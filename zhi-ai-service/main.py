@@ -1,13 +1,13 @@
 """
 ZHI AI Microservice
 ===================
-FastAPI service exposing 5 AI endpoints consumed by the Node.js ERP:
+FastAPI service exposing AI endpoints consumed by the Node.js ERP:
 
     POST /ai/performance         (XGBoost regressor)
     POST /ai/at-risk             (XGBoost classifier)
     POST /ai/attendance-risk     (ML + rule engine)
     POST /ai/finance-anomaly     (Isolation Forest, optional Mongo scan)
-    POST /ai/document            (multipart file → OCR → structured JSON)
+    POST /ai/document /ai/ocr    (multipart file → OCR → structured JSON)
 
 Run:
     uvicorn main:app --host 0.0.0.0 --port 8000 --reload
@@ -18,6 +18,7 @@ import io
 import logging
 import os
 import re
+import gc
 from contextlib import asynccontextmanager
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional
@@ -36,7 +37,7 @@ from sklearn.ensemble import IsolationForest
 from PIL import Image
 import pytesseract
 
-# Try pdf2image for PDF support (needs poppler installed via Aptfile)
+# Try pdf2image for PDF support (needs poppler installed via Docker/apt)
 try:
     from pdf2image import convert_from_bytes
     HAS_PDF2IMAGE = True
@@ -126,7 +127,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=CORS_ORIGINS or ["*"],
     allow_credentials=True,
-    allow_methods=["GET", "POST"],
+    allow_methods=["GET", "POST", "OPTIONS"],
     allow_headers=["*"],
 )
 
@@ -139,10 +140,11 @@ PUBLIC_PATHS = {"/", "/health", "/health/live", "/health/ready", "/docs", "/open
 
 @app.middleware("http")
 async def internal_key_guard(request: Request, call_next):
-    if request.url.path in PUBLIC_PATHS:
+    if request.url.path in PUBLIC_PATHS or request.method == "OPTIONS":
         return await call_next(request)
     provided = request.headers.get("x-internal-key")
     if provided != API_KEY:
+        logger.warning("Unauthorized access attempt to %s", request.url.path)
         return JSONResponse(
             status_code=401,
             content={"detail": "Invalid or missing X-Internal-Key"},
@@ -283,7 +285,7 @@ def _prob_to_level(p: float) -> str:
 
 
 # --------------------------------------------------------------------------- #
-# Health
+# Health & Root
 # --------------------------------------------------------------------------- #
 @app.get("/", tags=["Root"])
 async def root():
@@ -371,7 +373,6 @@ async def predict_at_risk(payload: AtRiskRequest):
 
         proba = float(model.predict_proba(row)[0][1])
 
-        # rule-based "top factors"
         factors: List[str] = []
         if payload.attendance_pct < 60:
             factors.append("Low attendance")
@@ -398,7 +399,7 @@ async def predict_at_risk(payload: AtRiskRequest):
 
 
 # --------------------------------------------------------------------------- #
-# 3) Attendance risk (rule engine, no ML needed — deterministic)
+# 3) Attendance risk (rule engine)
 # --------------------------------------------------------------------------- #
 @app.post("/ai/attendance-risk", response_model=AttendanceRiskResponse, tags=["AI"])
 async def attendance_risk(payload: AttendanceRiskRequest):
@@ -412,8 +413,6 @@ async def attendance_risk(payload: AttendanceRiskRequest):
         total_final = conducted + remaining
         projected_pct = ((attended + remaining) / total_final) * 100 if total_final else 0.0
 
-        # classes_needed: minimum additional attended out of `remaining`
-        # to reach threshold at end of term
         needed = 0
         for k in range(0, remaining + 1):
             if total_final == 0:
@@ -422,7 +421,7 @@ async def attendance_risk(payload: AttendanceRiskRequest):
                 needed = k
                 break
         else:
-            needed = remaining + 1  # impossible
+            needed = remaining + 1
 
         max_can_miss = max(remaining - needed, 0) if needed <= remaining else 0
 
@@ -470,14 +469,12 @@ async def attendance_risk(payload: AttendanceRiskRequest):
 # 4) Finance anomaly (Isolation Forest)
 # --------------------------------------------------------------------------- #
 async def _fetch_recent_transactions(days: int) -> List[FinanceTransaction]:
-    """Read recent transactions from Mongo. Adjust collection name to your ERP."""
     try:
         db = get_db()
     except RuntimeError:
         return []
 
     since = datetime.utcnow() - timedelta(days=days)
-    # Try common collection names used by ERPs; first one that has data wins.
     candidates = ["transactions", "feetransactions", "feecollections", "expenses"]
     docs: List[Dict[str, Any]] = []
     for col in candidates:
@@ -527,7 +524,6 @@ async def finance_anomaly(payload: FinanceAnomalyRequest):
         if not txs:
             return FinanceAnomalyResponse(total_checked=0, anomalies_found=0, items=[])
 
-        # Load or fit an ad-hoc IsolationForest if pkl missing
         if registry.finance_anomaly is None:
             logger.warning("finance model not loaded → fitting ad-hoc IsolationForest")
             model = IsolationForest(n_estimators=100, contamination=0.05, random_state=42)
@@ -539,14 +535,14 @@ async def finance_anomaly(payload: FinanceAnomalyRequest):
             features = registry.finance_anomaly["features"]
 
         df = pd.DataFrame([t.model_dump() for t in txs])[features]
-        scores = model.decision_function(df)     # higher = more normal
-        preds = model.predict(df)                # -1 anomaly, 1 normal
+        scores = model.decision_function(df)
+        preds = model.predict(df)
 
         items = [
             FinanceAnomalyItem(
                 tx_id=t.tx_id,
                 amount=t.amount,
-                anomaly_score=float(round(-s, 4)),   # flip so higher = more anomalous
+                anomaly_score=float(round(-s, 4)),
                 is_anomaly=bool(p == -1),
             )
             for t, s, p in zip(txs, scores, preds)
@@ -617,7 +613,6 @@ def _extract_entities(text: str) -> Dict[str, Any]:
     if m := _PHONE_RE.search(text):
         out["phone"] = m.group(1)
 
-    # highest percentage in doc → likely overall %
     pcts = [float(p) for p in _PERCENT_RE.findall(text) if 0 <= float(p) <= 100]
     if pcts:
         out["percentage"] = max(pcts)
@@ -639,32 +634,42 @@ def _image_bytes_to_text(data: bytes, content_type: str) -> str:
                 status_code=500,
                 detail="PDF received but pdf2image/poppler not installed",
             )
-        pages = convert_from_bytes(data, dpi=250)
+        pages = convert_from_bytes(data, dpi=150)  # Optimized DPI for memory
         for pg in pages:
             texts.append(pytesseract.image_to_string(pg, lang=OCR_LANG))
+            pg.close()
+        del pages
+        gc.collect()
     else:
         img = Image.open(io.BytesIO(data))
         if img.mode != "RGB":
             img = img.convert("RGB")
         texts.append(pytesseract.image_to_string(img, lang=OCR_LANG))
+        img.close()
 
     return "\n".join(texts).strip()
 
 
 @app.post("/ai/document", response_model=DocumentAIResponse, tags=["AI"])
+@app.post("/ai/ocr", response_model=DocumentAIResponse, tags=["AI"])
+@app.post("/ocr", response_model=DocumentAIResponse, tags=["AI"])
+@app.post("/ai/document-ocr", response_model=DocumentAIResponse, tags=["AI"])
 async def document_ai(file: UploadFile = File(...)):
     """
     Multipart upload of an image (jpg/png) or PDF.
     Returns raw OCR text + parsed key fields.
     """
+    logger.info("Processing OCR document: filename=%s, content_type=%s", file.filename, file.content_type)
     try:
         if not file.content_type or not any(
             file.content_type.startswith(p) for p in ("image/", "application/pdf")
         ):
-            raise HTTPException(
-                status_code=415,
-                detail=f"Unsupported content type: {file.content_type}",
-            )
+            # Fallback for generic octet-stream if filename matches PDF/image
+            if not (file.filename and file.filename.lower().endswith(('.pdf', '.png', '.jpg', '.jpeg'))):
+                raise HTTPException(
+                    status_code=415,
+                    detail=f"Unsupported content type: {file.content_type}",
+                )
 
         data = await file.read()
         if not data:
@@ -672,9 +677,9 @@ async def document_ai(file: UploadFile = File(...)):
         if len(data) > 15 * 1024 * 1024:  # 15 MB safety cap
             raise HTTPException(status_code=413, detail="File too large (>15 MB)")
 
-        raw_text = _image_bytes_to_text(data, file.content_type)
+        raw_text = _image_bytes_to_text(data, file.content_type or "")
         if not raw_text:
-            raise HTTPException(status_code=422, detail="OCR produced no text")
+            raw_text = "No text could be extracted from this document."
 
         return DocumentAIResponse(
             doc_type_guess=_guess_doc_type(raw_text),
