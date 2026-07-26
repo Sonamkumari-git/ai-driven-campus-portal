@@ -38,14 +38,9 @@ services:
   # ---------- New Python FastAPI AI service ----------
   - type: web
     name: zhi-ai-service
-    env: python
+    env: docker
     rootDir: zhi-ai-service
     plan: starter          # free tier RAM is tight for OCR — use starter
-    buildCommand: |
-      pip install --upgrade pip
-      pip install -r requirements.txt
-      python train_dummy_models.py
-    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
     envVars:
       - key: AI_SERVICE_ENV
         value: production
