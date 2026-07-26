@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZHI | Fee Collection Portal</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    
+    <style>
+        :root {
+            --sidebar-bg: #0f172a; --primary: #3b82f6; --success: #10b981; 
+            --warning: #f59e0b; --danger: #ef4444; --bg: #f8fafc;
+            --text-dark: #1e293b; --text-light: #64748b; --white: #ffffff; 
+            --border: #e2e8f0; --card-curve: 12px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        body { background-color: var(--bg); display: flex; height: 100vh; overflow: hidden; color: var(--text-dark); }
+
+        /* ------------------ SIDEBAR ------------------ */
+        .sidebar { width: 260px; background: var(--sidebar-bg); color: #fff; display: flex; flex-direction: column; flex-shrink: 0; z-index: 1001; }
+        .sidebar-header { padding: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-between; align-items: center; }
+        .sidebar-header h2 { font-size: 18px; color: #fff; font-weight: 700;}
+        .sidebar-header p { font-size: 11px; color: var(--success); font-weight: 700; letter-spacing: 1px; margin-top: 2px;}
+        .logo-img { width: 42px; height: 42px; border-radius: 50%; background: #fff; padding: 2px; display: flex; align-items: center; justify-content: center; }
+
+        .sidebar-menu { list-style: none; padding: 15px 0; flex: 1; overflow-y: auto; }
+        .sidebar-menu li a { display: flex; align-items: center; gap: 12px; padding: 12px 20px; color: #cbd5e1; text-decoration: none; font-size: 14px; font-weight: 500; transition: 0.2s; border-left: 4px solid transparent;}
+        .sidebar-menu li a i { font-size: 20px; }
+        .sidebar-menu li.active a, .sidebar-menu li a:hover { background: rgba(255,255,255,0.05); color: #fff; border-left: 4px solid var(--primary); }
+
+        /* ------------------ MAIN CONTENT & TOPBAR ------------------ */
+        .main-wrapper { flex: 1; display: flex; flex-direction: column; overflow: hidden; width: 100%; position: relative;}
+        .topbar { height: 70px; background: var(--white); border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; padding: 0 25px; position: sticky; top: 0; z-index: 1000; box-shadow: 0 1px 2px rgba(0,0,0,0.02);}
+        
+        .user-profile { display: flex; align-items: center; gap: 10px; cursor: pointer; padding: 5px; border-radius: 8px; transition: background 0.2s;}
+        .user-profile:hover { background: #f1f5f9; }
+        .user-profile img { width: 35px; height: 35px; border-radius: 50%; border: 2px solid var(--success);}
+        .user-profile div { display: flex; flex-direction: column; text-align: right;}
+        .user-profile b { font-size: 13px; color: var(--text-dark); }
+        .user-profile span { font-size: 11px; color: var(--text-light); }
+
+        .content { padding: 25px; flex: 1; overflow-y: auto;}
+        .page-title { font-size: 22px; font-weight: 700; color: var(--text-dark); margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between;}
+
+        /* ------------------ SEARCH & FILTER SECTION ------------------ */
+        .filter-panel { background: var(--white); padding: 20px; border-radius: var(--card-curve); border: 1px solid var(--border); box-shadow: 0 2px 4px rgba(0,0,0,0.02); margin-bottom: 20px; }
+        .filter-header { display: flex; align-items: center; gap: 8px; font-size: 16px; font-weight: 600; margin-bottom: 15px; color: var(--text-dark);}
+        
+        .filter-grid { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr auto; gap: 15px; align-items: end; }
+        .form-group { display: flex; flex-direction: column; gap: 6px; }
+        .form-group label { font-size: 12px; font-weight: 600; color: var(--text-light); }
+        .form-group input, .form-group select { padding: 10px 12px; border: 1px solid var(--border); border-radius: 6px; outline: none; font-size: 13px; transition: 0.2s;}
+        .form-group input:focus, .form-group select:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1); }
+        
+        .btn-search { background: var(--primary); color: white; border: none; padding: 10px 20px; border-radius: 6px; font-weight: 600; font-size: 14px; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center; gap: 5px; height: 38px;}
+        .btn-search:hover { background: #2563eb; }
+        
+        .btn-action { background: var(--success); color: white; border: none; padding: 6px 12px; border-radius: 4px; font-weight: 600; font-size: 12px; cursor: pointer; transition: 0.2s; }
+        .btn-action:hover { background: #059669; }
+
+        /* ------------------ TABLE & LEDGER SECTION ------------------ */
+        .data-panel { background: var(--white); border-radius: var(--card-curve); border: 1px solid var(--border); box-shadow: 0 2px 4px rgba(0,0,0,0.02); overflow: hidden; margin-bottom: 20px; }
+        
+        .table-res { overflow-x: auto; width: 100%;}
+        table { width: 100%; border-collapse: collapse; text-align: left; }
+        th { padding: 12px 20px; background: #f8fafc; font-size: 12px; text-transform: uppercase; color: var(--text-light); font-weight: 600; border-bottom: 1px solid var(--border);}
+        td { padding: 15px 20px; border-bottom: 1px solid var(--border); font-size: 13px; color: var(--text-dark); vertical-align: middle;}
+        tr:hover { background: #f1f5f9; }
+
+        /* Ledgers Wrapper */
+        #ledgerSection { display: none; }
+        .ledger-header { padding: 15px 20px; background: #eff6ff; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;}
+        .ledger-student-info { display: flex; flex-direction: column; gap: 4px; }
+        .ledger-student-info h3 { font-size: 18px; font-weight: 700; color: var(--text-dark); }
+        .ledger-student-info span { font-size: 12px; color: var(--text-light); font-weight: 500;}
+
+        /* Status Badges */
+        .status { padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; }
+        .status-paid { background: #dcfce7; color: #166534; }
+        .status-due { background: #fee2e2; color: #991b1b; }
+
+        /* ------------------ MODALS ------------------ */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.6); z-index: 2000; justify-content: center; align-items: center; padding: 20px; backdrop-filter: blur(2px); }
+        .modal-box { background: var(--white); width: 100%; max-width: 450px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); overflow: hidden; animation: slideIn 0.3s ease;}
+        @keyframes slideIn { from { transform: translateY(-20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        
+        .modal-header { padding: 18px 20px; background: #f8fafc; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+        .modal-header h3 { font-size: 16px; font-weight: 700; display: flex; align-items: center; gap: 8px;}
+        .modal-close { background: none; border: none; font-size: 22px; color: var(--text-light); cursor: pointer; transition: 0.2s;}
+        .modal-close:hover { color: var(--danger); }
+        
+        .modal-body { padding: 20px; }
+        .modal-footer { padding: 15px 20px; border-top: 1px solid var(--border); background: #f8fafc; display: flex; justify-content: flex-end; gap: 10px; }
+
+        /* Payment Form Specific */
+        .pay-amount-box { background: #eff6ff; border: 1px solid #bfdbfe; padding: 15px; border-radius: 8px; text-align: center; margin-bottom: 15px; }
+        .pay-amount-box p { font-size: 12px; color: var(--text-light); margin-bottom: 5px; font-weight: 600;}
+        .pay-amount-box h2 { font-size: 28px; color: var(--primary); font-weight: 800;}
+
+        /* Receipt UI */
+        .receipt-wrapper { padding: 20px; background: white; }
+        .receipt-header { text-align: center; margin-bottom: 20px; border-bottom: 2px dashed #ccc; padding-bottom: 15px; }
+        .receipt-header h2 { font-size: 20px; color: var(--text-dark); margin-bottom: 5px;}
+        .receipt-header p { font-size: 12px; color: var(--text-light); }
+        .receipt-row { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 8px;}
+        .receipt-total { display: flex; justify-content: space-between; font-size: 16px; font-weight: 700; margin-top: 15px; background: #f8fafc; padding: 10px; border-radius: 6px;}
+
+        @media (max-width: 992px) { .filter-grid { grid-template-columns: 1fr 1fr; } .btn-search { grid-column: span 2; } }
+        @media (max-width: 768px) { .filter-grid { grid-template-columns: 1fr; } .btn-search { grid-column: span 1; } }
+    </style>
+    <script src="js/auth-client.js"></script>
+</head>
+<body>
+
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <div class="logo-img"><i class='bx bx-wallet' style="color:var(--success); font-size: 26px;"></i></div>
+                <div><h2>ZHI Finance</h2><p>ACCOUNTANT PANEL</p></div>
+            </div>
+        </div>
+        <ul class="sidebar-menu">
+            <li><a href="accountant_dashboard.html"><i class='bx bx-home-alt'></i> Dashboard Home</a></li>
+            <li style="margin: 15px 0 5px 20px; font-size: 11px; color: #64748b; font-weight: 700; text-transform: uppercase;">Students & Fees</li>
+            <li class="active"><a href="#"><i class='bx bx-rupee'></i> Fee Collection</a></li>
+            <li><a href="#"><i class='bx bx-list-ol'></i> Fee Structure setup</a></li>
+            <li><a href="#"><i class='bx bx-user-x'></i> Pending Dues List</a></li>
+        </ul>
+    </aside>
+
+    <div class="main-wrapper">
+        <header class="topbar">
+            <div style="font-size: 18px; font-weight: 600; color: var(--text-dark);">Fee Collection Portal</div>
+            <div class="user-profile">
+                <div><b id="adminName">Accountant</b><span>Finance Dept</span></div>
+                <img src="https://ui-avatars.com/api/?name=Accounts&background=10b981&color=fff" alt="Admin">
+            </div>
+        </header>
+
+        <main class="content">
+            <div class="page-title">Search & Collect Student Fees</div>
+
+            <div class="filter-panel">
+                <div class="filter-header"><i class='bx bx-search-alt' style="color: var(--primary);"></i> Find Student</div>
+                <div class="filter-grid">
+                    <div class="form-group">
+                        <label>Search by Name / Reg No. / Mobile</label>
+                        <input type="text" id="searchQuery" placeholder="Enter student detail...">
+                    </div>
+                    <div class="form-group">
+                        <label>Course</label>
+                        <select id="searchCourse">
+                            <option value="">All Courses</option>
+                            <option value="BCA">BCA</option>
+                            <option value="BBA">BBA</option>
+                            <option value="MCA">MCA</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Semester</label>
+                        <select id="searchSem">
+                            <option value="">All Semesters</option>
+                            <option value="1">Sem 1</option>
+                            <option value="2">Sem 2</option>
+                            <option value="3">Sem 3</option>
+                            <option value="4">Sem 4</option>
+                            <option value="5">Sem 5</option>
+                            <option value="6">Sem 6</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Batch</label>
+                        <input type="text" id="searchBatch" placeholder="e.g. 2024-27">
+                    </div>
+                    <button class="btn-search" onclick="searchStudents()"><i class='bx bx-search'></i> Search</button>
+                </div>
+            </div>
+
+            <div class="data-panel" id="studentListPanel" style="display: none;">
+                <div class="table-res">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>College Reg No.</th>
+                                <th>Student Name</th>
+                                <th>Course & Sem</th>
+                                <th>Batch</th>
+                                <th>Mobile</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="studentTableBody">
+                            </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="data-panel" id="ledgerSection">
+                <div class="ledger-header">
+                    <div class="ledger-student-info">
+                        <h3 id="ld_name">Student Name</h3>
+                        <span id="ld_details">Course: BCA | Sem: 1 | Reg No: PATAKUBCA-001</span>
+                    </div>
+                    <button class="btn-search" style="background: var(--text-light);" onclick="closeLedger()">Close Ledger</button>
+                </div>
+                <div class="table-res">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Fee Head Name</th>
+                                <th>Due Date</th>
+                                <th>Total Amount</th>
+                                <th>Paid</th>
+                                <th>Due Balance</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ledgerTableBody">
+                            </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <div class="modal-overlay" id="paymentModal">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3><i class='bx bx-rupee' style="color: var(--success);"></i> Process Fee Payment</h3>
+                <button class="modal-close" onclick="closeModals()"><i class='bx bx-x'></i></button>
+            </div>
+            <form onsubmit="processPayment(event)">
+                <div class="modal-body">
+                    <input type="hidden" id="pay_studentId">
+                    <input type="hidden" id="pay_headId">
+                    
+                    <div class="pay-amount-box">
+                        <p id="pay_headName">1st Sem Tuition Fee</p>
+                        <h2>₹ <span id="pay_maxDue">12130</span></h2>
+                        <p style="color: var(--danger); font-size: 11px;">Current Pending Balance</p>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Paying Amount (₹) *</label>
+                        <input type="number" id="pay_amount" required>
+                        <small style="color: var(--text-light); font-size: 11px;">Can accept partial or full payment.</small>
+                    </div>
+                    <div class="form-group">
+                        <label>Payment Mode *</label>
+                        <select id="pay_mode" required>
+                            <option value="Cash">Cash</option>
+                            <option value="UPI">UPI / Online</option>
+                            <option value="Bank Transfer">Bank Transfer / NEFT</option>
+                            <option value="Cheque">Cheque</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Transaction ID / Remarks</label>
+                        <input type="text" id="pay_remarks" placeholder="Optional for Cash, required for UPI/Bank">
+                    </div>
+                    <div class="form-group">
+                        <label>Payer Mobile No (For SMS Receipt)</label>
+                        <input type="text" id="pay_mobile" placeholder="Leave blank to use student's mobile">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" onclick="closeModals()" style="padding: 10px 18px; border: 1px solid var(--border); background: white; border-radius: 6px; cursor: pointer; font-weight: 600;">Cancel</button>
+                    <button type="submit" id="btnPaySave" style="padding: 10px 18px; border: none; background: var(--success); color: white; border-radius: 6px; cursor: pointer; font-weight: 600; display: flex; align-items: center; gap: 5px;"><i class='bx bx-check-circle'></i> Collect Payment</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="receiptModal">
+        <div class="modal-box" style="max-width: 400px;">
+            <div class="receipt-wrapper" id="printableReceipt">
+                <div class="receipt-header">
+                    <h2>ZHI COLLEGE, PATNA</h2>
+                    <p>Official Fee Payment Receipt</p>
+                </div>
+                <div class="receipt-row"><span>Receipt No:</span><strong id="rec_no">REC-XXXXX</strong></div>
+                <div class="receipt-row"><span>Date:</span><strong id="rec_date">DD/MM/YYYY</strong></div>
+                <div class="receipt-row"><span>Student Name:</span><strong id="rec_name">Name</strong></div>
+                <div class="receipt-row"><span>Reg No:</span><strong id="rec_reg">REG-XXXX</strong></div>
+                <div class="receipt-row"><span>Payment For:</span><strong id="rec_head">Fee Head</strong></div>
+                <div class="receipt-row"><span>Payment Mode:</span><strong id="rec_mode">Mode</strong></div>
+                <div class="receipt-row"><span>Remarks:</span><strong id="rec_remark">N/A</strong></div>
+                
+                <div class="receipt-total">
+                    <span>Amount Paid:</span>
+                    <span style="color: var(--success);">₹ <span id="rec_amt">0</span></span>
+                </div>
+                
+                <div style="text-align: center; margin-top: 20px; font-size: 11px; color: var(--text-light);">
+                    <p>This is a computer-generated receipt.</p>
+                </div>
+            </div>
+            <div class="modal-footer" style="justify-content: center;">
+                <button onclick="closeModals()" style="padding: 10px 18px; border: 1px solid var(--border); background: white; border-radius: 6px; cursor: pointer; font-weight: 600;">Close</button>
+                <button onclick="printReceipt()" style="padding: 10px 18px; border: none; background: var(--primary); color: white; border-radius: 6px; cursor: pointer; font-weight: 600;"><i class='bx bx-printer'></i> Print Receipt</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const SERVER_URL = '';
+        let currentStudentData = null; // Global store to pass data between modals
+
+        window.onload = () => {
+            const userName = localStorage.getItem('userName');
+            if(userName) document.getElementById('adminName').innerText = userName;
+        };
+
+        // Modal Controllers
+        function closeModals() {
+            document.getElementById('paymentModal').style.display = 'none';
+            document.getElementById('receiptModal').style.display = 'none';
+        }
+        function closeLedger() {
+            document.getElementById('ledgerSection').style.display = 'none';
+            document.getElementById('studentListPanel').style.display = 'block';
+        }
+        function printReceipt() {
+            const printContent = document.getElementById('printableReceipt').innerHTML;
+            const originalContent = document.body.innerHTML;
+            document.body.innerHTML = printContent;
+            window.print();
+            document.body.innerHTML = originalContent;
+            window.location.reload(); // Reload to restore event listeners after print
+        }
+
+        // 1. Search Student API
+        async function searchStudents() {
+            const q = document.getElementById('searchQuery').value;
+            const course = document.getElementById('searchCourse').value;
+            const sem = document.getElementById('searchSem').value;
+            const batch = document.getElementById('searchBatch').value;
+
+            // Optional: Close ledger if open
+            document.getElementById('ledgerSection').style.display = 'none';
+            
+            const tbody = document.getElementById('studentTableBody');
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;"><i class="bx bx-loader-alt bx-spin"></i> Searching Database...</td></tr>';
+            document.getElementById('studentListPanel').style.display = 'block';
+
+            try {
+                // Fetching from backend search API
+                const response = await fetch(`${SERVER_URL}/api/finance/search-student?q=${q}&course=${course}&sem=${sem}&batch=${batch}`);
+                const result = await response.json();
+
+                if (result.success && result.data.length > 0) {
+                    tbody.innerHTML = '';
+                    result.data.forEach(student => {
+                        tbody.innerHTML += `
+                            <tr>
+                                <td><b>${student.collegeRegNo || 'N/A'}</b></td>
+                                <td>${student.studentName}</td>
+                                <td>${student.course || 'N/A'} (Sem ${student.semester || '-'})</td>
+                                <td>${student.sessionBatch || 'N/A'}</td>
+                                <td>${student.studentMobile || 'N/A'}</td>
+                                <td>
+                                    <button class="btn-action" onclick="viewLedger('${student._id}')"><i class='bx bx-folder-open'></i> View Ledger</button>
+                                </td>
+                            </tr>
+                        `;
+                    });
+                } else {
+                    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color: var(--danger);">No students found matching this criteria.</td></tr>';
+                }
+            } catch (error) {
+                console.error("Search Error:", error);
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color: var(--danger);">Server Error! Please try again.</td></tr>';
+            }
+        }
+
+        // 2. Fetch & View Ledger API
+        async function viewLedger(studentId) {
+            document.getElementById('studentListPanel').style.display = 'none';
+            const ledgerBody = document.getElementById('ledgerTableBody');
+            ledgerBody.innerHTML = '<tr><td colspan="7" style="text-align:center;"><i class="bx bx-loader-alt bx-spin"></i> Loading Ledger Details...</td></tr>';
+            document.getElementById('ledgerSection').style.display = 'block';
+
+            try {
+                const response = await fetch(`${SERVER_URL}/api/finance/student-fee/${studentId}`);
+                const result = await response.json();
+
+                if (result.success) {
+                    const data = result.data;
+                    const stInfo = data.studentId;
+                    currentStudentData = stInfo; // Save globally for receipt
+
+                    // Set Header Info
+                    document.getElementById('ld_name').innerText = stInfo.studentName;
+                    document.getElementById('ld_details').innerText = `Course: ${stInfo.course} | Sem: ${stInfo.semester} | Reg No: ${stInfo.collegeRegNo}`;
+
+                    // Render Ledger Table
+                    ledgerBody.innerHTML = '';
+                    data.feeHeads.forEach(head => {
+                        const isDue = head.status !== 'Paid';
+                        const statusClass = isDue ? 'status-due' : 'status-paid';
+                        
+                        let actionBtn = isDue ? 
+                            `<button class="btn-action" onclick="openPayModal('${stInfo._id}', '${head._id}', '${head.headName}', ${head.due})"><i class='bx bx-rupee'></i> Pay</button>` 
+                            : `<span style="color: var(--success); font-weight: 600;"><i class='bx bx-check-double'></i> Cleared</span>`;
+
+                        ledgerBody.innerHTML += `
+                            <tr>
+                                <td><b>${head.headName}</b></td>
+                                <td>${head.dueDate}</td>
+                                <td>₹${head.amount}</td>
+                                <td style="color: var(--success); font-weight: 600;">₹${head.paid}</td>
+                                <td style="color: var(--danger); font-weight: 600;">₹${head.due}</td>
+                                <td><span class="status ${statusClass}">${head.status}</span></td>
+                                <td>${actionBtn}</td>
+                            </tr>
+                        `;
+                    });
+                }
+            } catch (error) {
+                console.error("Ledger Error:", error);
+                ledgerBody.innerHTML = '<tr><td colspan="7" style="text-align:center; color: var(--danger);">Failed to load ledger data.</td></tr>';
+            }
+        }
+
+        // 3. Setup & Open Payment Modal
+        function openPayModal(studentId, headId, headName, dueAmount) {
+            document.getElementById('pay_studentId').value = studentId;
+            document.getElementById('pay_headId').value = headId;
+            
+            document.getElementById('pay_headName').innerText = headName;
+            document.getElementById('pay_maxDue').innerText = dueAmount;
+            
+            document.getElementById('pay_amount').value = dueAmount; // Default full amount fill
+            document.getElementById('pay_amount').max = dueAmount; // Cannot pay more than due
+
+            document.getElementById('paymentModal').style.display = 'flex';
+        }
+
+        // 4. Submit Payment API
+        async function processPayment(event) {
+            event.preventDefault();
+            const btn = document.getElementById('btnPaySave');
+            btn.innerHTML = `<i class='bx bx-loader-alt bx-spin'></i> Processing...`;
+            btn.disabled = true;
+
+            const payload = {
+                studentId: document.getElementById('pay_studentId').value,
+                headId: document.getElementById('pay_headId').value,
+                amount: document.getElementById('pay_amount').value,
+                mode: document.getElementById('pay_mode').value,
+                remarks: document.getElementById('pay_remarks').value,
+                payerMobile: document.getElementById('pay_mobile').value,
+                date: new Date()
+            };
+
+            try {
+                const response = await fetch(`${SERVER_URL}/api/finance/collect-fee`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const result = await response.json();
+
+                if (response.ok && result.success) {
+                    // Payment successful! Close pay modal
+                    document.getElementById('paymentModal').style.display = 'none';
+                    
+                    // Show Receipt Modal
+                    showReceipt(result.receipt, payload);
+
+                    // Refresh Ledger Data in background
+                    viewLedger(payload.studentId);
+                } else {
+                    alert("Error: " + result.message);
+                }
+            } catch (error) {
+                console.error("Payment Error:", error);
+                alert("Server Connection Error!");
+            } finally {
+                btn.innerHTML = `<i class='bx bx-check-circle'></i> Collect Payment`;
+                btn.disabled = false;
+            }
+        }
+
+        // 5. Generate & Show Receipt
+        function showReceipt(transactionData, payloadData) {
+            // Fill Receipt Details
+            document.getElementById('rec_no').innerText = transactionData.receiptNo;
+            document.getElementById('rec_date').innerText = new Date(transactionData.date).toLocaleString();
+            document.getElementById('rec_name').innerText = currentStudentData.studentName;
+            document.getElementById('rec_reg').innerText = currentStudentData.collegeRegNo || 'N/A';
+            document.getElementById('rec_head').innerText = transactionData.feeHeadName;
+            document.getElementById('rec_mode').innerText = transactionData.mode;
+            document.getElementById('rec_remark').innerText = transactionData.remarks || 'None';
+            document.getElementById('rec_amt').innerText = transactionData.amount;
+
+            document.getElementById('receiptModal').style.display = 'flex';
+        }
+    </script>
+    <script src="js/settings-client.js"></script>
+  <script src="js/role-ui.js"></script>
+</body>
+</html>

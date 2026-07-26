@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZHI | Office Reports & Analytics</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <style>
+        :root {
+            --sidebar-bg: #0f172a; 
+            --primary: #3b82f6; 
+            --warning: #f59e0b; 
+            --danger: #ef4444;
+            --success: #10b981;
+            --info: #0ea5e9;
+            --bg: #f8fafc;
+            --text-dark: #1e293b;
+            --text-light: #64748b;
+            --white: #ffffff;
+            --border: #e2e8f0;
+            --card-curve: 12px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        body { background-color: var(--bg); display: flex; height: 100vh; overflow: hidden; color: var(--text-dark); -webkit-font-smoothing: antialiased; }
+
+        /* ------------------ SIDEBAR ------------------ */
+        .sidebar { width: 260px; background: var(--sidebar-bg); color: #fff; display: flex; flex-direction: column; flex-shrink: 0; z-index: 1001; }
+        .sidebar-header { padding: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-between; align-items: center; }
+        .sidebar-header h2 { font-size: 18px; color: #fff; font-weight: 700;}
+        .sidebar-header p { font-size: 11px; color: var(--warning); font-weight: 700; letter-spacing: 1px; margin-top: 2px;}
+        .logo-img { width: 42px; height: 42px; border-radius: 50%; background: #fff; padding: 2px; display: flex; align-items: center; justify-content: center; }
+
+        .sidebar-menu { list-style: none; padding: 15px 0; flex: 1; overflow-y: auto; }
+        .sidebar-menu li a { 
+            display: flex; align-items: center; gap: 12px; padding: 12px 20px; 
+            color: #cbd5e1; text-decoration: none; font-size: 14px; font-weight: 500; 
+            transition: all 0.3s ease; border-left: 4px solid transparent; 
+        }
+        .sidebar-menu li a i { font-size: 20px; transition: transform 0.3s ease; }
+        
+        .sidebar-menu li a:hover { background: rgba(255,255,255,0.05); color: #fff; border-left: 4px solid var(--primary); padding-left: 25px; }
+        .sidebar-menu li a:hover i { transform: scale(1.1); }
+        .sidebar-menu li.active a { background: rgba(255,255,255,0.05); color: #fff; border-left: 4px solid var(--primary); }
+
+        /* ------------------ MAIN CONTENT & TOPBAR ------------------ */
+        .main-wrapper { flex: 1; display: flex; flex-direction: column; overflow: hidden; width: 100%; position: relative;}
+        
+        .topbar { 
+            height: 70px; background: var(--white); border-bottom: 1px solid var(--border); 
+            display: flex; justify-content: space-between; align-items: center; padding: 0 25px; 
+            position: sticky; top: 0; z-index: 1000; box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+        }
+        
+        .user-profile { display: flex; align-items: center; gap: 10px; cursor: pointer; padding: 5px; border-radius: 8px; transition: background 0.2s;}
+        .user-profile:hover { background: #f1f5f9; }
+        .user-profile img { width: 35px; height: 35px; border-radius: 50%; object-fit: cover; border: 2px solid var(--primary);}
+        .user-profile div { display: flex; flex-direction: column; }
+        .user-profile b { font-size: 13px; color: var(--text-dark); }
+        .user-profile span { font-size: 11px; color: var(--text-light); }
+
+        .content { padding: 25px; flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 20px; }
+        
+        .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .page-title { font-size: 22px; font-weight: 700; color: var(--text-dark); }
+        
+        .btn-export {
+            background: var(--white); border: 1px solid var(--border); padding: 8px 15px; border-radius: 6px;
+            font-size: 13px; font-weight: 600; color: var(--text-dark); cursor: pointer; display: flex; align-items: center; gap: 6px;
+            transition: 0.2s; box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        }
+        .btn-export:hover { background: #f1f5f9; border-color: #cbd5e1; }
+
+        /* ------------------ REPORT CARDS ------------------ */
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; }
+        .stat-card {
+            background: var(--white); padding: 20px; border-radius: var(--card-curve); border: 1px solid var(--border);
+            display: flex; align-items: center; gap: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+        }
+        .stat-icon { width: 50px; height: 50px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px; }
+        .stat-info h4 { font-size: 12px; color: var(--text-light); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 5px;}
+        .stat-info h2 { font-size: 24px; color: var(--text-dark); font-weight: 700;}
+        
+        /* ------------------ CHARTS SECTION ------------------ */
+        .charts-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; }
+        .chart-card {
+            background: var(--white); padding: 20px; border-radius: var(--card-curve); border: 1px solid var(--border);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+        }
+        .chart-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .chart-header h3 { font-size: 16px; font-weight: 600; color: var(--text-dark); }
+        
+        /* ------------------ DATA TABLE ------------------ */
+        .table-card { background: var(--white); border-radius: var(--card-curve); border: 1px solid var(--border); box-shadow: 0 2px 4px rgba(0,0,0,0.02); overflow: hidden; }
+        .table-header { padding: 18px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+        .table-header h3 { font-size: 16px; font-weight: 600; color: var(--text-dark); }
+        
+        table { width: 100%; border-collapse: collapse; }
+        th { text-align: left; padding: 12px 20px; font-size: 12px; color: var(--text-light); font-weight: 600; text-transform: uppercase; border-bottom: 1px solid var(--border); background: #f8fafc; }
+        td { padding: 15px 20px; font-size: 14px; color: var(--text-dark); border-bottom: 1px solid var(--border); }
+        tr:last-child td { border-bottom: none; }
+        tr:hover { background: #f1f5f9; }
+        
+        .status { padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+        .status-paid { background: #dcfce7; color: #16a34a; }
+        .status-pending { background: #fef3c7; color: #d97706; }
+
+        @media (max-width: 1024px) {
+            .charts-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+    <script src="js/auth-client.js"></script>
+</head>
+<body>
+
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <div class="logo-img">
+                    <i class='bx bxs-graduation' style="color:var(--primary); font-size: 26px;"></i>
+                </div>
+                <div>
+                    <h2>ZHI College</h2>
+                    <p>ADMIN OFFICE</p>
+                </div>
+            </div>
+        </div>
+        
+        <ul class="sidebar-menu">
+            <li><a href="index.html"><i class='bx bx-home-alt'></i> Dashboard Home</a></li>
+            
+            <li style="margin: 15px 0 5px 20px; font-size: 11px; color: #64748b; font-weight: 700; text-transform: uppercase;">Students & Admissions</li>
+            <li><a href="admissionform.html"><i class='bx bx-user-plus'></i> New Admission</a></li>
+            <li><a href="students.html"><i class='bx bx-group'></i> Student Directory</a></li>
+            
+            <li style="margin: 15px 0 5px 20px; font-size: 11px; color: #64748b; font-weight: 700; text-transform: uppercase;">Staff & Academics</li>
+            <li><a href="staff_dashboard.html"><i class='bx bx-briefcase-alt-2'></i> Staff Records</a></li>
+            <li><a href="teacher.html"><i class='bx bx-book-bookmark'></i> Course & Subjects</a></li> 
+            
+            <li style="margin: 15px 0 5px 20px; font-size: 11px; color: #64748b; font-weight: 700; text-transform: uppercase;">Office Tools</li>
+            <li><a href="#"><i class='bx bx-id-card'></i> Generate ID Cards</a></li>
+            <li><a href="GlobalNotice.html"><i class='bx bx-message-square-detail'></i> Notice Board</a></li>
+            <li class="active"><a href="Reports&Analytics.html"><i class='bx bx-pie-chart-alt-2'></i> Office Reports</a></li>
+        </ul>
+    </aside>
+
+    <main class="main-wrapper">
+        
+        <header class="topbar">
+            <div style="font-size: 18px; font-weight: 600; color: var(--text-dark);">Office Administration</div>
+            <div class="user-profile">
+                <div style="text-align: right;">
+                    <b id="adminName">Karan Mishara</b>
+                    <span>Management Staff</span>
+                </div>
+                <img src="https://ui-avatars.com/api/?name=Karan+Mishara&background=3b82f6&color=fff" alt="Admin">
+            </div>
+        </header>
+
+        <div class="content">
+            
+            <div class="page-header">
+                <div class="page-title">Reports & Analytics</div>
+                <button class="btn-export"><i class='bx bx-export'></i> Export Report (PDF)</button>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: #e0f2fe; color: #0284c7;"><i class='bx bx-wallet'></i></div>
+                    <div class="stat-info">
+                        <h4>Total Fees Collected</h4>
+                        <h2>₹ 14,50,000</h2>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: #fef3c7; color: #d97706;"><i class='bx bx-error-circle'></i></div>
+                    <div class="stat-info">
+                        <h4>Pending Dues</h4>
+                        <h2>₹ 2,30,000</h2>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: #dcfce7; color: #16a34a;"><i class='bx bx-user-check'></i></div>
+                    <div class="stat-info">
+                        <h4>New Admissions (This Month)</h4>
+                        <h2>45</h2>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: #f3e8ff; color: #9333ea;"><i class='bx bx-book-reader'></i></div>
+                    <div class="stat-info">
+                        <h4>Active Courses</h4>
+                        <h2>12</h2>
+                    </div>
+                </div>
+            </div>
+
+            <div class="charts-grid">
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3>Monthly Revenue vs Expenses</h3>
+                        <select style="padding: 5px; border-radius: 5px; border: 1px solid #ccc;">
+                            <option>2026</option>
+                            <option>2025</option>
+                        </select>
+                    </div>
+                    <canvas id="revenueChart" height="100"></canvas>
+                </div>
+                
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3>Admissions by Department</h3>
+                    </div>
+                    <canvas id="admissionChart" height="200"></canvas>
+                </div>
+            </div>
+
+            <div class="table-card">
+                <div class="table-header">
+                    <h3>Recent Fee Transactions</h3>
+                    <a href="#" style="font-size: 13px; color: var(--primary); text-decoration: none; font-weight: 500;">View All →</a>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Receipt No.</th>
+                            <th>Student Name</th>
+                            <th>Course</th>
+                            <th>Date</th>
+                            <th>Amount</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>#REC-0092</td>
+                            <td>Rahul Sharma</td>
+                            <td>BCA (Sem 1)</td>
+                            <td>29/03/2026</td>
+                            <td>₹ 25,000</td>
+                            <td><span class="status status-paid">Paid</span></td>
+                        </tr>
+                        <tr>
+                            <td>#REC-0091</td>
+                            <td>Sneha Gupta</td>
+                            <td>MCA (Sem 3)</td>
+                            <td>28/03/2026</td>
+                            <td>₹ 30,000</td>
+                            <td><span class="status status-paid">Paid</span></td>
+                        </tr>
+                        <tr>
+                            <td>#REC-0090</td>
+                            <td>Amit Verma</td>
+                            <td>BBA (Sem 2)</td>
+                            <td>28/03/2026</td>
+                            <td>₹ 15,000</td>
+                            <td><span class="status status-pending">Pending</span></td>
+                        </tr>
+                        <tr>
+                            <td>#REC-0089</td>
+                            <td>Priya Singh</td>
+                            <td>B.Com (Sem 1)</td>
+                            <td>27/03/2026</td>
+                            <td>₹ 18,000</td>
+                            <td><span class="status status-paid">Paid</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+        </div>
+    </main>
+
+    <script>
+        // 1. Revenue Bar Chart
+        const ctxRev = document.getElementById('revenueChart').getContext('2d');
+        new Chart(ctxRev, {
+            type: 'bar',
+            data: {
+                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                datasets: [
+                    {
+                        label: 'Revenue (₹)',
+                        data: [250000, 300000, 450000, 200000, 150000, 350000],
+                        backgroundColor: '#3b82f6',
+                        borderRadius: 4
+                    },
+                    {
+                        label: 'Expenses (₹)',
+                        data: [150000, 180000, 200000, 120000, 100000, 170000],
+                        backgroundColor: '#94a3b8',
+                        borderRadius: 4
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { position: 'top' }
+                },
+                scales: {
+                    y: { beginAtZero: true }
+                }
+            }
+        });
+
+        // 2. Admissions Doughnut Chart
+        const ctxAdm = document.getElementById('admissionChart').getContext('2d');
+        new Chart(ctxAdm, {
+            type: 'doughnut',
+            data: {
+                labels: ['Computer Science', 'Management', 'Commerce', 'Arts'],
+                datasets: [{
+                    data: [45, 25, 20, 10],
+                    backgroundColor: [
+                        '#3b82f6', // blue
+                        '#10b981', // green
+                        '#f59e0b', // yellow
+                        '#8b5cf6'  // purple
+                    ],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                cutout: '70%',
+                plugins: {
+                    legend: { position: 'bottom' }
+                }
+            }
+        });
+    </script>
+    <script src="js/settings-client.js"></script>
+  <script src="js/role-ui.js"></script>
+</body>
+</html>

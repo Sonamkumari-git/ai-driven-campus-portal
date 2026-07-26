@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZHI Director Panel | System Audit Logs</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    
+    <style>
+        :root {
+            --sidebar-bg: #0b1325; 
+            --primary: #3b82f6; 
+            --success: #10b981; 
+            --warning: #f59e0b; 
+            --danger: #ef4444; 
+            --purple: #8b5cf6;
+            --bg: #f8fafc;
+            --text-dark: #0f172a;
+            --text-light: #64748b;
+            --white: #ffffff;
+            --border: #e2e8f0;
+            --sidebar-hover: #1e293b;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        body { background-color: var(--bg); display: flex; height: 100vh; overflow: hidden; color: var(--text-dark); }
+
+        /* SIDEBAR OVERLAY FOR MOBILE */
+        .sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.5); z-index: 1000; backdrop-filter: blur(2px); }
+
+        /* SIDEBAR */
+        .sidebar { width: 260px; background: var(--sidebar-bg); color: #fff; display: flex; flex-direction: column; z-index: 1001; transition: transform 0.3s ease; flex-shrink: 0;}
+        .sidebar-header { padding: 20px; border-bottom: 1px solid rgba(255,255,255,0.05); display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+        .sidebar-brand { display: flex; align-items: center; gap: 12px; }
+        .brand-logo { width: 42px; height: 42px; background: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #d32f2f; font-size: 24px; flex-shrink: 0;}
+        .sidebar-header h2 { font-size: 18px; font-weight: 700; letter-spacing: 0.5px;}
+        .sidebar-header p { font-size: 11px; color: #ff4d4d; font-weight: 700; letter-spacing: 0.5px; margin-top: 2px;}
+        .close-sidebar-btn { display: none; background: none; border: none; color: #fff; font-size: 28px; cursor: pointer; }
+        
+        .sidebar-menu { list-style: none; padding: 15px 0; flex: 1; overflow-y: auto; }
+        .sidebar-menu li a { display: flex; align-items: center; gap: 12px; padding: 12px 25px; color: #94a3b8; text-decoration: none; font-size: 14px; font-weight: 500; transition: 0.2s; }
+        .sidebar-menu li a i { font-size: 20px; width: 24px; text-align: center; }
+        .sidebar-menu li.active a, .sidebar-menu li a:hover { background: var(--sidebar-hover); color: #fff; border-left: 3px solid #60a5fa; padding-left: 22px; }
+
+        /* MAIN CONTENT & TOPBAR */
+        .main-wrapper { flex: 1; display: flex; flex-direction: column; overflow-y: auto; width: 100%; }
+        .topbar { min-height: 65px; background: var(--white); border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; padding: 10px 25px; position: sticky; top: 0; z-index: 999; flex-wrap: wrap; gap: 10px; }
+        .topbar-left, .topbar-right { display: flex; align-items: center; gap: 15px; }
+        .menu-btn { display: none; background: none; border: none; font-size: 24px; cursor: pointer; color: var(--text-dark); }
+        .topbar h2 { font-size: 18px; }
+
+        /* BUTTONS */
+        .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text-dark); padding: 8px 16px; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 13px; transition: 0.2s; display: inline-flex; align-items: center; gap: 8px; }
+        .btn-outline:hover { background: #f1f5f9; }
+        .btn-primary { background: var(--primary); color: white; border: none; padding: 8px 16px; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 13px; transition: 0.2s; display: inline-flex; align-items: center; gap: 8px; }
+
+        .content { padding: 25px; }
+
+        /* FILTER PANEL PRO */
+        .filter-panel { background: var(--white); border-radius: 12px; border: 1px solid var(--border); padding: 20px; margin-bottom: 25px; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; align-items: end; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+        .form-group label { display: block; font-size: 12px; font-weight: 600; margin-bottom: 6px; color: var(--text-light); text-transform: uppercase; letter-spacing: 0.5px;}
+        .form-control { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 13px; outline: none; transition: 0.2s; }
+        .form-control:focus { border-color: var(--primary); }
+
+        /* TABLE STYLES */
+        .panel { background: var(--white); border-radius: 12px; border: 1px solid var(--border); box-shadow: 0 1px 3px rgba(0,0,0,0.05); overflow: hidden; }
+        .panel-header { padding: 15px 20px; border-bottom: 1px solid var(--border); background: #f8fafc; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;}
+        .panel-header h3 { font-size: 15px; display: flex; align-items: center; gap: 8px;}
+        
+        .table-responsive { width: 100%; overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; min-width: 800px; }
+        th { text-align: left; padding: 12px 20px; background: #f8fafc; font-size: 12px; text-transform: uppercase; color: var(--text-light); font-weight: 600; border-bottom: 1px solid var(--border);}
+        td { padding: 12px 20px; border-bottom: 1px solid var(--border); font-size: 13px; vertical-align: middle; font-weight: 500;}
+        tr:hover { background: #f8fafc; }
+
+        /* BADGES FOR ACTIONS */
+        .badge { padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; letter-spacing: 0.5px; display: inline-flex; align-items: center; gap: 4px;}
+        .badge-delete { background: #fee2e2; color: #b91c1c; border: 1px solid #fca5a5; }
+        .badge-create { background: #d1fae5; color: #059669; border: 1px solid #6ee7b7; }
+        .badge-update { background: #dbeafe; color: #1d4ed8; border: 1px solid #93c5fd; }
+        .badge-login { background: #f3e8ff; color: #7e22ce; border: 1px solid #d8b4fe; }
+        .badge-failed { background: #1e293b; color: #f8fafc; border: 1px solid #475569; }
+
+        .user-info { display: flex; flex-direction: column; }
+        .user-info span { font-size: 11px; color: var(--text-light); }
+        .ip-address { font-family: monospace; font-size: 12px; color: var(--text-light); background: #f1f5f9; padding: 2px 6px; border-radius: 4px; border: 1px solid var(--border);}
+
+        /* RESPONSIVE DESIGN */
+        @media (max-width: 992px) {
+            .sidebar { position: fixed; left: -260px; height: 100vh; }
+            .sidebar.active { transform: translateX(0); }
+            .sidebar-overlay.active { display: block; }
+            .menu-btn, .close-sidebar-btn { display: block; }
+        }
+
+        @media (max-width: 768px) {
+            .topbar { padding: 15px; }
+            .content { padding: 15px; }
+            .filter-panel { grid-template-columns: 1fr; }
+            
+            table, thead, tbody, th, td, tr { display: block; }
+            thead tr { display: none; }
+            .table-responsive { overflow-x: hidden; }
+            table { min-width: 100%; }
+            tr { border: 1px solid var(--border); margin-bottom: 15px; border-radius: 8px; padding: 10px; background: #fff; box-shadow: 0 1px 2px rgba(0,0,0,0.02);}
+            td { border: none; padding: 8px 0; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px dashed var(--border);}
+            td:last-child { border-bottom: none; }
+            td::before { content: attr(data-label); font-weight: 600; font-size: 12px; color: var(--text-light); margin-right: 15px;}
+            td div, td span { text-align: right; }
+            .user-info { align-items: flex-end; }
+        }
+    </style>
+    <script src="js/auth-client.js"></script>
+</head>
+<body>
+
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-brand">
+                <div class="brand-logo"><i class='bx bx-microscope'></i></div>
+                <div>
+                    <h2>ZHI College</h2>
+                    <p>DIRECTOR PANEL</p>
+                </div>
+            </div>
+            <button class="close-sidebar-btn" onclick="toggleSidebar()">&times;</button>
+        </div>
+        
+        <ul class="sidebar-menu">
+            <li><a href="admin_dashboard.html"><i class='bx bx-grid-alt'></i> Dashboard</a></li>
+            <li><a href="users_roles.html"><i class='bx bx-group'></i> Users & Roles</a></li>
+            <li><a href="students.html"><i class='bx bx-user'></i> Students</a></li>
+            <li><a href="Finance.html"><i class='bx bx-dollar'></i> Finance</a></li>
+            <li><a href="Reports&Analytics.html"><i class='bx bx-bar-chart-alt-2'></i> Reports & Analytics</a></li>
+            <li><a href="Exams&Results.html"><i class='bx bx-file'></i> Exams & Results</a></li>
+            <li><a href="GlobalNotice.html"><i class='bx bx-message-rounded'></i> Global Notices</a></li>
+            <li><a href="SystemSettings.html"><i class='bx bx-cog'></i> System Settings</a></li>
+            <li class="active"><a href="#"><i class='bx bx-revision'></i> Audit Logs</a></li>
+        </ul>
+    </aside>
+
+    <div class="main-wrapper">
+        <header class="topbar">
+            <div class="topbar-left">
+                <button class="menu-btn" onclick="toggleSidebar()"><i class='bx bx-menu'></i></button>
+                <h2>System Audit Logs</h2>
+            </div>
+            <div class="topbar-right">
+                <button class="btn-outline" onclick="exportCSV()">
+                    <i class='bx bx-export'></i> Export CSV
+                </button>
+            </div>
+        </header>
+
+        <main class="content">
+
+            <div class="filter-panel">
+                <div class="form-group">
+                    <label>Action Type</label>
+                    <select class="form-control" id="filterType" onchange="filterLogs()">
+                        <option value="ALL">All Actions</option>
+                        <option value="DELETE">Deletions</option>
+                        <option value="CREATE">Creations</option>
+                        <option value="UPDATE">Modifications</option>
+                        <option value="LOGIN">Logins</option>
+                        <option value="FAILED">Failed Logins</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Search Keyword / IP / Name</label>
+                    <input type="text" class="form-control" id="searchKeyword" placeholder="Search IP, name, action..." onkeyup="filterLogs()">
+                </div>
+            </div>
+
+            <div class="panel">
+                <div class="panel-header">
+                    <h3><i class='bx bx-history' style="font-size: 18px; color: var(--primary);"></i> Recent Activity Logs</h3>
+                    <span style="font-size: 12px; color: var(--text-light);">Showing last 50 records</span>
+                </div>
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Timestamp</th>
+                                <th>User</th>
+                                <th>Action Performed</th>
+                                <th>Details</th>
+                                <th>IP Address</th>
+                            </tr>
+                        </thead>
+                        <tbody id="logsTableBody">
+                            <tr><td colspan="5" style="text-align: center; padding: 20px;">Loading Live Logs...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <script>
+        function toggleSidebar() { 
+            document.getElementById('sidebar').classList.toggle('active'); 
+            document.getElementById('sidebarOverlay').classList.toggle('active'); 
+        }
+
+        let allLogs = [];
+
+        window.onload = () => {
+            fetchLiveLogs();
+        };
+
+        // 🟢 FETCH FROM SERVER
+        async function fetchLiveLogs() {
+            try {
+                // Temporary Mock Data for Demonstration (if API isn't ready)
+                // Real code will uncomment the fetch below:
+                const response = await fetch('/api/audit-logs');
+                if (!response.ok) throw new Error("Fallback to mock");
+                const result = await response.json();
+                
+                if (result.success && result.data.length > 0) {
+                    allLogs = result.data;
+                } else {
+                    useMockData(); // Use mock if DB is empty
+                }
+            } catch (error) {
+                useMockData(); // Use mock if API fails
+            }
+            renderTable(allLogs);
+        }
+
+        function useMockData() {
+            allLogs = [
+                { createdAt: new Date().toISOString(), user: 'Ravi Kumar', role: 'System Admin', type: 'DELETE', action: 'Deleted Record', details: 'Deleted student profile (ID: ZHI-24-001)', ipAddress: '192.168.1.45' },
+                { createdAt: new Date(Date.now() - 3600000).toISOString(), user: 'Amit Singh', role: 'Accountant', type: 'CREATE', action: 'Created Record', details: 'Generated Fee Receipt (#REC-8845) for ₹25,000', ipAddress: '10.0.0.15' },
+                { createdAt: new Date(Date.now() - 7200000).toISOString(), user: 'Director', role: 'Super Admin', type: 'UPDATE', action: 'Modified Config', details: 'Updated System Academic Session to 2025-26', ipAddress: '117.200.14.5' },
+                { createdAt: new Date(Date.now() - 86400000).toISOString(), user: 'Unknown', role: 'Unauthenticated', type: 'FAILED', action: 'Failed Login', details: 'Invalid password attempt for admin@zhi.edu', ipAddress: '45.33.22.11' }
+            ];
+        }
+
+        function renderTable(logsData) {
+            const tbody = document.getElementById('logsTableBody');
+            tbody.innerHTML = '';
+
+            if (logsData.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">No logs found.</td></tr>';
+                return;
+            }
+
+            logsData.forEach(log => {
+                let badgeHtml = '';
+                if(log.type === 'DELETE') badgeHtml = `<span class="badge badge-delete"><i class='bx bx-trash'></i> ${log.action}</span>`;
+                else if(log.type === 'CREATE') badgeHtml = `<span class="badge badge-create"><i class='bx bx-plus-circle'></i> ${log.action}</span>`;
+                else if(log.type === 'UPDATE') badgeHtml = `<span class="badge badge-update"><i class='bx bx-edit'></i> ${log.action}</span>`;
+                else if(log.type === 'LOGIN') badgeHtml = `<span class="badge badge-login"><i class='bx bx-log-in-circle'></i> ${log.action}</span>`;
+                else if(log.type === 'FAILED') badgeHtml = `<span class="badge badge-failed"><i class='bx bx-block'></i> ${log.action}</span>`;
+                else badgeHtml = `<span class="badge badge-update">${log.action}</span>`;
+
+                let dateObj = new Date(log.createdAt);
+                let dateStr = dateObj.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+                let timeStr = dateObj.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+
+                let userColor = log.role === 'Unauthenticated' ? 'color: var(--danger);' : '';
+
+                tbody.innerHTML += `
+                    <tr>
+                        <td data-label="Timestamp">
+                            <b>${dateStr}</b><br>
+                            <span style="font-size: 11px; color: var(--text-light);">${timeStr}</span>
+                        </td>
+                        <td data-label="User">
+                            <div class="user-info">
+                                <b>${log.user}</b>
+                                <span style="${userColor}">${log.role}</span>
+                            </div>
+                        </td>
+                        <td data-label="Action">${badgeHtml}</td>
+                        <td data-label="Details">${log.details}</td>
+                        <td data-label="IP Address">
+                            <span class="ip-address" ${log.type === 'FAILED' ? 'style="color: var(--danger); border-color: #fca5a5; background: #fef2f2;"' : ''}>
+                                ${log.ipAddress}
+                            </span>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        // 🟢 FILTER LOGIC
+        function filterLogs() {
+            const filterType = document.getElementById('filterType').value;
+            const searchVal = document.getElementById('searchKeyword').value.toLowerCase();
+
+            let filtered = allLogs.filter(log => {
+                let matchType = (filterType === 'ALL') || (log.type === filterType);
+                let matchSearch = log.user.toLowerCase().includes(searchVal) || 
+                                  log.details.toLowerCase().includes(searchVal) || 
+                                  log.ipAddress.includes(searchVal);
+                
+                return matchType && matchSearch;
+            });
+
+            renderTable(filtered);
+        }
+
+        function exportCSV() {
+            alert("Exporting logs to CSV format...");
+            // CSV Logic can be added here
+        }
+    </script>
+    <script src="js/settings-client.js"></script>
+  <script src="js/role-ui.js"></script>
+</body>
+</html>

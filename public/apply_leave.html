@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZHI | Apply Leave (Teacher)</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    
+    <style>
+        :root { --sidebar-bg: #0f172a; --primary: #3b82f6; --warning: #f59e0b; --danger: #ef4444; --success: #10b981; --bg: #f8fafc; --text-dark: #1e293b; --text-light: #64748b; --white: #ffffff; --border: #e2e8f0; --card-curve: 12px; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        body { background-color: var(--bg); display: flex; height: 100vh; overflow: hidden; color: var(--text-dark); }
+
+        .sidebar { width: 260px; background: var(--sidebar-bg); color: #fff; display: flex; flex-direction: column; flex-shrink: 0; z-index: 1001; transition: transform 0.3s ease; }
+        .sidebar-header { padding: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; gap: 12px; }
+        .sidebar-header h2 { font-size: 18px; color: #fff; font-weight: 700;}
+        .sidebar-header p { font-size: 11px; color: var(--success); font-weight: 700; letter-spacing: 1px;}
+        .logo-img { width: 42px; height: 42px; border-radius: 50%; background: #fff; display: flex; align-items: center; justify-content: center; color: var(--primary); font-size: 26px;}
+
+        .sidebar-menu { list-style: none; padding: 15px 0; flex: 1; overflow-y: auto; }
+        .sidebar-menu li a { display: flex; align-items: center; gap: 12px; padding: 12px 20px; color: #cbd5e1; text-decoration: none; font-size: 14px; font-weight: 500; transition: 0.2s; border-left: 4px solid transparent;}
+        .sidebar-menu li a:hover, .sidebar-menu li.active a { background: rgba(255,255,255,0.05); color: #fff; border-left: 4px solid var(--primary); padding-left: 25px;}
+        .sidebar-menu li.active a { padding-left: 20px; }
+
+        .main-wrapper { flex: 1; display: flex; flex-direction: column; overflow-y: auto; width: 100%; position: relative;}
+        .topbar { height: 70px; background: var(--white); border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; padding: 0 25px; position: sticky; top: 0; z-index: 1000;}
+        .menu-btn { display: none; background: none; border: none; font-size: 26px; cursor: pointer; color: var(--text-dark); }
+        
+        .user-profile { display: flex; align-items: center; gap: 10px; padding: 5px; border-radius: 8px; }
+        .user-profile img { width: 35px; height: 35px; border-radius: 50%; object-fit: cover; border: 2px solid var(--success);}
+
+        .content { padding: 30px; flex: 1; }
+        .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
+        .page-title { font-size: 24px; font-weight: 700; color: var(--text-dark); }
+
+        .grid-layout { display: grid; grid-template-columns: 350px 1fr; gap: 25px; align-items: start;}
+        .card { background: var(--white); border-radius: var(--card-curve); border: 1px solid var(--border); box-shadow: 0 2px 6px rgba(0,0,0,0.02); overflow: hidden; }
+        .card-header { padding: 18px 20px; background: #f8fafc; border-bottom: 1px solid var(--border); font-size: 16px; font-weight: 600; display: flex; align-items: center; gap: 8px; color: var(--text-dark);}
+        .card-body { padding: 20px; display: flex; flex-direction: column; gap: 15px; }
+        
+        .form-group { display: flex; flex-direction: column; gap: 6px; }
+        .form-group label { font-size: 13px; font-weight: 600; color: var(--text-light); }
+        .form-control { padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 6px; outline: none; font-size: 14px; background: var(--bg); transition: 0.2s; width: 100%; font-family: inherit;}
+        .form-control:focus { border-color: var(--primary); background: #fff; }
+        
+        .btn-submit { background: var(--primary); color: white; border: none; padding: 12px; border-radius: 6px; font-weight: 600; cursor: pointer; transition: 0.2s; display: flex; justify-content: center; align-items: center; gap: 8px;}
+        .btn-submit:hover { background: #2563eb; }
+        .btn-submit:disabled { background: #94a3b8; cursor: not-allowed; }
+
+        table { width: 100%; border-collapse: collapse; text-align: left; min-width: 600px;}
+        th { padding: 15px 20px; background: #f8fafc; font-size: 12px; text-transform: uppercase; color: var(--text-light); font-weight: 600; border-bottom: 1px solid var(--border);}
+        td { padding: 15px 20px; border-bottom: 1px solid var(--border); font-size: 14px; vertical-align: middle;}
+        
+        .badge { padding: 5px 10px; border-radius: 4px; font-size: 11px; font-weight: 600; }
+        .badge-pending { background: #fef3c7; color: #b45309; border: 1px solid #fde68a;}
+        .badge-approved { background: #d1fae5; color: #065f46; border: 1px solid #a7f3d0;}
+        .badge-rejected { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca;}
+
+        .hod-remark { font-size: 12px; color: var(--primary); margin-top: 6px; font-weight: 500; background: #eff6ff; padding: 6px 10px; border-radius: 4px;}
+
+        @media (max-width: 992px) { .grid-layout { grid-template-columns: 1fr; } }
+        @media (max-width: 768px) { .sidebar { position: fixed; left: -260px; height: 100vh; } .sidebar.active { transform: translateX(260px); } .menu-btn { display: block; } }
+    </style>
+    <script src="js/auth-client.js"></script>
+</head>
+<body>
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="logo-img"><i class='bx bx-book-reader'></i></div>
+            <div><h2>ZHI Academics</h2><p>TEACHER PANEL</p></div>
+        </div>
+        <ul class="sidebar-menu">
+            <li><a href="teacher_dashboard.html"><i class='bx bx-grid-alt'></i> Dashboard Home</a></li>
+            
+            <li style="margin: 15px 0 5px 20px; font-size: 11px; color: #64748b; font-weight: 700; text-transform: uppercase;">Academics</li>
+            <li><a href="teacher_timetable.html"><i class='bx bx-calendar'></i> My Timetable</a></li>
+            <li><a href="upload_notes.html"><i class='bx bx-folder-plus'></i> Upload Notes</a></li>
+            <li><a href="manage_assignments.html"><i class='bx bx-task'></i> Assignments</a></li>
+            
+            <li style="margin: 15px 0 5px 20px; font-size: 11px; color: #64748b; font-weight: 700; text-transform: uppercase;">Classroom</li>
+            <li><a href="mark_attendance.html"><i class='bx bx-check-shield'></i> Mark Attendance</a></li>
+            <li><a href="upload_marks.html"><i class='bx bx-bar-chart-alt-2'></i> Upload Marks</a></li>
+            <li class="active"><a href="apply_leave.html"><i class='bx bx-envelope'></i> Apply Leave</a></li>
+            
+            <li style="margin: 15px 0 5px 20px; font-size: 11px; color: #64748b; font-weight: 700; text-transform: uppercase;">Personal</li>
+            <li><a href="teacher_profile.html"><i class='bx bx-user'></i> My Profile</a></li>
+            <li><a href="login.html" style="color: var(--danger);"><i class='bx bx-log-out'></i> Logout</a></li>
+        </ul>
+    </aside>
+
+    <main class="main-wrapper">
+        <header class="topbar">
+            <div style="display: flex; align-items: center; gap: 15px;">
+                <button class="menu-btn" onclick="toggleSidebar()"><i class='bx bx-menu'></i></button>
+                <div style="font-size: 18px; font-weight: 600; color: var(--text-dark);">Classroom & Leaves</div>
+            </div>
+            <div class="user-profile">
+                <div style="text-align: right;">
+                    <b id="topbarTeacherName" style="font-size: 13px;">Loading...</b><br>
+                    <span id="topbarTeacherSkills" style="font-size: 11px; color: var(--text-light);">Faculty</span>
+                </div>
+                <img id="topbarTeacherImg" src="https://ui-avatars.com/api/?name=Teacher&background=10b981&color=fff">
+            </div>
+        </header>
+
+        <div class="content">
+            <div class="page-header"><div class="page-title">Leave Application</div></div>
+
+            <div class="grid-layout">
+                <div class="card">
+                    <div class="card-header"><i class='bx bx-edit' style="color: var(--primary);"></i> Submit Leave Request</div>
+                    <form id="leaveForm" class="card-body" onsubmit="applyLeave(event)">
+                        <div class="form-group">
+                            <label>Leave Type *</label>
+                            <select id="leaveType" class="form-control" required>
+                                <option value="Casual Leave">Casual Leave (CL)</option>
+                                <option value="Sick Leave">Sick Leave (SL)</option>
+                                <option value="Emergency">Emergency Leave</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="display: flex; gap: 10px; flex-direction: row;">
+                            <div style="flex: 1;"><label>From Date *</label><input type="date" id="startDate" class="form-control" required></div>
+                            <div style="flex: 1;"><label>To Date *</label><input type="date" id="endDate" class="form-control" required></div>
+                        </div>
+                        <div class="form-group">
+                            <label>Reason for Leave *</label>
+                            <textarea id="leaveReason" class="form-control" rows="3" placeholder="Briefly explain the reason..." required></textarea>
+                        </div>
+                        <button type="submit" id="btnSubmit" class="btn-submit"><i class='bx bx-send'></i> Submit Application</button>
+                    </form>
+                </div>
+
+                <div class="card">
+                    <div class="card-header"><i class='bx bx-history' style="color: var(--text-light);"></i> My Leave History</div>
+                    <div style="overflow-x: auto;">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Applied On</th>
+                                    <th>Leave Type</th>
+                                    <th>Duration</th>
+                                    <th>Status & Remark</th>
+                                </tr>
+                            </thead>
+                            <tbody id="leaveHistoryBody">
+                                <tr>
+                                    <td colspan="4" style="text-align: center; padding: 30px; color: var(--text-light);">
+                                        <i class='bx bx-loader-alt bx-spin'></i> Fetching your leave history...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        function toggleSidebar() { document.getElementById('sidebar').classList.toggle('active'); }
+
+        const BASE_URL = '/api';
+        
+        // Fetch logged in Teacher Data
+        let staffId = localStorage.getItem('staffId');
+        let staffName = localStorage.getItem('staffName') || 'Faculty';
+        let staffRole = localStorage.getItem('role') || 'Teacher';
+
+        window.onload = async () => {
+            if (!staffId) {
+                alert("Please login first to apply for leave!");
+                window.location.href = 'index.html';
+                return;
+            }
+
+            // Set minimum date to today (past leave blocks)
+            let today = new Date().toISOString().split('T')[0];
+            document.getElementById("startDate").setAttribute('min', today);
+            document.getElementById("endDate").setAttribute('min', today);
+
+            // Fetch Real Profile Details & Skills
+            await loadTeacherProfile();
+            
+            // Fetch History from DB
+            fetchMyLeaves();
+        };
+
+        // 🟢 1. FETCH LIVE TEACHER SKILLS/PROFILE 🟢
+        async function loadTeacherProfile() {
+            document.getElementById('topbarTeacherName').innerText = staffName;
+            document.getElementById('topbarTeacherImg').src = `https://ui-avatars.com/api/?name=${staffName.replace(" ", "+")}&background=10b981&color=fff`;
+
+            try {
+                const response = await fetch(`${BASE_URL}/staff`);
+                const result = await response.json();
+                
+                if (result.success) {
+                    const myProfile = result.data.find(s => s._id === staffId);
+                    if (myProfile) {
+                        staffName = myProfile.name;
+                        document.getElementById('topbarTeacherName').innerText = myProfile.name;
+                        
+                        // Set Teacher Skills or Department
+                        if (myProfile.skills) {
+                            document.getElementById('topbarTeacherSkills').innerText = myProfile.skills;
+                        } else if (myProfile.dept) {
+                            document.getElementById('topbarTeacherSkills').innerText = myProfile.dept;
+                        }
+
+                        // Load Real Profile Picture
+                        if (myProfile.profilePicUrl) {
+                            document.getElementById('topbarTeacherImg').src = myProfile.profilePicUrl;
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error("Error loading profile data", error);
+            }
+        }
+
+        // 🟢 2. FETCH PAST LEAVES (Sirf Isi Teacher Ki) 🟢
+        async function fetchMyLeaves() {
+            const tbody = document.getElementById('leaveHistoryBody');
+            
+            try {
+                const response = await fetch(`${BASE_URL}/leaves`);
+                const result = await response.json();
+
+                if (result.success) {
+                    // Sirf login wale teacher ki leave uthao
+                    const myLeaves = result.data.filter(l => l.applicantId === staffId);
+
+                    if (myLeaves.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 30px; color: var(--text-light);">No leave history found.</td></tr>';
+                        return;
+                    }
+
+                    tbody.innerHTML = ''; // Clear loading
+                    
+                    // Sort by newest first
+                    myLeaves.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+                    myLeaves.forEach(leave => {
+                        let badgeClass = 'badge-pending';
+                        if(leave.status === 'Approved') badgeClass = 'badge-approved';
+                        if(leave.status === 'Rejected') badgeClass = 'badge-rejected';
+
+                        let appliedOn = new Date(leave.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+                        let fromDate = new Date(leave.startDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+                        let toDate = new Date(leave.endDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+
+                        let remarkHtml = leave.hodRemark ? `<div class="hod-remark"><b>HOD:</b> ${leave.hodRemark}</div>` : '';
+
+                        let row = `
+                            <tr>
+                                <td>${appliedOn}</td>
+                                <td><b>${leave.leaveType}</b><br><small style="color: var(--text-light);">${leave.reason.substring(0, 30)}...</small></td>
+                                <td>${fromDate} to ${toDate}<br><small style="color: var(--text-light);">${leave.totalDays} Days</small></td>
+                                <td>
+                                    <span class="badge ${badgeClass}">${leave.status}</span>
+                                    ${remarkHtml}
+                                </td>
+                            </tr>
+                        `;
+                        tbody.insertAdjacentHTML('beforeend', row);
+                    });
+                }
+            } catch (error) {
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 30px; color: var(--danger);">Failed to fetch leave data from server.</td></tr>';
+            }
+        }
+
+        // 🟢 3. SUBMIT LEAVE APPLICATION (To Server) 🟢
+        async function applyLeave(e) {
+            e.preventDefault();
+            
+            const btn = document.getElementById('btnSubmit');
+            const leaveType = document.getElementById('leaveType').value;
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+            const reason = document.getElementById('leaveReason').value;
+
+            // Dates check
+            const sDate = new Date(startDate);
+            const eDate = new Date(endDate);
+            if (eDate < sDate) {
+                alert("❌ End date cannot be earlier than Start date!");
+                return;
+            }
+            const diffTime = Math.abs(eDate - sDate);
+            const totalDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+
+            btn.innerHTML = "<i class='bx bx-loader-alt bx-spin'></i> Submitting...";
+            btn.disabled = true;
+
+            // Form Data creation kyunki server.js multer.single expect kar raha hai
+            const formData = new FormData();
+            formData.append('applicantId', staffId);
+            formData.append('applicantName', staffName);
+            formData.append('applicantRole', staffRole); 
+            formData.append('leaveType', leaveType);
+            formData.append('startDate', startDate);
+            formData.append('endDate', endDate);
+            formData.append('totalDays', totalDays);
+            formData.append('reason', reason);
+
+            try {
+                const response = await fetch(`${BASE_URL}/leaves/apply`, {
+                    method: 'POST',
+                    body: formData // Content-Type auto detect ho jayega boundary ke saath
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    alert("✅ Leave Application Submitted Successfully!");
+                    document.getElementById('leaveForm').reset();
+                    fetchMyLeaves(); // Table ko instantly update karo
+                } else {
+                    alert("❌ Failed: " + result.message);
+                }
+            } catch (error) {
+                alert("❌ Server Error! Please check your connection.");
+            }
+
+            btn.innerHTML = "<i class='bx bx-send'></i> Submit Application";
+            btn.disabled = false;
+        }
+    </script>
+    <script src="js/settings-client.js"></script>
+  <script src="js/role-ui.js"></script>
+</body>
+</html>

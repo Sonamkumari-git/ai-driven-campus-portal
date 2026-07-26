@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZHI | My Attendance (Teacher)</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    
+    <style>
+        :root {
+            --sidebar-bg: #0f172a; 
+            --primary: #14b8a6; /* Teal Theme */
+            --primary-dark: #0f766e;
+            --primary-light: #ccfbf1;
+            --success: #10b981; 
+            --success-light: #d1fae5;
+            --warning: #f59e0b; 
+            --warning-light: #fef3c7;
+            --danger: #ef4444; 
+            --danger-light: #fee2e2;
+            --bg: #f8fafc;
+            --text-dark: #1e293b;
+            --text-light: #64748b;
+            --white: #ffffff;
+            --border: #e2e8f0;
+        }
+
+        /* Basic Reset */
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        html, body { width: 100%; overflow-x: hidden; background-color: var(--bg); color: var(--text-dark); display: flex; height: 100vh; }
+
+        /* ------------------ SIDEBAR ------------------ */
+        .sidebar { width: 260px; background: var(--sidebar-bg); color: #fff; display: flex; flex-direction: column; flex-shrink: 0; z-index: 1001; transition: transform 0.3s ease; }
+        .sidebar-header { padding: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-between; align-items: center; }
+        .sidebar-header h2 { font-size: 18px; color: #fff; font-weight: 700;}
+        .sidebar-header p { font-size: 11px; color: var(--primary); font-weight: 700; letter-spacing: 1px; margin-top: 2px;}
+        .logo-img { width: 42px; height: 42px; border-radius: 50%; background: #fff; padding: 2px; display: flex; align-items: center; justify-content: center; }
+
+        .sidebar-menu { list-style: none; padding: 15px 0; flex: 1; overflow-y: auto; }
+        .sidebar-menu li a { display: flex; align-items: center; gap: 12px; padding: 12px 20px; color: #cbd5e1; text-decoration: none; font-size: 14px; font-weight: 500; transition: 0.2s; }
+        .sidebar-menu li a i { font-size: 20px; }
+        .sidebar-menu li.active a, .sidebar-menu li a:hover { background: rgba(255,255,255,0.05); color: #fff; border-left: 4px solid var(--primary); }
+
+        /* ------------------ MAIN CONTENT & TOPBAR ------------------ */
+        .main-wrapper { flex: 1; display: flex; flex-direction: column; overflow-y: auto; overflow-x: hidden; width: 100%; position: relative;}
+        .topbar { height: 70px; background: var(--white); border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; padding: 0 25px; position: sticky; top: 0; z-index: 1000; box-shadow: 0 1px 2px rgba(0,0,0,0.02);}
+        .menu-btn { display: none; background: none; border: none; font-size: 26px; cursor: pointer; color: var(--text-dark); }
+        
+        .user-profile { display: flex; align-items: center; gap: 10px; }
+        .user-profile img { width: 35px; height: 35px; border-radius: 50%; object-fit: cover; border: 2px solid var(--primary);}
+        .user-profile div { display: flex; flex-direction: column; text-align: right;}
+        .user-profile b { font-size: 13px; color: var(--text-dark); }
+        .user-profile span { font-size: 11px; color: var(--text-light); }
+
+        .content { padding: 25px; flex: 1; width: 100%; max-width: 1200px; margin: 0 auto;}
+        
+        /* ------------------ TOP ACTION BAR ------------------ */
+        .action-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; margin-bottom: 25px; }
+        .page-title { font-size: 22px; font-weight: 700; color: var(--text-dark); display: flex; align-items: center; gap: 10px;}
+        
+        .month-selector { padding: 10px 15px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; font-weight: 600; color: var(--text-dark); background: var(--white); outline: none; cursor: pointer;}
+        .month-selector:focus { border-color: var(--primary); }
+
+        /* ------------------ PUNCH IN/OUT CARD ------------------ */
+        .punch-card { background: var(--white); border-radius: 12px; border: 1px solid var(--border); padding: 20px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; box-shadow: 0 2px 10px rgba(0,0,0,0.03); flex-wrap: wrap; gap: 15px;}
+        .punch-info h3 { font-size: 18px; font-weight: 700; color: var(--text-dark); margin-bottom: 5px;}
+        .punch-info p { font-size: 13px; color: var(--text-light);}
+        
+        .punch-buttons { display: flex; gap: 15px; flex-wrap: wrap;}
+        .btn-punch { padding: 12px 24px; border-radius: 8px; font-size: 14px; font-weight: 700; border: none; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: 0.2s; color: white;}
+        .btn-in { background: var(--primary); }
+        .btn-in:hover { background: var(--primary-dark); }
+        .btn-out { background: var(--warning); }
+        .btn-out:hover { background: #d97706; }
+        .btn-disabled { background: #cbd5e1; cursor: not-allowed; color: #64748b;}
+        
+        /* ------------------ STATS CARDS ------------------ */
+        .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 25px; }
+        .stat-card { background: var(--white); border-radius: 12px; padding: 20px; border: 1px solid var(--border); display: flex; align-items: center; gap: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.02);}
+        .stat-icon { width: 50px; height: 50px; border-radius: 12px; display: flex; justify-content: center; align-items: center; font-size: 24px; flex-shrink: 0;}
+        .stat-info h4 { font-size: 22px; font-weight: 800; color: var(--text-dark); margin-bottom: 2px;}
+        .stat-info p { font-size: 12px; color: var(--text-light); font-weight: 600; text-transform: uppercase;}
+
+        .overall-card { grid-column: span 4; background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: white; padding: 25px; border-radius: 12px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 4px 10px rgba(20, 184, 166, 0.3); margin-bottom: 20px;}
+        .overall-card h2 { font-size: 36px; font-weight: 800; margin-bottom: 5px;}
+        .overall-card p { font-size: 14px; opacity: 0.9;}
+        .overall-icon { font-size: 60px; opacity: 0.2; }
+
+        /* ------------------ TABLE & PANELS ------------------ */
+        .panel { background: var(--white); border-radius: 12px; border: 1px solid var(--border); box-shadow: 0 1px 3px rgba(0,0,0,0.02); overflow: hidden; margin-bottom: 25px;}
+        .panel-header { padding: 15px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; background: #f8fafc;}
+        .panel-header h3 { font-size: 16px; font-weight: 700; display: flex; align-items: center; gap: 8px; color: var(--text-dark);}
+        
+        .table-res { width: 100%; overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; text-align: left; min-width: 700px; }
+        th { padding: 15px 20px; background: #f8fafc; font-size: 12px; text-transform: uppercase; color: var(--text-light); font-weight: 700; border-bottom: 1px solid var(--border);}
+        td { padding: 15px 20px; border-bottom: 1px solid var(--border); font-size: 14px; font-weight: 500;}
+        
+        /* Badges */
+        .badge { padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 700; display: inline-block; text-align: center;}
+        .badge-present { background: var(--success-light); color: var(--success); }
+        .badge-absent { background: var(--danger-light); color: var(--danger); }
+        .badge-leave { background: var(--warning-light); color: var(--warning); }
+
+        /* Mobile Responsiveness */
+        .sidebar-overlay { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.5); z-index: 999; }
+        @media (max-width: 992px) { .stats-grid { grid-template-columns: repeat(2, 1fr); } }
+        @media (max-width: 768px) {
+            .sidebar { position: fixed; left: -260px; height: 100vh; }
+            .sidebar.active { transform: translateX(260px); }
+            .menu-btn { display: block; }
+            .sidebar-overlay.active { display: block; }
+            .topbar { padding: 0 15px; }
+            .user-profile b, .user-profile span { display: none; }
+            .content { padding: 15px; }
+            .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+            .stat-card { padding: 15px; gap: 10px; }
+            .stat-icon { width: 40px; height: 40px; font-size: 20px; }
+            .stat-info h4 { font-size: 18px; }
+            .overall-card { flex-direction: column; align-items: flex-start; gap: 15px; position: relative;}
+            .overall-icon { position: absolute; right: 20px; top: 20px; font-size: 50px;}
+            .punch-card { flex-direction: column; align-items: flex-start; }
+            .punch-buttons { width: 100%; }
+            .btn-punch { flex: 1; justify-content: center;}
+        }
+    </style>
+    <script src="js/auth-client.js"></script>
+</head>
+<body>
+
+    <div class="sidebar-overlay" id="overlay" onclick="toggleSidebar()"></div>
+
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <div class="logo-img"><i class='bx bx-book-reader' style="color:var(--primary); font-size: 24px;"></i></div>
+                <div>
+                    <h2>ZHI Faculty</h2>
+                    <p>TEACHER PANEL</p>
+                </div>
+            </div>
+            <button class="menu-btn close-btn" onclick="toggleSidebar()" style="color:white; display:none;"><i class='bx bx-x'></i></button>
+        </div>
+        
+        <ul class="sidebar-menu">
+            <li><a href="teacher_dashboard.html"><i class='bx bx-grid-alt'></i> Dashboard Home</a></li>
+            <li class="active"><a href="teacher_self_attendance.html"><i class='bx bx-fingerprint'></i> My Attendance</a></li>
+            
+            <li style="margin: 15px 0 5px 20px; font-size: 11px; color: #64748b; font-weight: 700; text-transform: uppercase;">My Classes</li>
+            <li><a href="teacher_timetable.html"><i class='bx bx-calendar'></i> My Timetable</a></li>
+            <li><a href="mark_attendance.html"><i class='bx bx-user-check'></i> Mark Student Attendance</a></li>
+            
+            <li style="margin: 15px 0 5px 20px; font-size: 11px; color: #64748b; font-weight: 700; text-transform: uppercase;">Academics</li>
+            <li><a href="upload_notes.html"><i class='bx bx-book-content'></i> Upload Notes</a></li>
+            <li><a href="manage_assignments.html"><i class='bx bx-task'></i> Assignments</a></li>
+            <li><a href="upload_marks.html"><i class='bx bx-edit'></i> Enter Marks</a></li>
+            
+            <li style="margin: 15px 0 5px 20px; font-size: 11px; color: #64748b; font-weight: 700; text-transform: uppercase;">Personal</li>
+            <li><a href="apply_leave.html"><i class='bx bx-calendar-minus'></i> Apply Leave</a></li>
+            <li><a href="teacher_profile.html"><i class='bx bx-user-circle'></i> My Profile</a></li>
+        </ul>
+    </aside>
+
+    <div class="main-wrapper">
+        <header class="topbar">
+            <div style="display: flex; align-items: center; gap: 15px;">
+                <button class="menu-btn" onclick="toggleSidebar()"><i class='bx bx-menu'></i></button>
+                <div style="font-size: 18px; font-weight: 600; color: var(--text-dark);">Faculty Portal</div>
+            </div>
+            <div class="user-profile">
+                <div>
+                    <b id="adminName">Loading...</b>
+                    <span id="adminDept">Faculty Member</span>
+                </div>
+                <img id="profileImage" src="https://ui-avatars.com/api/?name=Teacher&background=14b8a6&color=fff" alt="Admin">
+            </div>
+        </header>
+
+        <main class="content">
+            <div class="action-header">
+                <div class="page-title"><i class='bx bx-fingerprint'></i> My Attendance Record</div>
+                
+                <select class="month-selector" id="monthSelector" onchange="renderTableAndStats()">
+                    </select>
+            </div>
+
+            <div class="punch-card" id="punchCard">
+                <div class="punch-info">
+                    <h3>Mark Today's Attendance</h3>
+                    <p id="todayDateText">Loading today's date...</p>
+                </div>
+                <div class="punch-buttons">
+                    <button class="btn-punch btn-in" id="btnPunchIn" onclick="markPunch('IN')">
+                        <i class='bx bx-log-in-circle'></i> Punch In
+                    </button>
+                    <button class="btn-punch btn-out btn-disabled" id="btnPunchOut" onclick="markPunch('OUT')" disabled>
+                        <i class='bx bx-log-out-circle'></i> Punch Out
+                    </button>
+                </div>
+            </div>
+
+            <div class="overall-card">
+                <div>
+                    <h2 id="overallPercentage">0%</h2>
+                    <p>Monthly Attendance Percentage (<span id="currentMonthText">Month</span>)</p>
+                </div>
+                <i class='bx bx-bar-chart-alt-2 overall-icon'></i>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: var(--primary-light); color: var(--primary);"><i class='bx bx-calendar'></i></div>
+                    <div class="stat-info">
+                        <h4 id="totalDays">0</h4>
+                        <p>Total Days</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: var(--success-light); color: var(--success);"><i class='bx bx-check-circle'></i></div>
+                    <div class="stat-info">
+                        <h4 id="presentDays">0</h4>
+                        <p>Present</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: var(--danger-light); color: var(--danger);"><i class='bx bx-x-circle'></i></div>
+                    <div class="stat-info">
+                        <h4 id="absentDays">0</h4>
+                        <p>Absent</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: var(--warning-light); color: var(--warning);"><i class='bx bx-calendar-minus'></i></div>
+                    <div class="stat-info">
+                        <h4 id="leaveDays">0</h4>
+                        <p>On Leave</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel">
+                <div class="panel-header">
+                    <h3><i class='bx bx-list-ul'></i> Daily Attendance Log</h3>
+                </div>
+                <div class="table-res">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Day</th>
+                                <th>Punch In Time</th>
+                                <th>Punch Out Time</th>
+                                <th>Status</th>
+                                <th>Remarks</th>
+                            </tr>
+                        </thead>
+                        <tbody id="attendanceTableBody">
+                            <tr><td colspan="6" style="text-align:center;">Fetching data from server...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <script>
+        // Server URL Setup
+        const API_BASE_URL = "/api/teacher-attendance";
+        
+        // Logged-in Teacher Details (Id aur Name strictly match karenge backend ke liye)
+        const staffId = localStorage.getItem('staffId') || ""; 
+        const staffName = localStorage.getItem('staffName') || localStorage.getItem('userName') || "Teacher";
+
+        let allLogs = []; // Global variable database se data store karne ke liye
+
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('active');
+            document.getElementById('overlay').classList.toggle('active');
+        }
+
+        // Generate Last 6 Months for Dropdown
+        function setupMonthSelector() {
+            const selector = document.getElementById('monthSelector');
+            const today = new Date();
+            
+            for(let i=0; i<6; i++) {
+                let d = new Date(today.getFullYear(), today.getMonth() - i, 1);
+                let monthStr = d.toLocaleString('default', { month: 'long', year: 'numeric' }); 
+                let monthVal = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2, '0')}`; 
+                
+                let option = document.createElement('option');
+                option.value = monthVal;
+                option.text = monthStr;
+                selector.appendChild(option);
+            }
+        }
+
+        window.onload = () => {
+            // Profile Name set karega
+            document.getElementById('adminName').innerText = staffName;
+            document.getElementById('profileImage').src = `https://ui-avatars.com/api/?name=${staffName}&background=14b8a6&color=fff`;
+
+            // Date text set karega
+            const today = new Date();
+            document.getElementById('todayDateText').innerText = today.toLocaleDateString('en-GB', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' });
+
+            setupMonthSelector();
+            
+            if(!staffId) {
+                alert("Teacher ID missing! Please login again.");
+                return;
+            }
+
+            // 🔴 LIVE: Fetch Attendance from MongoDB (Only for logged-in Staff ID)
+            fetchAttendanceData();
+        };
+
+        // Date and Time Formatters
+        function formatTime(date) {
+            let hours = date.getHours();
+            let minutes = date.getMinutes();
+            let ampm = hours >= 12 ? 'PM' : 'AM';
+            hours = hours % 12;
+            hours = hours ? hours : 12; 
+            minutes = minutes < 10 ? '0' + minutes : minutes;
+            return hours + ':' + minutes + ' ' + ampm;
+        }
+
+        function getStandardDate() {
+            const d = new Date();
+            return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+        }
+
+        // 🔴 1. Fetch from Database
+        async function fetchAttendanceData() {
+            try {
+                // Fetch all records strictly for THIS teacher using staffId
+                const response = await fetch(`${API_BASE_URL}/${staffId}`);
+                const result = await response.json();
+
+                if (result.success) {
+                    allLogs = result.data; // Server se aaye hue array ko yaha set karo
+                    checkTodayStatus();
+                    renderTableAndStats();
+                } else {
+                    console.error("Failed to fetch data", result.message);
+                }
+            } catch (error) {
+                console.error("Server connection error:", error);
+                document.getElementById('attendanceTableBody').innerHTML = `<tr><td colspan="6" style="text-align:center; color:red;">Server connection failed! Please check internet or wait for server to wake up.</td></tr>`;
+            }
+        }
+
+        // Check Button Status (In / Out / Completed)
+        function checkTodayStatus() {
+            const todayStr = getStandardDate();
+            const todayLog = allLogs.find(l => l.dateStr === todayStr);
+
+            const btnIn = document.getElementById('btnPunchIn');
+            const btnOut = document.getElementById('btnPunchOut');
+
+            if (!todayLog) {
+                // Not punched in yet
+                btnIn.classList.remove('btn-disabled'); btnIn.disabled = false;
+                btnOut.classList.add('btn-disabled'); btnOut.disabled = true;
+                btnIn.innerHTML = "<i class='bx bx-log-in-circle'></i> Punch In";
+            } else if (todayLog.punchIn && (!todayLog.punchOut || todayLog.punchOut === "")) {
+                // Punched in, waiting to punch out
+                btnIn.classList.add('btn-disabled'); btnIn.disabled = true;
+                btnIn.innerHTML = "<i class='bx bx-check-double'></i> In: " + todayLog.punchIn;
+                
+                btnOut.classList.remove('btn-disabled'); btnOut.disabled = false;
+                btnOut.innerHTML = "<i class='bx bx-log-out-circle'></i> Punch Out";
+            } else if (todayLog.punchIn && todayLog.punchOut) {
+                // Shift completed
+                btnIn.classList.add('btn-disabled'); btnIn.disabled = true;
+                btnIn.innerHTML = "<i class='bx bx-check-double'></i> In: " + todayLog.punchIn;
+                
+                btnOut.classList.add('btn-disabled'); btnOut.disabled = true;
+                btnOut.innerHTML = "<i class='bx bx-check-double'></i> Out: " + todayLog.punchOut;
+            }
+        }
+
+        // 🔴 2. Post Punch In / Punch Out to Database
+        async function markPunch(actionType) {
+            const now = new Date();
+            const timeStr = formatTime(now);
+            const dateStr = getStandardDate();
+            const monthVal = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+            const dayName = now.toLocaleDateString('en-GB', { weekday: 'long' });
+
+            const payload = {
+                teacherId: staffId,
+                teacherName: staffName,
+                action: actionType, // 'IN' or 'OUT'
+                timeStr: timeStr,
+                dateStr: dateStr,
+                monthVal: monthVal,
+                dayName: dayName
+            };
+
+            // Loading state
+            const btn = actionType === 'IN' ? document.getElementById('btnPunchIn') : document.getElementById('btnPunchOut');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = "<i class='bx bx-loader bx-spin'></i> Saving...";
+            btn.disabled = true;
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/punch`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    alert(`Punched ${actionType} Successfully at ` + timeStr);
+                    fetchAttendanceData(); // Database se fresh data reload karo
+                } else {
+                    alert("Failed to save: " + result.message);
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+                }
+            } catch (error) {
+                console.error("Error pushing punch:", error);
+                alert("Server error! Cannot save attendance.");
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        }
+
+        // 🔴 3. Live Percentage & Table Calculation based on Dropdown Month
+        function renderTableAndStats() {
+            const selectedMonthVal = document.getElementById('monthSelector').value; 
+            const selectedMonthText = document.getElementById('monthSelector').options[document.getElementById('monthSelector').selectedIndex].text;
+            
+            document.getElementById('currentMonthText').innerText = selectedMonthText;
+
+            // Database se aayi saari logs ko sirf us month ke hisaab se filter karega
+            const monthlyLogs = allLogs.filter(log => log.monthVal === selectedMonthVal);
+
+            // Present, Absent aur Leave count karega
+            let present = 0, absent = 0, leave = 0;
+            monthlyLogs.forEach(log => {
+                if(log.status === 'Present') present++;
+                else if(log.status === 'Absent') absent++;
+                else if(log.status === 'Leave') leave++;
+            });
+
+            // LIVE PERCENTAGE CALCULATION logic: (Present / Total Working Days) * 100
+            const total = monthlyLogs.length;
+            const percentage = total === 0 ? 0 : Math.round((present / total) * 100);
+
+            // Interface pe Live data display karega
+            document.getElementById('totalDays').innerText = total;
+            document.getElementById('presentDays').innerText = present;
+            document.getElementById('absentDays').innerText = absent;
+            document.getElementById('leaveDays').innerText = leave;
+            document.getElementById('overallPercentage').innerText = percentage + "%";
+
+            // Draw Table
+            const tbody = document.getElementById('attendanceTableBody');
+            tbody.innerHTML = "";
+
+            if (monthlyLogs.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:#64748b;">No attendance recorded for ${selectedMonthText} yet.</td></tr>`;
+            } else {
+                // Latest dates ko table ke upar dikhane ke liye reverse kiya gaya hai
+                let displayLogs = [...monthlyLogs].reverse(); 
+                
+                displayLogs.forEach(log => {
+                    let badgeClass = 'badge-leave';
+                    if(log.status === 'Present') badgeClass = 'badge-present';
+                    if(log.status === 'Absent') badgeClass = 'badge-absent';
+
+                    // String Date (YYYY-MM-DD) ko readable (15 Apr 2026) format mein change karega
+                    let d = new Date(log.dateStr);
+                    let niceDate = d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+
+                    tbody.innerHTML += `
+                        <tr>
+                            <td><b>${niceDate}</b></td>
+                            <td>${log.dayName}</td>
+                            <td style="color:var(--primary); font-weight:600;">${log.punchIn || '-'}</td>
+                            <td style="color:var(--warning); font-weight:600;">${log.punchOut || '-'}</td>
+                            <td><span class="badge ${badgeClass}">${log.status}</span></td>
+                            <td>${log.remarks || '-'}</td>
+                        </tr>
+                    `;
+                });
+            }
+        }
+    </script>
+    <script src="js/settings-client.js"></script>
+  <script src="js/role-ui.js"></script>
+</body>
+</html>

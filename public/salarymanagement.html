@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZHI | Salary Management</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    
+    <style>
+        :root {
+            --sidebar-bg: #0f172a; 
+            --primary: #3b82f6; 
+            --warning: #f59e0b; 
+            --danger: #ef4444;
+            --success: #10b981;
+            --purple: #8b5cf6;
+            --info: #0ea5e9;
+            --bg: #f8fafc;
+            --text-dark: #1e293b;
+            --text-light: #64748b;
+            --white: #ffffff;
+            --border: #e2e8f0;
+            --card-curve: 12px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        body { background-color: var(--bg); display: flex; height: 100vh; overflow: hidden; color: var(--text-dark); -webkit-font-smoothing: antialiased; }
+
+        /* ------------------ SIDEBAR ------------------ */
+        .sidebar { width: 260px; background: var(--sidebar-bg); color: #fff; display: flex; flex-direction: column; flex-shrink: 0; z-index: 1001; transition: transform 0.3s ease; }
+        .sidebar-header { padding: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-between; align-items: center; }
+        .sidebar-header h2 { font-size: 18px; color: #fff; font-weight: 700;}
+        .sidebar-header p { font-size: 11px; color: var(--success); font-weight: 700; letter-spacing: 1px; margin-top: 2px;}
+        .logo-img { width: 42px; height: 42px; border-radius: 50%; background: #fff; padding: 2px; display: flex; align-items: center; justify-content: center; }
+
+        .sidebar-menu { list-style: none; padding: 15px 0; flex: 1; overflow-y: auto; }
+        .sidebar-menu li a { display: flex; align-items: center; gap: 12px; padding: 12px 20px; color: #cbd5e1; text-decoration: none; font-size: 14px; font-weight: 500; transition: 0.2s; border-left: 4px solid transparent;}
+        .sidebar-menu li a i { font-size: 20px; transition: transform 0.3s ease;}
+        .sidebar-menu li a:hover { background: rgba(255,255,255,0.05); color: #fff; border-left: 4px solid var(--primary); padding-left: 25px;}
+        .sidebar-menu li a:hover i { transform: scale(1.1); }
+        .sidebar-menu li.active a { background: rgba(255,255,255,0.05); color: #fff; border-left: 4px solid var(--primary); }
+
+        /* ------------------ MAIN CONTENT & TOPBAR ------------------ */
+        .main-wrapper { flex: 1; display: flex; flex-direction: column; overflow-y: auto; width: 100%; position: relative;}
+        
+        .topbar { 
+            height: 70px; background: var(--white); border-bottom: 1px solid var(--border); 
+            display: flex; justify-content: space-between; align-items: center; padding: 0 25px; 
+            position: sticky; top: 0; z-index: 1000; box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+        }
+        
+        .menu-btn { display: none; background: none; border: none; font-size: 26px; cursor: pointer; color: var(--text-dark); transition: transform 0.2s;}
+        .menu-btn:hover { transform: scale(1.1); }
+
+        .user-profile { display: flex; align-items: center; gap: 10px; cursor: pointer; padding: 5px; border-radius: 8px; transition: background 0.2s;}
+        .user-profile:hover { background: #f1f5f9; }
+        .user-profile img { width: 35px; height: 35px; border-radius: 50%; object-fit: cover; border: 2px solid var(--success);}
+        .user-profile div { display: flex; flex-direction: column; }
+        .user-profile b { font-size: 13px; color: var(--text-dark); }
+        .user-profile span { font-size: 11px; color: var(--text-light); }
+
+        .content { padding: 30px; flex: 1; }
+        
+        .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
+        .page-title { font-size: 24px; font-weight: 700; color: var(--text-dark); }
+
+        /* ------------------ STATS CARDS ------------------ */
+        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 25px; margin-bottom: 30px; }
+        .stat-card {
+            background: var(--white); padding: 25px; border-radius: var(--card-curve); border: 1px solid var(--border);
+            display: flex; align-items: center; gap: 20px; box-shadow: 0 2px 6px rgba(0,0,0,0.02); transition: 0.3s; cursor: default;
+        }
+        .stat-card:hover { transform: translateY(-5px); box-shadow: 0 8px 20px rgba(0,0,0,0.06); border-color: #cbd5e1; }
+        
+        .stat-icon { width: 55px; height: 55px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 28px; transition: transform 0.3s ease;}
+        .stat-card:hover .stat-icon { transform: scale(1.1); }
+        
+        .stat-info h4 { font-size: 13px; color: var(--text-light); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; font-weight: 600;}
+        .stat-info h2 { font-size: 24px; color: var(--text-dark); font-weight: 700;}
+
+        /* ------------------ DATA TABLE ------------------ */
+        .table-card { background: var(--white); border-radius: var(--card-curve); border: 1px solid var(--border); box-shadow: 0 2px 6px rgba(0,0,0,0.02); overflow: hidden; }
+        .table-header { padding: 20px 25px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; background: #f8fafc;}
+        .table-header h3 { font-size: 18px; font-weight: 600; color: var(--text-dark); display: flex; align-items: center; gap: 8px;}
+        
+        .search-box { display: flex; align-items: center; background: #fff; border: 1px solid var(--border); border-radius: 6px; padding: 5px 12px; }
+        .search-box input { border: none; outline: none; padding: 5px; font-size: 13px; width: 200px; }
+        .search-box i { color: var(--text-light); font-size: 18px; }
+
+        .table-res { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; text-align: left; min-width: 900px; }
+        th { padding: 15px 25px; background: #f8fafc; font-size: 13px; text-transform: uppercase; color: var(--text-light); font-weight: 600; border-bottom: 1px solid var(--border);}
+        td { padding: 18px 25px; border-bottom: 1px solid var(--border); font-size: 14px; color: var(--text-dark); transition: background 0.2s;}
+        
+        tbody tr { transition: all 0.2s ease; }
+        tbody tr:hover td { background-color: #f1f5f9; }
+        
+        .btn-pay { background: var(--success); color: white; border: none; padding: 8px 14px; border-radius: 6px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px; font-size: 13px; transition: 0.2s; }
+        .btn-pay:hover { background: #059669; transform: translateY(-2px); box-shadow: 0 4px 6px rgba(16, 185, 129, 0.2);}
+
+        /* ------------------ MODALS ------------------ */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.6); z-index: 2000; justify-content: center; align-items: center; padding: 20px; backdrop-filter: blur(2px); }
+        .modal-box { background: var(--white); width: 100%; max-width: 450px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); overflow: hidden; animation: slideIn 0.3s ease;}
+        @keyframes slideIn { from { transform: translateY(-20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        
+        .modal-header { padding: 18px 20px; background: #f8fafc; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+        .modal-header h3 { font-size: 16px; font-weight: 700; display: flex; align-items: center; gap: 8px; color: var(--text-dark);}
+        .modal-close { background: none; border: none; font-size: 22px; color: var(--text-light); cursor: pointer; transition: 0.2s;}
+        .modal-close:hover { color: var(--danger); }
+        
+        .modal-body { padding: 20px; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; font-size: 13px; font-weight: 600; color: var(--text-dark); margin-bottom: 5px; }
+        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 6px; outline: none; font-size: 14px; transition: 0.2s; background: var(--bg);}
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: var(--primary); background: #fff; }
+        
+        .modal-footer { padding: 15px 20px; border-top: 1px solid var(--border); background: #f8fafc; display: flex; justify-content: flex-end; gap: 10px; }
+
+        .staff-info-card { background: #eff6ff; padding: 15px; border-radius: 8px; border: 1px solid #bfdbfe; margin-bottom: 20px;}
+        .staff-info-card h4 { color: var(--primary); margin-bottom: 5px;}
+        .staff-info-card p { font-size: 12px; color: var(--text-light);}
+
+        /* Mobile Adjustments */
+        @media (max-width: 1024px) {
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+        @media (max-width: 768px) {
+            .sidebar { position: fixed; left: -260px; height: 100vh; }
+            .sidebar.active { transform: translateX(260px); }
+            .menu-btn { display: block; }
+            .sidebar-overlay.active { display: block; }
+            .content { padding: 20px; }
+            .stats-grid { grid-template-columns: 1fr; }
+            .table-header { flex-direction: column; align-items: flex-start; gap: 15px;}
+            .search-box { width: 100%; }
+            .search-box input { width: 100%; }
+        }
+    </style>
+    <script src="js/auth-client.js"></script>
+</head>
+<body>
+
+    <div class="sidebar-overlay" id="overlay" onclick="toggleSidebar()"></div>
+
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <div class="logo-img">
+                    <i class='bx bx-wallet' style="color:var(--success); font-size: 26px;"></i>
+                </div>
+                <div>
+                    <h2>ZHI Finance</h2>
+                    <p>ACCOUNTANT PANEL</p>
+                </div>
+            </div>
+            <button class="menu-btn close-btn" onclick="toggleSidebar()" style="color:white; display:none;"><i class='bx bx-x'></i></button>
+        </div>
+        
+        <ul class="sidebar-menu">
+            <li><a href="accountant_dashboard.html"><i class='bx bx-home-alt'></i> Dashboard Home</a></li>
+            
+            <li style="margin: 15px 0 5px 20px; font-size: 11px; color: #64748b; font-weight: 700; text-transform: uppercase;">Students & Fees</li>
+            <li><a href="fee_collection.html"><i class='bx bx-rupee'></i> Fee Collection</a></li>
+            <li><a href="#"><i class='bx bx-list-ol'></i> Fee Structure setup</a></li>
+            <li><a href="#"><i class='bx bx-user-x'></i> Pending Dues List</a></li>
+            
+            <li style="margin: 15px 0 5px 20px; font-size: 11px; color: #64748b; font-weight: 700; text-transform: uppercase;">Staff & Payroll</li>
+            <li class="active"><a href="salary_management.html"><i class='bx bx-credit-card-front'></i> Salary Management</a></li>
+            <li><a href="#"><i class='bx bx-file-blank'></i> Generate Payslips</a></li>
+            
+            <li style="margin: 15px 0 5px 20px; font-size: 11px; color: #64748b; font-weight: 700; text-transform: uppercase;">Accounts & Ledger</li>
+            <li><a href="#"><i class='bx bx-transfer'></i> All Transactions</a></li>
+            <li><a href="#"><i class='bx bx-trending-down'></i> Manage Expenses</a></li>
+            <li><a href="Reports&Analytics.html"><i class='bx bx-pie-chart-alt-2'></i> Financial Reports</a></li>
+        </ul>
+    </aside>
+
+    <main class="main-wrapper">
+        
+        <header class="topbar">
+            <div style="display: flex; align-items: center; gap: 15px;">
+                <button class="menu-btn" onclick="toggleSidebar()"><i class='bx bx-menu'></i></button>
+                <div style="font-size: 18px; font-weight: 600; color: var(--text-dark);">Staff Payroll</div>
+            </div>
+            <div class="user-profile">
+                <div style="text-align: right;">
+                    <b id="adminName">Accountant</b>
+                    <span>Finance Dept</span>
+                </div>
+                <img src="https://ui-avatars.com/api/?name=Accounts&background=10b981&color=fff" alt="Admin">
+            </div>
+        </header>
+
+        <div class="content">
+            
+            <div class="page-header">
+                <div class="page-title">Salary & Payroll Management</div>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: #eff6ff; color: var(--primary);"><i class='bx bx-group'></i></div>
+                    <div class="stat-info">
+                        <h4>Total Active Staff</h4>
+                        <h2><span id="totalStaffCount">0</span></h2>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: #fffbeb; color: var(--warning);"><i class='bx bx-coin-stack'></i></div>
+                    <div class="stat-info">
+                        <h4>Estimated Monthly Payroll</h4>
+                        <h2>₹<span id="totalPayrollEst">0</span></h2>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: #dcfce7; color: var(--success);"><i class='bx bx-check-shield'></i></div>
+                    <div class="stat-info">
+                        <h4>Salaries Paid (This Month)</h4>
+                        <h2>₹<span id="salariesPaidMonth">0</span></h2>
+                    </div>
+                </div>
+            </div>
+
+            <div class="table-card">
+                <div class="table-header">
+                    <h3><i class='bx bx-list-ul' style="color: var(--primary);"></i> Process Salaries</h3>
+                    <div class="search-box">
+                        <i class='bx bx-search'></i>
+                        <input type="text" id="searchInput" placeholder="Search staff name..." onkeyup="filterTable()">
+                    </div>
+                </div>
+                <div class="table-res">
+                    <table id="staffTable">
+                        <thead>
+                            <tr>
+                                <th>Emp ID</th>
+                                <th>Staff Name</th>
+                                <th>Role / Dept</th>
+                                <th>Base Salary</th>
+                                <th>Bank Details</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="staffTableBody">
+                            <tr><td colspan="6" style="text-align: center; color: var(--text-light);"><i class='bx bx-loader-alt bx-spin'></i> Loading staff data...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <div class="modal-overlay" id="salaryModal">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3><i class='bx bx-credit-card' style="color: var(--primary);"></i> Process Salary Payment</h3>
+                <button class="modal-close" onclick="closeSalaryModal()"><i class='bx bx-x'></i></button>
+            </div>
+            <form id="salaryForm" onsubmit="submitSalaryPayment(event)">
+                <div class="modal-body">
+                    
+                    <div class="staff-info-card">
+                        <h4 id="pay_staffName">Staff Name</h4>
+                        <p id="pay_staffRole">Emp ID: ZHI-EMP-001 | Dept: N/A</p>
+                    </div>
+
+                    <input type="hidden" id="pay_empId">
+
+                    <div class="form-group">
+                        <label>Salary Month *</label>
+                        <input type="month" id="pay_month" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Paying Amount (₹) *</label>
+                        <input type="number" id="pay_amount" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Payment Mode *</label>
+                        <select id="pay_mode" required>
+                            <option value="Bank Transfer">Bank Transfer (NEFT/RTGS)</option>
+                            <option value="Cheque">Cheque</option>
+                            <option value="UPI">UPI / Online</option>
+                            <option value="Cash">Cash</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Transaction ID / Remarks</label>
+                        <input type="text" id="pay_remarks" placeholder="Enter Ref No. or deductions detail">
+                    </div>
+
+                </div>
+                <div class="modal-footer">
+                    <button type="button" onclick="closeSalaryModal()" style="padding: 10px 18px; border: 1px solid var(--border); background: white; border-radius: 6px; cursor: pointer; font-weight: 600;">Cancel</button>
+                    <button type="submit" id="btnPaySubmit" style="padding: 10px 18px; border: none; background: var(--primary); color: white; border-radius: 6px; cursor: pointer; font-weight: 600; display: flex; align-items: center; gap: 5px;"><i class='bx bx-check'></i> Record Payment</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const SERVER_URL = '';
+        let globalStaffList = [];
+
+        // Sidebar Toggle
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('overlay');
+            sidebar.classList.toggle('active');
+            overlay.classList.toggle('active');
+        }
+
+        window.onload = () => {
+            const userName = localStorage.getItem('userName');
+            if(userName) document.getElementById('adminName').innerText = userName;
+
+            // Set current month as default in modal
+            const now = new Date();
+            const monthStr = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
+            document.getElementById('pay_month').value = monthStr;
+
+            fetchStaffAndStats();
+        };
+
+        // Modals
+        function closeSalaryModal() {
+            document.getElementById('salaryModal').style.display = 'none';
+        }
+
+        // Fetch Live Data
+        async function fetchStaffAndStats() {
+            try {
+                // 1. Fetch Staff List
+                const staffRes = await fetch(`${SERVER_URL}/api/staff`);
+                const staffData = await staffRes.json();
+
+                // 2. Fetch Expenses (to calculate salaries paid this month)
+                // Assuming /api/finance/dashboard returns expenses
+                const dashRes = await fetch(`${SERVER_URL}/api/finance/dashboard`);
+                const dashData = await dashRes.json();
+
+                if (staffData.success) {
+                    globalStaffList = staffData.data.filter(s => s.status !== 'Disabled'); // Only active staff
+                    renderStaffTable(globalStaffList);
+
+                    // Stats: Total Staff
+                    document.getElementById('totalStaffCount').innerText = globalStaffList.length;
+
+                    // Stats: Total Payroll Estimate
+                    const totalSalary = globalStaffList.reduce((sum, s) => sum + (Number(s.salary) || 0), 0);
+                    document.getElementById('totalPayrollEst').innerText = totalSalary.toLocaleString('en-IN');
+                }
+
+                if (dashData.success) {
+                    const currentMonth = new Date().getMonth();
+                    const currentYear = new Date().getFullYear();
+
+                    // Filter expenses where category is 'Staff Salary' and date is current month
+                    const salaryExpenses = (dashData.expenses || []).filter(e => {
+                        const expDate = new Date(e.date || e.createdAt);
+                        const isSalary = e.category === 'Staff Salary' || (e.description && e.description.toLowerCase().includes('salary'));
+                        return isSalary && expDate.getMonth() === currentMonth && expDate.getFullYear() === currentYear;
+                    });
+
+                    const paidThisMonth = salaryExpenses.reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
+                    document.getElementById('salariesPaidMonth').innerText = paidThisMonth.toLocaleString('en-IN');
+                }
+
+            } catch (error) {
+                console.error("Error fetching data:", error);
+                document.getElementById('staffTableBody').innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--danger);">Failed to load server data. Check connection.</td></tr>`;
+            }
+        }
+
+        // Render Table
+        function renderStaffTable(staffList) {
+            const tbody = document.getElementById('staffTableBody');
+            tbody.innerHTML = '';
+
+            if(staffList.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-light);">No active staff found.</td></tr>`;
+                return;
+            }
+
+            staffList.forEach(staff => {
+                const bankInfo = staff.accNumber ? `A/c: ******${staff.accNumber.slice(-4)}<br><small>${staff.bankName || ''}</small>` : 'Not Provided';
+                const salaryAmt = staff.salary ? `₹ ${Number(staff.salary).toLocaleString('en-IN')}` : 'Not Set';
+
+                tbody.innerHTML += `
+                    <tr>
+                        <td><b>${staff.empId || 'N/A'}</b></td>
+                        <td>${staff.name}</td>
+                        <td>${staff.role || 'N/A'}<br><small style="color:var(--text-light);">${staff.dept || 'N/A'}</small></td>
+                        <td><b style="color: var(--text-dark);">${salaryAmt}</b></td>
+                        <td>${bankInfo}</td>
+                        <td>
+                            <button class="btn-pay" onclick="openPayModal('${staff._id}')"><i class='bx bx-money'></i> Pay Salary</button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        // Search Filter
+        function filterTable() {
+            const input = document.getElementById("searchInput").value.toLowerCase();
+            const filtered = globalStaffList.filter(s => s.name.toLowerCase().includes(input) || (s.empId && s.empId.toLowerCase().includes(input)));
+            renderStaffTable(filtered);
+        }
+
+        // Open Modal & Fill Data
+        function openPayModal(staffId) {
+            const staff = globalStaffList.find(s => s._id === staffId);
+            if(!staff) return;
+
+            document.getElementById('pay_empId').value = staff.empId;
+            document.getElementById('pay_staffName').innerText = staff.name;
+            document.getElementById('pay_staffRole').innerText = `Emp ID: ${staff.empId || 'N/A'} | Dept: ${staff.dept || 'N/A'}`;
+            
+            document.getElementById('pay_amount').value = staff.salary || 0;
+            document.getElementById('pay_remarks').value = '';
+
+            document.getElementById('salaryModal').style.display = 'flex';
+        }
+
+        // Submit Payment to Backend (As Expense)
+        async function submitSalaryPayment(event) {
+            event.preventDefault();
+            const btn = document.getElementById('btnPaySubmit');
+            btn.innerHTML = `<i class='bx bx-loader-alt bx-spin'></i> Processing...`;
+            btn.disabled = true;
+
+            const staffName = document.getElementById('pay_staffName').innerText;
+            const empId = document.getElementById('pay_empId').value;
+            const monthVal = document.getElementById('pay_month').value; // format YYYY-MM
+            
+            // Format Month for description (e.g., "2026-03" -> "March 2026")
+            const dateObj = new Date(monthVal + "-01");
+            const monthName = dateObj.toLocaleString('default', { month: 'long', year: 'numeric' });
+
+            const extraRemarks = document.getElementById('pay_remarks').value;
+            let finalDesc = `Salary for ${staffName} (${empId}) - ${monthName}`;
+            if(extraRemarks) finalDesc += ` | Remarks: ${extraRemarks}`;
+
+            const expenseData = {
+                date: new Date(),
+                category: 'Staff Salary', // Specific category to identify in reports
+                amount: document.getElementById('pay_amount').value,
+                mode: document.getElementById('pay_mode').value,
+                description: finalDesc,
+                type: 'Expense'
+            };
+
+            try {
+                // Hitting the existing expense API route
+                const response = await fetch(`${SERVER_URL}/api/finance/expense`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(expenseData)
+                });
+
+                const result = await response.json();
+                
+                if(response.ok) {
+                    alert("Salary Payment Recorded Successfully!");
+                    closeSalaryModal();
+                    fetchStaffAndStats(); // Refresh stats instantly
+                } else {
+                    alert(result.message || "Failed to process payment.");
+                }
+            } catch (error) {
+                console.error("Payment Error:", error);
+                alert("Server Error! Check connection.");
+            } finally {
+                btn.innerHTML = `<i class='bx bx-check'></i> Record Payment`;
+                btn.disabled = false;
+            }
+        }
+    </script>
+    <script src="js/settings-client.js"></script>
+  <script src="js/role-ui.js"></script>
+</body>
+</html>

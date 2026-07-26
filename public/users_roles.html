@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZHI Director Panel | Users & Roles</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    
+    <style>
+        :root {
+            --sidebar-bg: #0f172a; 
+            --primary: #3b82f6; 
+            --success: #10b981; 
+            --warning: #f59e0b; 
+            --danger: #ef4444; 
+            --purple: #8b5cf6;
+            --bg: #f8fafc;
+            --text-dark: #0f172a;
+            --text-light: #64748b;
+            --white: #ffffff;
+            --border: #e2e8f0;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        body { background-color: var(--bg); display: flex; height: 100vh; overflow: hidden; color: var(--text-dark); -webkit-font-smoothing: antialiased; }
+
+        /* ------------------ SIDEBAR ------------------ */
+        .sidebar { width: 260px; background: var(--sidebar-bg); color: #fff; display: flex; flex-direction: column; flex-shrink: 0; z-index: 1001; transition: transform 0.3s ease; }
+        .sidebar-header { padding: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-between; align-items: center; }
+        .sidebar-header h2 { font-size: 18px; color: #fff; font-weight: 700;}
+        .sidebar-header p { font-size: 11px; color: var(--danger); font-weight: 700; letter-spacing: 1px; margin-top: 2px;}
+        .logo-img { width: 42px; height: 42px; border-radius: 50%; background: #fff; padding: 2px; object-fit: contain; }
+
+        .sidebar-menu { list-style: none; padding: 15px 0; flex: 1; overflow-y: auto; }
+        .sidebar-menu li a { display: flex; align-items: center; gap: 12px; padding: 12px 20px; color: #94a3b8; text-decoration: none; font-size: 14px; font-weight: 500; transition: 0.2s; }
+        .sidebar-menu li a i { font-size: 20px; }
+        .sidebar-menu li.active a, .sidebar-menu li a:hover { background: rgba(255,255,255,0.05); color: #fff; border-left: 4px solid var(--primary); }
+
+        /* ------------------ MAIN CONTENT & TOPBAR ------------------ */
+        .main-wrapper { flex: 1; display: flex; flex-direction: column; overflow-y: auto; width: 100%; position: relative;}
+        .topbar { height: 65px; background: var(--white); border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; padding: 0 25px; position: sticky; top: 0; z-index: 1000; }
+        .menu-btn, .close-sidebar-btn { display: none; background: none; border: none; font-size: 24px; cursor: pointer; color: var(--text-dark); }
+        
+        .search-bar { display: flex; align-items: center; background: #f1f5f9; padding: 8px 15px; border-radius: 8px; width: 350px; border: 1px solid transparent; transition: 0.3s;}
+        .search-bar i { color: var(--text-light); font-size: 18px; }
+        .search-bar:focus-within { border-color: var(--primary); background: white;}
+        .search-bar input { background: none; border: none; outline: none; width: 100%; font-size: 13px; margin-left: 8px;}
+
+        /* 🔴 ANCHOR TAG BUTTON DESIGN 🔴 */
+        .btn-primary { background: var(--primary); color: white; border: none; padding: 9px 16px; border-radius: 6px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; font-size: 13px; transition: 0.2s; text-decoration: none; }
+        .btn-primary:hover { background: #2563eb; }
+
+        .content { padding: 25px; flex: 1; }
+
+        /* FILTER TABS */
+        .filter-tabs { display: flex; gap: 10px; margin-bottom: 20px; overflow-x: auto; padding-bottom: 5px; }
+        .filter-btn { padding: 8px 16px; border: 1px solid var(--border); background: var(--white); border-radius: 20px; font-size: 13px; font-weight: 600; color: var(--text-light); cursor: pointer; transition: 0.3s; white-space: nowrap; }
+        .filter-btn:hover { background: #f1f5f9; }
+        .filter-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
+
+        /* PANEL & TABLE */
+        .panel { background: var(--white); border-radius: 12px; border: 1px solid var(--border); box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+        .panel-header { padding: 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;}
+        .panel-header h3 { font-size: 16px; font-weight: 600; }
+        
+        .table-res { width: 100%; overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; min-width: 950px; } 
+        th { text-align: left; padding: 12px 20px; background: #f8fafc; font-size: 12px; text-transform: uppercase; color: var(--text-light); font-weight: 600;}
+        td { padding: 15px 20px; border-bottom: 1px solid var(--border); font-size: 14px; vertical-align: middle;}
+
+        /* Badges */
+        .badge { padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; display: inline-block; text-transform: capitalize; }
+        .badge-management { background: #f3e8ff; color: #7e22ce; }
+        .badge-teacher { background: #e0f2fe; color: #0369a1; }
+        .badge-nonteaching { background: #fef08a; color: #854d0e; }
+        
+        .status-active { color: var(--success); font-weight: 600; display: flex; align-items: center; gap: 5px;}
+        .status-active::before { content: ""; width: 8px; height: 8px; background: var(--success); border-radius: 50%; display: inline-block;}
+        .status-disabled { color: var(--text-light); font-weight: 600; display: flex; align-items: center; gap: 5px;}
+        .status-disabled::before { content: ""; width: 8px; height: 8px; background: var(--text-light); border-radius: 50%; display: inline-block;}
+        
+        .action-btns { display: flex; gap: 8px; }
+        .action-btns button { background: none; border: 1px solid var(--border); padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: 500; color: var(--text-dark); transition: 0.2s; display: flex; align-items: center; gap: 4px;}
+        .action-btns button:hover { background: #f1f5f9; }
+        .action-btns .btn-view { color: var(--primary); border-color: #bfdbfe; }
+        .action-btns .btn-view:hover { background: #eff6ff; }
+        .action-btns .btn-danger { color: var(--danger); border-color: #fca5a5; }
+        .action-btns .btn-danger:hover { background: #fef2f2; }
+
+        /* ------------------ MODALS CSS (Edit & View) ------------------ */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.7); z-index: 2000; justify-content: center; align-items: flex-start; padding: 20px; backdrop-filter: blur(4px); overflow-y: auto;}
+        
+        .modal-box { background: var(--bg); width: 100%; max-width: 900px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); display: flex; flex-direction: column; animation: slideIn 0.3s ease; margin: auto; }
+        @keyframes slideIn { from { transform: translateY(-20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        
+        .modal-header { padding: 20px 25px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; background: var(--white); border-radius: 12px 12px 0 0; position: sticky; top: 0; z-index: 10; }
+        .modal-header h3 { font-size: 18px; color: var(--text-dark); }
+        .modal-body { padding: 25px; display: flex; flex-direction: column; gap: 20px; }
+        
+        .form-section { background: var(--white); border: 1px solid var(--border); border-radius: 8px; padding: 20px; box-shadow: 0 1px 2px rgba(0,0,0,0.02);}
+        .section-title { font-size: 14px; font-weight: 700; color: var(--primary); text-transform: uppercase; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid var(--border); padding-bottom: 10px;}
+        
+        .form-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
+        .form-grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; }
+        .form-group { display: flex; flex-direction: column; gap: 5px; overflow: hidden; } 
+        .form-group.full-width { grid-column: 1 / -1; }
+        
+        .form-group label { font-size: 13px; font-weight: 600; color: var(--text-dark); }
+        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 6px; outline: none; font-size: 14px; font-family: inherit; background: #fff; transition: all 0.2s; }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1); }
+        
+        .form-group input[type="file"] { padding: 7px; background: #f8fafc; font-size: 13px; color: var(--text-light); cursor: pointer; box-sizing: border-box; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .form-group input[type="file"]::file-selector-button { background: var(--primary); color: white; border: none; padding: 6px 12px; border-radius: 4px; margin-right: 10px; cursor: pointer; font-weight: 500; }
+
+        .hide-section { display: none !important; }
+
+        .modal-footer { padding: 15px 25px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 10px; background: var(--white); border-radius: 0 0 12px 12px; position: sticky; bottom: 0; z-index: 10;}
+
+        /* ------------------ PROFILE VIEW CSS ------------------ */
+        .view-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
+        .view-grid div { display: flex; flex-direction: column; gap: 4px; }
+        .view-grid label { font-size: 11px; color: var(--text-light); text-transform: uppercase; font-weight: 600; }
+        .view-grid span { font-size: 14px; color: var(--text-dark); font-weight: 500; word-break: break-word;}
+        .doc-link { background: #eff6ff; color: var(--primary); padding: 8px 15px; border-radius: 6px; text-decoration: none; font-size: 13px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; border: 1px solid #bfdbfe; transition: 0.2s; }
+        .doc-link:hover { background: #dbeafe; }
+
+        /* 📱 MOBILE RESPONSIVENESS */
+        .sidebar-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 999; }
+        @media (max-width: 992px) {
+            .form-grid, .view-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+        @media (max-width: 768px) {
+            .sidebar { position: fixed; left: -260px; height: 100vh; }
+            .sidebar.active { transform: translateX(260px); }
+            .menu-btn, .close-sidebar-btn { display: block; }
+            .sidebar-overlay.active { display: block; }
+            .content { padding: 15px; }
+            .topbar { padding: 0 15px; }
+            .search-bar { width: 180px; } 
+            
+            .modal-box { margin: 0; max-height: 100vh; border-radius: 0; width: 100%;}
+            .modal-overlay { padding: 0; }
+            .modal-header { border-radius: 0; padding: 15px; }
+            .modal-body { padding: 15px; gap: 15px;}
+            .form-section { padding: 15px; }
+            .form-grid, .form-grid-2, .view-grid { grid-template-columns: 1fr; gap: 12px;} 
+            .modal-footer { padding: 15px; }
+        }
+
+        .loader { display: none; border: 3px solid #f3f3f3; border-top: 3px solid var(--primary); border-radius: 50%; width: 25px; height: 25px; animation: spin 1s linear infinite; margin: 30px auto; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+    <script src="js/auth-client.js"></script>
+</head>
+<body>
+
+    <div class="sidebar-overlay" id="overlay" onclick="toggleSidebar()"></div>
+
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <div class="logo-img">
+                    <i class="fa-solid fa-graduation-cap" style="color:var(--primary); font-size: 24px; padding: 8px;"></i>
+                </div>
+                <div>
+                    <h2>ZHI College</h2>
+                    <p>DIRECTOR PANEL</p>
+                </div>
+            </div>
+            <button class="close-sidebar-btn" onclick="toggleSidebar()" style="color:white;"><i class='bx bx-x'></i></button>
+        </div>
+        
+        <ul class="sidebar-menu">
+            <li><a href="admin_dashboard.html" onclick="checkMobileClose()"><i class='bx bx-grid-alt'></i> Dashboard</a></li>
+            <li class="active"><a href="#" onclick="checkMobileClose()"><i class='bx bx-user-pin'></i> Users & Roles</a></li>
+            <li><a href="students.html" onclick="checkMobileClose()"><i class='bx bx-user'></i> Students</a></li>
+            <li><a href="Finance.html" onclick="checkMobileClose()"><i class='bx bx-dollar'></i> Finance</a></li>
+            <li><a href="Reports&Analytics.html" onclick="checkMobileClose()"><i class='bx bx-bar-chart-alt-2'></i> Reports & Analytics</a></li>
+            <li><a href="Exams&Results.html" onclick="checkMobileClose()"><i class='bx bx-file'></i> Exams & Results</a></li>
+            <li><a href="GlobalNotice.html" onclick="checkMobileClose()"><i class='bx bx-message-square-detail'></i> Global Notices</a></li>
+            <li><a href="SystemSettings.html" onclick="checkMobileClose()"><i class='bx bx-cog'></i> System Settings</a></li>
+            <li><a href="AuditLogs.html" onclick="checkMobileClose()"><i class='bx bx-refresh'></i> Audit Logs</a></li>
+        </ul>
+    </aside>
+
+    <div class="main-wrapper">
+        <header class="topbar">
+            <div style="display: flex; align-items: center; gap: 15px;">
+                <button class="menu-btn" onclick="toggleSidebar()"><i class='bx bx-menu'></i></button>
+                <div class="search-bar">
+                    <i class='bx bx-search'></i> <input type="text" id="searchInput" placeholder="Search employee..." onkeyup="handleSearch()">
+                </div>
+            </div>
+            <a href="addstaff.html" class="btn-primary"><i class='bx bx-plus'></i> Add Employee</a>
+        </header>
+
+        <main class="content">
+            <div class="filter-tabs" id="roleFilters">
+                <button class="filter-btn active" onclick="filterUsers('all')">All Staff</button>
+                <button class="filter-btn" onclick="filterUsers('management')">Management</button>
+                <button class="filter-btn" onclick="filterUsers('teacher')">Teaching Faculty</button>
+                <button class="filter-btn" onclick="filterUsers('nonteaching')">Non-Teaching Staff</button>
+            </div>
+
+            <div class="panel">
+                <div class="panel-header">
+                    <h3>College Employee Directory</h3>
+                </div>
+                <div class="loader" id="tableLoader"></div>
+                
+                <div class="table-res">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Emp ID & Name</th>
+                                <th>Category & Role</th>
+                                <th>Department</th>
+                                <th>Contact Details</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="userTableBody">
+                            </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div class="modal-overlay" id="userModal">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3 id="modalTitle">✏️ Edit Staff Member Data</h3>
+                <button onclick="closeModal()" style="background:none; border:none; font-size: 24px; cursor: pointer; color: var(--text-light);"><i class='bx bx-x'></i></button>
+            </div>
+            
+            <div class="modal-body" id="modalBodyScroll">
+                <form id="editStaffForm" onsubmit="updateUser(event)">
+                    
+                    <div class="form-section" style="background: #eff6ff; border-color: #bfdbfe;">
+                        <div class="form-grid-2">
+                            <div class="form-group">
+                                <label>Staff Category (Main Category) *</label>
+                                <select id="staffCategory" required onchange="handleCategoryChange()" style="font-weight: 600; color: var(--primary);">
+                                    <option value="management">🏢 Management Staff (Admin/Office)</option>
+                                    <option value="teacher">🎓 Teaching Faculty (Professors)</option>
+                                    <option value="nonteaching">🛠️ Non-Teaching Staff (Support)</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Specific Role / Designation *</label>
+                                <select id="staffRole" required>
+                                    </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <div class="section-title"><i class='bx bx-user'></i> Basic Personal Details</div>
+                        <div class="form-grid">
+                            <div class="form-group"><label>Full Name *</label><input type="text" id="fullName" required></div>
+                            <div class="form-group"><label>Father/Guardian Name</label><input type="text" id="fatherName"></div>
+                            <div class="form-group"><label>Date of Birth</label><input type="date" id="dob"></div>
+                            <div class="form-group"><label>Gender</label>
+                                <select id="gender"><option value="Male">Male</option><option value="Female">Female</option><option value="Other">Other</option></select>
+                            </div>
+                            <div class="form-group"><label>Mobile Number *</label><input type="text" id="mobile" required></div>
+                            
+                            <div class="form-group" id="emailGroup"><label>Email ID (Login ID) *</label><input type="email" id="email"></div>
+                            <div class="form-group" id="passwordGroup"><label>Login Password *</label><input type="text" id="password"></div>
+                            
+                            <div class="form-group full-width"><label>Full Permanent Address</label><textarea id="address" rows="2"></textarea></div>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <div class="section-title"><i class='bx bx-id-card'></i> Identity & Documents</div>
+                        <div class="form-grid">
+                            <div class="form-group"><label>Aadhaar Number *</label><input type="text" id="aadhaar" required></div>
+                            <div class="form-group" id="panGroup"><label>PAN Card Number</label><input type="text" id="pan"></div>
+                            <div class="form-group"><label>Update Profile Photo</label><input type="file" id="profilePic" accept="image/*"></div>
+                            
+                            <div class="form-group" id="resumeGroup"><label>Update Resume / CV</label><input type="file" id="resumeFile" accept=".pdf,.doc,.docx"></div>
+                            <div class="form-group" id="certGroup"><label>Update Certificates</label><input type="file" id="certFile" accept=".pdf"></div>
+                        </div>
+                    </div>
+
+                    <div class="form-section" id="educationSection">
+                        <div class="section-title"><i class='bx bxs-graduation'></i> Education & Experience</div>
+                        <div class="form-grid">
+                            <div class="form-group"><label>Highest Qualification *</label><input type="text" id="qualification"></div>
+                            <div class="form-group" id="universityGroup"><label>University / Board</label><input type="text" id="university"></div>
+                            <div class="form-group"><label>Total Experience (Years)</label><input type="number" id="experience"></div>
+                            <div class="form-group full-width" id="skillsGroup"><label>Key Skills / Subjects to Teach</label><input type="text" id="skills"></div>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <div class="section-title"><i class='bx bx-briefcase'></i> College Job Details</div>
+                        <div class="form-grid">
+                            <div class="form-group"><label>Employee ID *</label><input type="text" id="empId" required readonly style="background:#f1f5f9;"></div>
+                            <div class="form-group"><label>Joining Date *</label><input type="date" id="joinDate" required></div>
+                            <div class="form-group"><label>Department / Area</label>
+                                <select id="department">
+                                    <option value="Computer Science">Computer Science (IT/BCA)</option>
+                                    <option value="Management">Management (BBA/MBA)</option>
+                                    <option value="Administration">Administration & HR</option>
+                                    <option value="Accounts">Accounts & Finance</option>
+                                    <option value="Campus Maintenance">Campus Maintenance & Security</option>
+                                </select>
+                            </div>
+                            <div class="form-group" id="shiftGroup"><label>Duty Shift</label>
+                                <select id="shift"><option value="Day Shift (General)">Day Shift (General)</option><option value="Morning Shift">Morning Shift</option><option value="Night Shift">Night Shift</option></select>
+                            </div>
+                            <div class="form-group"><label>Basic Salary (₹) *</label><input type="number" id="salary" required></div>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <div class="section-title"><i class='bx bxs-bank'></i> Bank & Payroll Details</div>
+                        <div class="form-grid">
+                            <div class="form-group"><label>Bank Name</label><input type="text" id="bankName"></div>
+                            <div class="form-group"><label>Account Number</label><input type="text" id="accNumber"></div>
+                            <div class="form-group"><label>IFSC Code</label><input type="text" id="ifsc"></div>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer" style="margin-top: 20px;">
+                        <button type="button" onclick="closeModal()" style="padding: 10px 18px; border: 1px solid var(--border); background: white; border-radius: 6px; cursor: pointer; font-weight: 600;">Cancel</button>
+                        <button type="submit" class="btn-primary" id="updateBtn" style="padding: 10px 20px;"><i class='bx bx-refresh'></i> Update Details</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="viewModal">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3><i class='bx bx-user-circle' style="color: var(--primary);"></i> Staff Profile Details</h3>
+                <button onclick="closeViewModal()" style="background:none; border:none; font-size: 24px; cursor: pointer; color: var(--text-light);"><i class='bx bx-x'></i></button>
+            </div>
+            
+            <div class="modal-body">
+                <div style="display:flex; gap: 20px; align-items: center; padding-bottom: 15px; border-bottom: 1px solid var(--border);">
+                    <img id="viewProfilePic" src="https://via.placeholder.com/80?text=Image" style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 3px solid #eff6ff;">
+                    <div>
+                        <h2 id="viewName" style="font-size: 20px; color: var(--text-dark);"></h2>
+                        <p id="viewRoleDept" style="color: var(--text-light); font-size: 14px; margin-top: 4px;"></p>
+                        <div id="viewStatusBadge" style="margin-top: 8px;"></div>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <div class="section-title">Personal & Contact Info</div>
+                    <div class="view-grid">
+                        <div><label>Emp ID</label><span id="viewEmpId"></span></div>
+                        <div><label>Mobile Number</label><span id="viewMobile"></span></div>
+                        <div><label>Login Email</label><span id="viewEmail"></span></div>
+                        <div><label>Login Password</label><span id="viewPassword"></span></div>
+                        <div><label>Date of Birth</label><span id="viewDob"></span></div>
+                        <div><label>Gender</label><span id="viewGender"></span></div>
+                        <div><label>Aadhaar No.</label><span id="viewAadhaar"></span></div>
+                        <div><label>PAN Card</label><span id="viewPan"></span></div>
+                        <div style="grid-column: 1/-1"><label>Full Address</label><span id="viewAddress"></span></div>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <div class="section-title">Job & Bank Details</div>
+                    <div class="view-grid">
+                        <div><label>Joining Date</label><span id="viewJoinDate"></span></div>
+                        <div><label>Duty Shift</label><span id="viewShift"></span></div>
+                        <div><label>Basic Salary</label><span id="viewSalary"></span></div>
+                        <div><label>Bank Name</label><span id="viewBankName"></span></div>
+                        <div><label>Account No.</label><span id="viewAccNo"></span></div>
+                        <div><label>IFSC Code</label><span id="viewIfsc"></span></div>
+                    </div>
+                </div>
+
+                <div class="form-section" id="viewEduSection">
+                    <div class="section-title">Education & Skills</div>
+                    <div class="view-grid">
+                        <div><label>Highest Qual.</label><span id="viewQual"></span></div>
+                        <div><label>University / Board</label><span id="viewUniv"></span></div>
+                        <div><label>Experience</label><span id="viewExp"></span></div>
+                        <div style="grid-column: 1/-1"><label>Key Skills / Subjects</label><span id="viewSkills"></span></div>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <div class="section-title">Uploaded Documents (View / Download)</div>
+                    <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+                        <a id="linkProfile" href="#" target="_blank" class="doc-link hide-section"><i class='bx bx-image'></i> View Photo</a>
+                        <a id="linkResume" href="#" target="_blank" class="doc-link hide-section"><i class='bx bx-file'></i> View Resume</a>
+                        <a id="linkCert" href="#" target="_blank" class="doc-link hide-section"><i class='bx bx-certification'></i> View Certificate</a>
+                        <span id="noDocsMsg" style="color: var(--text-light); font-size: 13px; display:none;">No documents uploaded to server yet.</span>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('active');
+            document.getElementById('overlay').classList.toggle('active');
+        }
+
+        function checkMobileClose() {
+            if (window.innerWidth <= 768) toggleSidebar(); 
+        }
+
+        let editingUserId = null;
+        function closeModal() { document.getElementById('userModal').style.display = 'none'; }
+        function closeViewModal() { document.getElementById('viewModal').style.display = 'none'; }
+
+        const roleOptions = {
+            management: ["Director", "Principal", "Vice Principal", "HOD (Head of Department)", "Admin Staff", "Accountant", "Office Staff"],
+            teacher: ["Professor", "Assistant Professor", "Lecturer", "Guest Faculty"],
+            nonteaching: ["Guard", "Sweeper", "Peon", "Clerk", "Driver", "Electrician"]
+        };
+
+        function handleCategoryChange() {
+            const category = document.getElementById('staffCategory').value;
+            const roleDropdown = document.getElementById('staffRole');
+            
+            roleDropdown.innerHTML = '<option value="">-- Select Specific Role --</option>';
+            if(category && roleOptions[category]) {
+                roleOptions[category].forEach(role => {
+                    roleDropdown.innerHTML += `<option value="${role}">${role}</option>`;
+                });
+            }
+
+            const isNonTeaching = (category === 'nonteaching');
+            
+            document.getElementById('emailGroup').classList.toggle('hide-section', isNonTeaching);
+            document.getElementById('email').required = !isNonTeaching;
+            
+            document.getElementById('passwordGroup').classList.toggle('hide-section', isNonTeaching);
+            document.getElementById('password').required = !isNonTeaching;
+
+            document.getElementById('panGroup').classList.toggle('hide-section', isNonTeaching);
+            document.getElementById('resumeGroup').classList.toggle('hide-section', isNonTeaching);
+            document.getElementById('certGroup').classList.toggle('hide-section', isNonTeaching);
+            document.getElementById('universityGroup').classList.toggle('hide-section', isNonTeaching);
+            
+            const skillsLabel = document.querySelector('#skillsGroup label');
+            if(category === 'teacher') skillsLabel.innerText = "Subjects to Teach *";
+            else if(category === 'management') skillsLabel.innerText = "Management/Admin Skills";
+            else skillsLabel.innerText = "Previous Work Skills";
+
+            document.getElementById('skills').required = (category === 'teacher');
+        }
+
+        let usersData = []; 
+        let currentFilter = 'all';
+
+        async function fetchUsersFromLiveServer() {
+            document.getElementById('tableLoader').style.display = 'block';
+            document.getElementById('userTableBody').innerHTML = '';
+            
+            try {
+                const res = await fetch('/api/staff');
+                const result = await res.json();
+                
+                if(result.success) {
+                    usersData = result.data;
+                    renderTable(usersData);
+                } else {
+                    document.getElementById('userTableBody').innerHTML = `<tr><td colspan="6" style="text-align:center; color: red;">Failed to load data.</td></tr>`;
+                }
+            } catch (error) {
+                document.getElementById('userTableBody').innerHTML = `<tr><td colspan="6" style="text-align:center; color: red;">Server connection error.</td></tr>`;
+            }
+            document.getElementById('tableLoader').style.display = 'none';
+        }
+
+        function renderTable(data) {
+            const tbody = document.getElementById('userTableBody');
+            tbody.innerHTML = '';
+            
+            if(data.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding: 30px; color: var(--text-light);">No staff records found.</td></tr>`;
+                return;
+            }
+
+            data.forEach(user => {
+                let badgeClass = `badge-${user.category}`; 
+                let statusHtml = user.status === 'Active' ? `<span class="status-active">Active</span>` : `<span class="status-disabled">Disabled</span>`;
+
+                let row = `
+                    <tr>
+                        <td>
+                            <b>${user.name}</b><br>
+                            <span style="font-size: 11px; color: var(--primary); font-weight: 600;">ID: ${user.empId}</span>
+                        </td>
+                        <td>
+                            <span class="badge ${badgeClass}">${user.category}</span><br>
+                            <span style="font-size: 13px; color: var(--text-light);">${user.role}</span>
+                        </td>
+                        <td><span style="font-size: 13px; font-weight: 500;">${user.dept || 'N/A'}</span></td>
+                        <td><span style="color: var(--text-light); font-size: 13px;">${user.contact || user.mobile}</span></td>
+                        <td>${statusHtml}</td>
+                        <td>
+                            <div class="action-btns">
+                                <button class="btn-view" onclick="viewUser('${user._id}')" title="View Profile"><i class='bx bx-show'></i> View</button>
+                                <button onclick="editUser('${user._id}')" title="Edit Data"><i class='bx bx-edit'></i> Edit</button>
+                                <button class="btn-danger" onclick="deleteUser('${user._id}')" title="Delete Data"><i class='bx bx-trash'></i> Delete</button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+                tbody.innerHTML += row;
+            });
+        }
+
+        function filterUsers(category) {
+            currentFilter = category;
+            const btns = document.querySelectorAll('.filter-btn');
+            btns.forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            applyFiltersAndSearch();
+        }
+
+        function handleSearch() { applyFiltersAndSearch(); }
+
+        function applyFiltersAndSearch() {
+            const searchText = document.getElementById('searchInput').value.toLowerCase();
+            let filteredData = usersData.filter(user => {
+                const matchesRole = (currentFilter === 'all') || (user.category === currentFilter);
+                const matchesSearch = (user.name && user.name.toLowerCase().includes(searchText)) || 
+                                      (user.empId && user.empId.toLowerCase().includes(searchText)) || 
+                                      (user.role && user.role.toLowerCase().includes(searchText));
+                return matchesRole && matchesSearch;
+            });
+            renderTable(filteredData);
+        }
+
+        // --- VIEW PROFILE DETAILS ---
+        function viewUser(id) {
+            const user = usersData.find(u => u._id === id);
+            if(!user) return;
+
+            document.getElementById('viewProfilePic').src = user.profilePicUrl || 'https://via.placeholder.com/80?text=No+Photo';
+            document.getElementById('viewName').innerText = user.name || 'N/A';
+            document.getElementById('viewRoleDept').innerText = `${user.role} | ${user.dept || 'N/A'}`;
+            
+            const statusBadge = document.getElementById('viewStatusBadge');
+            if(user.status === 'Active') {
+                statusBadge.innerHTML = `<span class="badge" style="background:#dcfce7; color:#166534;">Active</span>`;
+            } else {
+                statusBadge.innerHTML = `<span class="badge" style="background:#fee2e2; color:#991b1b;">Disabled</span>`;
+            }
+
+            document.getElementById('viewEmpId').innerText = user.empId || 'N/A';
+            document.getElementById('viewMobile').innerText = user.mobile || 'N/A';
+            document.getElementById('viewEmail').innerText = user.email || 'N/A (Non-Teaching)';
+            document.getElementById('viewPassword').innerText = user.password || 'N/A';
+            document.getElementById('viewDob').innerText = user.dob || 'N/A';
+            document.getElementById('viewGender').innerText = user.gender || 'N/A';
+            document.getElementById('viewAadhaar').innerText = user.aadhaar || 'N/A';
+            document.getElementById('viewPan').innerText = user.pan || 'N/A';
+            document.getElementById('viewAddress').innerText = user.address || 'N/A';
+
+            document.getElementById('viewJoinDate').innerText = user.joinDate || 'N/A';
+            document.getElementById('viewShift').innerText = user.shift || 'N/A';
+            document.getElementById('viewSalary').innerText = user.salary ? `₹${user.salary}` : 'N/A';
+            document.getElementById('viewBankName').innerText = user.bankName || 'N/A';
+            document.getElementById('viewAccNo').innerText = user.accNumber || 'N/A';
+            document.getElementById('viewIfsc').innerText = user.ifsc || 'N/A';
+
+            if (user.category === 'nonteaching') {
+                document.getElementById('viewEduSection').style.display = 'none';
+            } else {
+                document.getElementById('viewEduSection').style.display = 'block';
+                document.getElementById('viewQual').innerText = user.qualification || 'N/A';
+                document.getElementById('viewUniv').innerText = user.university || 'N/A';
+                document.getElementById('viewExp').innerText = user.experience ? `${user.experience} Years` : 'N/A';
+                document.getElementById('viewSkills').innerText = user.skills || 'N/A';
+            }
+
+            const linkProfile = document.getElementById('linkProfile');
+            const linkResume = document.getElementById('linkResume');
+            const linkCert = document.getElementById('linkCert');
+            const noDocsMsg = document.getElementById('noDocsMsg');
+
+            let hasDocs = false;
+
+            if(user.profilePicUrl) { linkProfile.href = user.profilePicUrl; linkProfile.classList.remove('hide-section'); hasDocs = true; } else { linkProfile.classList.add('hide-section'); }
+            if(user.resumeUrl) { linkResume.href = user.resumeUrl; linkResume.classList.remove('hide-section'); hasDocs = true; } else { linkResume.classList.add('hide-section'); }
+            if(user.certUrl) { linkCert.href = user.certUrl; linkCert.classList.remove('hide-section'); hasDocs = true; } else { linkCert.classList.add('hide-section'); }
+
+            if(!hasDocs) noDocsMsg.style.display = 'inline-block';
+            else noDocsMsg.style.display = 'none';
+
+            document.getElementById('viewModal').style.display = 'flex';
+        }
+
+        // --- UPDATE EXISTING USER ---
+        async function updateUser(event) {
+            event.preventDefault();
+            
+            const btn = document.getElementById('updateBtn');
+            btn.innerHTML = "<i class='bx bx-loader-alt bx-spin'></i> Updating...";
+            btn.disabled = true;
+
+            const category = document.getElementById('staffCategory').value;
+            const mobile = document.getElementById('mobile').value;
+            
+            const formData = new FormData();
+            formData.append('category', category);
+            formData.append('role', document.getElementById('staffRole').value);
+            formData.append('name', document.getElementById('fullName').value);
+            formData.append('fatherName', document.getElementById('fatherName').value);
+            formData.append('dob', document.getElementById('dob').value);
+            formData.append('gender', document.getElementById('gender').value);
+            formData.append('mobile', mobile);
+            formData.append('email', document.getElementById('email').value);
+            formData.append('password', document.getElementById('password').value);
+            formData.append('address', document.getElementById('address').value);
+            formData.append('aadhaar', document.getElementById('aadhaar').value);
+            formData.append('pan', document.getElementById('pan').value);
+            formData.append('qualification', document.getElementById('qualification').value);
+            formData.append('university', document.getElementById('university').value);
+            formData.append('experience', document.getElementById('experience').value);
+            formData.append('skills', document.getElementById('skills').value);
+            formData.append('empId', document.getElementById('empId').value);
+            formData.append('joinDate', document.getElementById('joinDate').value);
+            formData.append('dept', document.getElementById('department').value);
+            formData.append('shift', document.getElementById('shift').value);
+            formData.append('salary', document.getElementById('salary').value);
+            formData.append('bankName', document.getElementById('bankName').value);
+            formData.append('accNumber', document.getElementById('accNumber').value);
+            formData.append('ifsc', document.getElementById('ifsc').value);
+            
+            let contactField = category === 'nonteaching' ? mobile : document.getElementById('email').value;
+            formData.append('contact', contactField);
+
+            const profilePic = document.getElementById('profilePic').files[0];
+            if (profilePic) formData.append('profilePic', profilePic);
+            const resumeFile = document.getElementById('resumeFile').files[0];
+            if (resumeFile) formData.append('resumeFile', resumeFile);
+            const certFile = document.getElementById('certFile').files[0];
+            if (certFile) formData.append('certFile', certFile);
+
+            try {
+                const response = await fetch('/api/staff/' + editingUserId, {
+                    method: 'PUT',
+                    body: formData 
+                });
+                const result = await response.json();
+
+                if (result.success) {
+                    alert("✅ Staff Data Updated Successfully!");
+                    closeModal();
+                    fetchUsersFromLiveServer(); 
+                } else {
+                    alert("❌ Failed: " + result.message);
+                }
+            } catch (error) {
+                alert("❌ Server Error: Could not update data.");
+            }
+
+            btn.innerHTML = "<i class='bx bx-refresh'></i> Update Details";
+            btn.disabled = false;
+        }
+
+        // --- PREFILL EDIT FORM ---
+        function editUser(id) {
+            const user = usersData.find(u => u._id === id);
+            if(!user) return;
+
+            editingUserId = id;
+            
+            document.getElementById('staffCategory').value = user.category || '';
+            handleCategoryChange(); 
+            
+            // Wait slightly for dropdown to populate before setting role
+            setTimeout(() => {
+                document.getElementById('staffRole').value = user.role || '';
+            }, 50);
+
+            document.getElementById('fullName').value = user.name || '';
+            document.getElementById('fatherName').value = user.fatherName || '';
+            document.getElementById('dob').value = user.dob || '';
+            document.getElementById('gender').value = user.gender || 'Male';
+            document.getElementById('mobile').value = user.mobile || '';
+            document.getElementById('email').value = user.email || '';
+            document.getElementById('password').value = user.password || ''; 
+            document.getElementById('address').value = user.address || '';
+            document.getElementById('aadhaar').value = user.aadhaar || '';
+            document.getElementById('pan').value = user.pan || '';
+            document.getElementById('qualification').value = user.qualification || '';
+            document.getElementById('university').value = user.university || '';
+            document.getElementById('experience').value = user.experience || '';
+            document.getElementById('skills').value = user.skills || '';
+            document.getElementById('empId').value = user.empId || '';
+            document.getElementById('joinDate').value = user.joinDate || '';
+            document.getElementById('department').value = user.dept || '';
+            document.getElementById('shift').value = user.shift || '';
+            document.getElementById('salary').value = user.salary || '';
+            document.getElementById('bankName').value = user.bankName || '';
+            document.getElementById('accNumber').value = user.accNumber || '';
+            document.getElementById('ifsc').value = user.ifsc || '';
+
+            document.getElementById('userModal').style.display = 'flex'; 
+        }
+
+        // --- DELETE USER ---
+        async function deleteUser(id) {
+            let confirmDelete = confirm("⚠️ Are you sure you want to permanently delete this Staff Member?");
+            if(!confirmDelete) return;
+
+            try {
+                const response = await fetch('/api/staff/' + id, { method: 'DELETE' });
+                const result = await response.json();
+
+                if (result.success) {
+                    alert("🗑️ Staff Member deleted successfully.");
+                    fetchUsersFromLiveServer(); 
+                } else {
+                    alert("❌ Delete failed: " + result.message);
+                }
+            } catch (error) {
+                alert("❌ Server Error: Could not delete data.");
+            }
+        }
+
+        window.onload = () => { fetchUsersFromLiveServer(); };
+    </script>
+    <script src="js/settings-client.js"></script>
+  <script src="js/role-ui.js"></script>
+</body>
+</html>

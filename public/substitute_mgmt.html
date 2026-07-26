@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZHI | Substitute Management (HOD)</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    
+    <style>
+        :root {
+            --sidebar-bg: #0f172a; --primary: #3b82f6; --warning: #f59e0b; 
+            --danger: #ef4444; --success: #10b981; --bg: #f8fafc; 
+            --text-dark: #1e293b; --text-light: #64748b; --white: #ffffff; 
+            --border: #e2e8f0; --card-curve: 12px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        body { background-color: var(--bg); display: flex; height: 100vh; overflow: hidden; color: var(--text-dark); }
+
+        /* SIDEBAR & TOPBAR (Standardized) */
+        .sidebar { width: 260px; background: var(--sidebar-bg); color: #fff; display: flex; flex-direction: column; flex-shrink: 0; z-index: 1001; transition: transform 0.3s ease; }
+        .sidebar-header { padding: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; gap: 12px; }
+        .sidebar-header h2 { font-size: 18px; color: #fff; font-weight: 700;}
+        .sidebar-header p { font-size: 11px; color: var(--warning); font-weight: 700; letter-spacing: 1px;}
+        .logo-img { width: 42px; height: 42px; border-radius: 50%; background: #fff; display: flex; align-items: center; justify-content: center; color: var(--primary); font-size: 26px;}
+
+        .sidebar-menu { list-style: none; padding: 15px 0; flex: 1; overflow-y: auto; }
+        .sidebar-menu li a { display: flex; align-items: center; gap: 12px; padding: 12px 20px; color: #cbd5e1; text-decoration: none; font-size: 14px; font-weight: 500; transition: 0.2s; border-left: 4px solid transparent;}
+        .sidebar-menu li a i { font-size: 20px; transition: transform 0.3s ease;}
+        .sidebar-menu li a:hover { background: rgba(255,255,255,0.05); color: #fff; border-left: 4px solid var(--primary); padding-left: 25px;}
+        .sidebar-menu li.active a { background: rgba(255,255,255,0.05); color: #fff; border-left: 4px solid var(--primary); }
+
+        .main-wrapper { flex: 1; display: flex; flex-direction: column; overflow-y: auto; width: 100%; position: relative;}
+        .topbar { height: 70px; background: var(--white); border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; padding: 0 25px; position: sticky; top: 0; z-index: 1000;}
+        .menu-btn { display: none; background: none; border: none; font-size: 26px; cursor: pointer; color: var(--text-dark); }
+        .user-profile { display: flex; align-items: center; gap: 10px; cursor: pointer; padding: 5px; border-radius: 8px; }
+        .user-profile img { width: 35px; height: 35px; border-radius: 50%; object-fit: cover; border: 2px solid var(--primary);}
+        .user-profile div { display: flex; flex-direction: column; text-align: right;}
+        .user-profile b { font-size: 13px; color: var(--text-dark); }
+        .user-profile span { font-size: 11px; color: var(--text-light); }
+
+        .content { padding: 30px; flex: 1; }
+        .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
+        .page-title { font-size: 24px; font-weight: 700; color: var(--text-dark); }
+
+        /* CARDS & GRIDS */
+        .grid-layout { display: grid; grid-template-columns: 350px 1fr; gap: 25px; align-items: start;}
+        .card { background: var(--white); border-radius: var(--card-curve); border: 1px solid var(--border); box-shadow: 0 2px 6px rgba(0,0,0,0.02); overflow: hidden; }
+        .card-header { padding: 18px 20px; background: #f8fafc; border-bottom: 1px solid var(--border); font-size: 16px; font-weight: 600; display: flex; align-items: center; gap: 8px; color: var(--text-dark);}
+        .card-body { padding: 20px; display: flex; flex-direction: column; gap: 15px; }
+        
+        .form-group { display: flex; flex-direction: column; gap: 6px; }
+        .form-group label { font-size: 13px; font-weight: 600; color: var(--text-light); }
+        .form-control { padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 6px; outline: none; font-size: 14px; background: var(--bg); transition: 0.2s; width: 100%; }
+        .form-control:focus { border-color: var(--primary); background: #fff; }
+        
+        .btn-submit { background: var(--primary); color: white; border: none; padding: 12px; border-radius: 6px; font-weight: 600; cursor: pointer; transition: 0.2s; display: flex; justify-content: center; align-items: center; gap: 8px;}
+        .btn-submit:hover { background: #2563eb; }
+
+        .table-res { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; text-align: left; min-width: 650px;}
+        th { padding: 15px 20px; background: #f8fafc; font-size: 12px; text-transform: uppercase; color: var(--text-light); font-weight: 600; border-bottom: 1px solid var(--border);}
+        td { padding: 15px 20px; border-bottom: 1px solid var(--border); font-size: 14px; vertical-align: middle;}
+        tbody tr:hover { background-color: #f1f5f9; }
+
+        .badge-warning { background: #fef3c7; color: #b45309; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; border: 1px solid #fde68a;}
+        .badge-success { background: #d1fae5; color: #065f46; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; border: 1px solid #a7f3d0;}
+
+        @media (max-width: 992px) { .grid-layout { grid-template-columns: 1fr; } }
+        @media (max-width: 768px) { .sidebar { position: fixed; left: -260px; height: 100vh; } .sidebar.active { transform: translateX(260px); } .menu-btn { display: block; } }
+    </style>
+    <script src="js/auth-client.js"></script>
+</head>
+<body>
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="logo-img"><i class='bx bx-book-reader'></i></div>
+            <div><h2>ZHI Academics</h2><p>HOD PANEL</p></div>
+        </div>
+        <ul class="sidebar-menu">
+            <li><a href="hod_dashboard.html"><i class='bx bx-grid-alt'></i> Dashboard Home</a></li>
+            <li style="margin: 15px 0 5px 20px; font-size: 11px; color: #64748b; font-weight: 700; text-transform: uppercase;">Academics</li>
+            <li><a href="timetable_setup.html"><i class='bx bx-calendar'></i> Timetable Setup</a></li>
+            <li><a href="assign_teacher.html"><i class='bx bx-user-pin'></i> Assign Teachers</a></li>
+            <li class="active"><a href="substitute_mgmt.html"><i class='bx bx-transfer-alt'></i> Substitute Mgmt</a></li>
+            <li><a href="manage_syllabus.html"><i class='bx bx-book-bookmark'></i> Manage Syllabus</a></li>
+            <li style="margin: 15px 0 5px 20px; font-size: 11px; color: #64748b; font-weight: 700; text-transform: uppercase;">Tracking</li>
+            <li><a href="attendance_overview.html"><i class='bx bx-check-shield'></i> Attendance Overview</a></li>
+            <li><a href="performance_reports.html"><i class='bx bx-bar-chart-alt-2'></i> Performance Reports</a></li>
+        </ul>
+    </aside>
+
+    <main class="main-wrapper">
+        <header class="topbar">
+            <div style="display: flex; align-items: center; gap: 15px;">
+                <button class="menu-btn" onclick="toggleSidebar()"><i class='bx bx-menu'></i></button>
+                <div style="font-size: 18px; font-weight: 600; color: var(--text-dark);">Academic Planning</div>
+            </div>
+            <div class="user-profile">
+                <div><b id="hodName">Prof. Sharma</b><span>HOD - BCA Dept</span></div>
+                <img src="https://ui-avatars.com/api/?name=HOD&background=3b82f6&color=fff" alt="HOD">
+            </div>
+        </header>
+
+        <div class="content">
+            <div class="page-header">
+                <div class="page-title">Substitute Faculty Management</div>
+            </div>
+
+            <div class="grid-layout">
+                <div class="card">
+                    <div class="card-header"><i class='bx bx-user-x' style="color: var(--danger);"></i> Log Absence & Assign</div>
+                    <form id="subForm" class="card-body" onsubmit="handleSubstitute(event)">
+                        <div class="form-group">
+                            <label>Date of Absence</label>
+                            <input type="date" class="form-control" id="absDate" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Absent Faculty</label>
+                            <select class="form-control" id="absFaculty" required>
+                                <option value="">Select Absent Teacher</option>
+                                <option value="Dr. Rakesh Kumar">Dr. Rakesh Kumar</option>
+                                <option value="Prof. Sunita Sharma">Prof. Sunita Sharma</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Class & Period (Subject)</label>
+                            <input type="text" class="form-control" id="absClass" placeholder="e.g. BCA Sem 1 - Period 2 (C Prog)" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Assign Substitute</label>
+                            <select class="form-control" id="subFaculty" required>
+                                <option value="">Select Available Teacher</option>
+                                <option value="Mr. Anil Verma">Mr. Anil Verma (Free)</option>
+                                <option value="Ms. Priya Singh">Ms. Priya Singh (Free)</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn-submit"><i class='bx bx-check-shield'></i> Confirm Substitute</button>
+                    </form>
+                </div>
+
+                <div class="card">
+                    <div class="card-header"><i class='bx bx-list-ul' style="color: var(--text-light);"></i> Today's Substitute Assignments</div>
+                    <div class="table-res">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Class & Period</th>
+                                    <th>Absent Faculty</th>
+                                    <th>Substitute Assigned</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="subTableBody">
+                                <tr>
+                                    <td><b>Today</b></td>
+                                    <td>BBA Sem 3<br><small style="color:var(--text-light);">Period 1 (Economics)</small></td>
+                                    <td style="color: var(--danger); font-weight: 500;">Prof. Sunita Sharma</td>
+                                    <td style="color: var(--primary); font-weight: 600;">Ms. Priya Singh</td>
+                                    <td><span class="badge-success">Notified</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        function toggleSidebar() { document.getElementById('sidebar').classList.toggle('active'); }
+
+        // Set today's date automatically
+        document.getElementById('absDate').valueAsDate = new Date();
+
+        function handleSubstitute(e) {
+            e.preventDefault();
+            const date = document.getElementById('absDate').value;
+            const absent = document.getElementById('absFaculty').value;
+            const classInfo = document.getElementById('absClass').value;
+            const sub = document.getElementById('subFaculty').value;
+
+            const tbody = document.getElementById('subTableBody');
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><b>${new Date(date).toLocaleDateString()}</b></td>
+                <td>${classInfo}</td>
+                <td style="color: var(--danger); font-weight: 500;">${absent}</td>
+                <td style="color: var(--primary); font-weight: 600;">${sub}</td>
+                <td><span class="badge-warning">Pending</span></td>
+            `;
+            tbody.insertBefore(tr, tbody.firstChild);
+
+            document.getElementById('subForm').reset();
+            document.getElementById('absDate').valueAsDate = new Date();
+            alert(`Substitute ${sub} has been assigned successfully!`);
+        }
+    </script>
+    <script src="js/settings-client.js"></script>
+  <script src="js/role-ui.js"></script>
+</body>
+</html>

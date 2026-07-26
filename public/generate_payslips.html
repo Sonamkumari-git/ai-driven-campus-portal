@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZHI | Generate Payslips</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    
+    <style>
+        :root {
+            --sidebar-bg: #0f172a; 
+            --primary: #3b82f6; 
+            --warning: #f59e0b; 
+            --danger: #ef4444;
+            --success: #10b981;
+            --bg: #f8fafc;
+            --text-dark: #1e293b;
+            --text-light: #64748b;
+            --white: #ffffff;
+            --border: #e2e8f0;
+            --card-curve: 12px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        body { background-color: var(--bg); display: flex; height: 100vh; overflow: hidden; color: var(--text-dark); }
+
+        /* ------------------ SIDEBAR ------------------ */
+        .sidebar { width: 260px; background: var(--sidebar-bg); color: #fff; display: flex; flex-direction: column; flex-shrink: 0; z-index: 1001; transition: transform 0.3s ease; }
+        .sidebar-header { padding: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; gap: 12px; }
+        .sidebar-header h2 { font-size: 18px; color: #fff; font-weight: 700;}
+        .sidebar-header p { font-size: 11px; color: var(--success); font-weight: 700; letter-spacing: 1px;}
+        .logo-img { width: 42px; height: 42px; border-radius: 50%; background: #fff; display: flex; align-items: center; justify-content: center; color: var(--success); font-size: 26px;}
+
+        .sidebar-menu { list-style: none; padding: 15px 0; flex: 1; overflow-y: auto; }
+        .sidebar-menu li a { display: flex; align-items: center; gap: 12px; padding: 12px 20px; color: #cbd5e1; text-decoration: none; font-size: 14px; font-weight: 500; transition: 0.2s; border-left: 4px solid transparent;}
+        .sidebar-menu li a i { font-size: 20px; transition: transform 0.3s ease;}
+        .sidebar-menu li a:hover { background: rgba(255,255,255,0.05); color: #fff; border-left: 4px solid var(--primary); padding-left: 25px;}
+        .sidebar-menu li a:hover i { transform: scale(1.1); }
+        .sidebar-menu li.active a { background: rgba(255,255,255,0.05); color: #fff; border-left: 4px solid var(--primary); }
+
+        /* ------------------ MAIN CONTENT & TOPBAR ------------------ */
+        .main-wrapper { flex: 1; display: flex; flex-direction: column; overflow-y: auto; width: 100%; position: relative;}
+        
+        .topbar { height: 70px; background: var(--white); border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; padding: 0 25px; position: sticky; top: 0; z-index: 1000; box-shadow: 0 1px 2px rgba(0,0,0,0.02);}
+        .menu-btn { display: none; background: none; border: none; font-size: 26px; cursor: pointer; color: var(--text-dark); transition: transform 0.2s;}
+        
+        .user-profile { display: flex; align-items: center; gap: 10px; cursor: pointer; padding: 5px; border-radius: 8px; transition: background 0.2s;}
+        .user-profile img { width: 35px; height: 35px; border-radius: 50%; object-fit: cover; border: 2px solid var(--success);}
+        .user-profile div { display: flex; flex-direction: column; }
+        .user-profile b { font-size: 13px; color: var(--text-dark); }
+        .user-profile span { font-size: 11px; color: var(--text-light); }
+
+        .content { padding: 30px; flex: 1; }
+        .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
+        .page-title { font-size: 24px; font-weight: 700; color: var(--text-dark); }
+
+        /* ------------------ TABLE & FILTERS ------------------ */
+        .table-card { background: var(--white); border-radius: var(--card-curve); border: 1px solid var(--border); box-shadow: 0 2px 6px rgba(0,0,0,0.02); overflow: hidden; }
+        .table-header { padding: 20px 25px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; background: #f8fafc; flex-wrap: wrap; gap: 15px;}
+        .table-header h3 { font-size: 18px; font-weight: 600; color: var(--text-dark); display: flex; align-items: center; gap: 8px;}
+        
+        .search-box { display: flex; align-items: center; background: #fff; border: 1px solid var(--border); border-radius: 6px; padding: 6px 12px; width: 300px;}
+        .search-box input { border: none; outline: none; padding: 4px; font-size: 13px; background: transparent; width: 100%;}
+        .search-box i { color: var(--text-light); font-size: 18px; margin-right: 5px;}
+
+        .table-res { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; text-align: left; min-width: 900px; }
+        th { padding: 15px 25px; background: #f8fafc; font-size: 13px; text-transform: uppercase; color: var(--text-light); font-weight: 600; border-bottom: 1px solid var(--border);}
+        td { padding: 18px 25px; border-bottom: 1px solid var(--border); font-size: 14px; color: var(--text-dark); transition: background 0.2s;}
+        tbody tr:hover td { background-color: #f1f5f9; }
+        
+        .btn-generate { background: var(--success); color: white; border: none; padding: 8px 14px; border-radius: 6px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px; font-size: 13px; transition: 0.2s; }
+        .btn-generate:hover { background: #059669; transform: translateY(-2px); box-shadow: 0 4px 6px rgba(16, 185, 129, 0.2);}
+
+        /* ------------------ PAYSLIP MODAL ------------------ */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.7); z-index: 2000; justify-content: center; align-items: center; padding: 20px; backdrop-filter: blur(4px); }
+        .modal-box { background: var(--bg); width: 100%; max-width: 800px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); display: flex; flex-direction: column; max-height: 90vh;}
+        
+        .modal-header { padding: 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; background: var(--white); border-radius: 12px 12px 0 0; }
+        .modal-header h3 { font-size: 18px; color: var(--text-dark); display: flex; align-items: center; gap: 8px;}
+        .modal-close { background: none; border: none; font-size: 24px; cursor: pointer; color: var(--text-light); transition: 0.2s;}
+        .modal-close:hover { color: var(--danger); }
+
+        .modal-body { padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 20px;}
+        
+        /* Config Section */
+        .config-panel { background: #fff; padding: 15px; border-radius: 8px; border: 1px solid var(--border); display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px;}
+        .form-group { display: flex; flex-direction: column; gap: 5px; }
+        .form-group label { font-size: 12px; font-weight: 600; color: var(--text-light); }
+        .form-group input { padding: 8px 10px; border: 1px solid var(--border); border-radius: 4px; font-size: 13px; outline: none; }
+        .form-group input:focus { border-color: var(--primary); }
+
+        /* Printable Payslip Wrapper */
+        .printable-area { background: #fff; padding: 30px; border: 1px solid #ccc; border-radius: 4px; color: #000; font-family: 'Arial', sans-serif;}
+        
+        .modal-footer { padding: 15px 20px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 10px; background: var(--white); border-radius: 0 0 12px 12px; }
+        
+        .btn-print { background: var(--primary); color: white; border: none; padding: 10px 20px; border-radius: 6px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px; font-size: 14px;}
+        .btn-print:hover { background: #2563eb; }
+
+        @media (max-width: 768px) {
+            .sidebar { position: fixed; left: -260px; height: 100vh; }
+            .sidebar.active { transform: translateX(260px); }
+            .config-panel { grid-template-columns: 1fr; }
+        }
+    </style>
+    <script src="js/auth-client.js"></script>
+</head>
+<body>
+
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="logo-img"><i class='bx bx-wallet'></i></div>
+            <div><h2>ZHI Finance</h2><p>ACCOUNTANT PANEL</p></div>
+            <button class="menu-btn close-btn" onclick="toggleSidebar()" style="color:white; display:none;"><i class='bx bx-x'></i></button>
+        </div>
+        
+        <ul class="sidebar-menu">
+            <li><a href="accountant_dashboard.html"><i class='bx bx-home-alt'></i> Dashboard Home</a></li>
+            
+            <li style="margin: 15px 0 5px 20px; font-size: 11px; color: #64748b; font-weight: 700; text-transform: uppercase;">Students & Fees</li>
+            <li><a href="fee_collection.html"><i class='bx bx-rupee'></i> Fee Collection</a></li>
+            <li><a href="#"><i class='bx bx-list-ol'></i> Fee Structure setup</a></li>
+            <li><a href="#"><i class='bx bx-user-x'></i> Pending Dues List</a></li>
+            
+            <li style="margin: 15px 0 5px 20px; font-size: 11px; color: #64748b; font-weight: 700; text-transform: uppercase;">Staff & Payroll</li>
+            <li><a href="salary_management.html"><i class='bx bx-credit-card-front'></i> Salary Management</a></li>
+            <li class="active"><a href="generate_payslips.html"><i class='bx bx-file-blank'></i> Generate Payslips</a></li>
+            
+            <li style="margin: 15px 0 5px 20px; font-size: 11px; color: #64748b; font-weight: 700; text-transform: uppercase;">Accounts & Ledger</li>
+            <li><a href="all_transactions.html"><i class='bx bx-transfer'></i> All Transactions</a></li>
+            <li><a href="manage_expenses.html"><i class='bx bx-trending-down'></i> Manage Expenses</a></li>
+            <li><a href="financial_reports.html"><i class='bx bx-pie-chart-alt-2'></i> Financial Reports</a></li>
+        </ul>
+    </aside>
+
+    <main class="main-wrapper">
+        <header class="topbar">
+            <div style="display: flex; align-items: center; gap: 15px;">
+                <button class="menu-btn" onclick="toggleSidebar()"><i class='bx bx-menu'></i></button>
+                <div style="font-size: 18px; font-weight: 600; color: var(--text-dark);">Accounts & Finance</div>
+            </div>
+            <div class="user-profile">
+                <div style="text-align: right;"><b id="adminName">Accountant</b><span>Finance Dept</span></div>
+                <img src="https://ui-avatars.com/api/?name=Accounts&background=10b981&color=fff" alt="Admin">
+            </div>
+        </header>
+
+        <div class="content">
+            <div class="page-header">
+                <div class="page-title">Generate Staff Payslips</div>
+            </div>
+
+            <div class="table-card">
+                <div class="table-header">
+                    <h3><i class='bx bx-group' style="color: var(--primary);"></i> Select Staff Member</h3>
+                    <div class="search-box">
+                        <i class='bx bx-search'></i>
+                        <input type="text" id="searchInput" placeholder="Search by name or ID..." onkeyup="filterTable()">
+                    </div>
+                </div>
+                
+                <div class="table-res">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Emp ID</th>
+                                <th>Staff Name</th>
+                                <th>Department / Role</th>
+                                <th>Base Salary</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="staffTableBody">
+                            <tr><td colspan="5" style="text-align: center; color: var(--text-light);"><i class='bx bx-loader-alt bx-spin'></i> Fetching staff records...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <div class="modal-overlay" id="payslipModal">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3><i class='bx bx-file' style="color: var(--primary);"></i> Payslip Generator</h3>
+                <button class="modal-close" onclick="closeModal()"><i class='bx bx-x'></i></button>
+            </div>
+            
+            <div class="modal-body">
+                <div class="config-panel">
+                    <div class="form-group">
+                        <label>Salary Month</label>
+                        <input type="month" id="slipMonth" onchange="updatePayslip()">
+                    </div>
+                    <div class="form-group">
+                        <label>Add Bonus / Allowances (₹)</label>
+                        <input type="number" id="slipBonus" value="0" min="0" onkeyup="updatePayslip()" onchange="updatePayslip()">
+                    </div>
+                    <div class="form-group">
+                        <label>Deductions / Leaves (₹)</label>
+                        <input type="number" id="slipDeduct" value="0" min="0" onkeyup="updatePayslip()" onchange="updatePayslip()">
+                    </div>
+                </div>
+
+                <div class="printable-area" id="printablePayslip">
+                    <div style="text-align: center; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 15px;">
+                        <h2 style="margin: 0; font-size: 22px; text-transform: uppercase;">ZHI COLLEGE, PATNA</h2>
+                        <p style="margin: 5px 0 0; font-size: 14px;">Salary Slip for the month of <strong id="pl_month_text">Month, Year</strong></p>
+                    </div>
+                    
+                    <table style="width: 100%; margin-bottom: 20px; font-size: 13px;">
+                        <tr>
+                            <td style="padding: 5px;"><strong>Employee ID:</strong> <span id="pl_empId">EMP-000</span></td>
+                            <td style="padding: 5px; text-align: right;"><strong>Name:</strong> <span id="pl_name">John Doe</span></td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 5px;"><strong>Department:</strong> <span id="pl_dept">IT Dept</span></td>
+                            <td style="padding: 5px; text-align: right;"><strong>Designation:</strong> <span id="pl_role">Professor</span></td>
+                        </tr>
+                    </table>
+
+                    <table style="width: 100%; border-collapse: collapse; font-size: 13px;" border="1">
+                        <thead style="background-color: #f3f4f6;">
+                            <tr>
+                                <th style="padding: 8px; text-align: left; width: 50%;">Earnings</th>
+                                <th style="padding: 8px; text-align: right;">Amount (₹)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td style="padding: 8px;">Basic Salary</td>
+                                <td style="padding: 8px; text-align: right;" id="pl_basic">0.00</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 8px;">Bonus / Allowances</td>
+                                <td style="padding: 8px; text-align: right;" id="pl_bonus">0.00</td>
+                            </tr>
+                        </tbody>
+                        <thead style="background-color: #f3f4f6;">
+                            <tr>
+                                <th style="padding: 8px; text-align: left;">Deductions</th>
+                                <th style="padding: 8px; text-align: right;">Amount (₹)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td style="padding: 8px;">Leaves / Tax Deductions</td>
+                                <td style="padding: 8px; text-align: right;" id="pl_deduct">0.00</td>
+                            </tr>
+                        </tbody>
+                        <tfoot>
+                            <tr style="background-color: #f8fafc; font-weight: bold;">
+                                <td style="padding: 10px; text-align: left; font-size: 14px;">Net Salary Payable</td>
+                                <td style="padding: 10px; text-align: right; font-size: 15px; color: #166534;" id="pl_net">₹ 0.00</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+
+                    <div style="margin-top: 40px; display: flex; justify-content: space-between; font-size: 13px;">
+                        <div style="text-align: center;">
+                            <p>_______________________</p>
+                            <p style="margin-top: 5px;">Employer Signature</p>
+                        </div>
+                        <div style="text-align: center;">
+                            <p>_______________________</p>
+                            <p style="margin-top: 5px;">Employee Signature</p>
+                        </div>
+                    </div>
+                    <div style="text-align: center; margin-top: 20px; font-size: 11px; color: #666;">
+                        <p>This is a computer-generated document and does not require a physical stamp.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="modal-footer">
+                <button type="button" onclick="closeModal()" style="padding: 10px 18px; border: 1px solid var(--border); background: white; border-radius: 6px; cursor: pointer; font-weight: 600;">Close</button>
+                <button class="btn-print" onclick="printPayslip()"><i class='bx bx-printer'></i> Print / Save PDF</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const SERVER_URL = '';
+        let allStaff = [];
+        let activeStaff = null; // Store selected staff details
+
+        window.onload = () => {
+            const userName = localStorage.getItem('userName');
+            if(userName) document.getElementById('adminName').innerText = userName;
+            
+            // Set current month in modal input
+            const now = new Date();
+            const monthStr = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
+            document.getElementById('slipMonth').value = monthStr;
+
+            fetchStaffList();
+        };
+
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('active');
+        }
+        function closeModal() {
+            document.getElementById('payslipModal').style.display = 'none';
+        }
+
+        // Fetch Data from API
+        async function fetchStaffList() {
+            try {
+                const response = await fetch(`${SERVER_URL}/api/staff`);
+                const result = await response.json();
+                if (result.success) {
+                    allStaff = result.data.filter(s => s.status !== 'Disabled'); // Get active staff
+                    renderTable(allStaff);
+                }
+            } catch (error) {
+                document.getElementById('staffTableBody').innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--danger);">Server Error! Could not fetch data.</td></tr>`;
+            }
+        }
+
+        function renderTable(data) {
+            const tbody = document.getElementById('staffTableBody');
+            tbody.innerHTML = '';
+            
+            if (data.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" style="text-align: center;">No staff found.</td></tr>`;
+                return;
+            }
+
+            data.forEach(staff => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td><b>${staff.empId || 'N/A'}</b></td>
+                        <td>${staff.name}</td>
+                        <td>${staff.role || 'Staff'} <br><small style="color:var(--text-light);">${staff.dept || ''}</small></td>
+                        <td><b>₹ ${Number(staff.salary || 0).toLocaleString('en-IN')}</b></td>
+                        <td>
+                            <button class="btn-generate" onclick="openPayslipModal('${staff._id}')">
+                                <i class='bx bx-file-blank'></i> Generate Slip
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        function filterTable() {
+            const val = document.getElementById('searchInput').value.toLowerCase();
+            const filtered = allStaff.filter(s => s.name.toLowerCase().includes(val) || (s.empId && s.empId.toLowerCase().includes(val)));
+            renderTable(filtered);
+        }
+
+        // Open Modal and Setup base values
+        function openPayslipModal(id) {
+            activeStaff = allStaff.find(s => s._id === id);
+            if(!activeStaff) return;
+
+            // Reset inputs
+            document.getElementById('slipBonus').value = 0;
+            document.getElementById('slipDeduct').value = 0;
+
+            // Fill HTML fields
+            document.getElementById('pl_empId').innerText = activeStaff.empId || 'N/A';
+            document.getElementById('pl_name').innerText = activeStaff.name;
+            document.getElementById('pl_dept').innerText = activeStaff.dept || 'N/A';
+            document.getElementById('pl_role').innerText = activeStaff.role || 'N/A';
+
+            updatePayslip(); // Calculate math
+            document.getElementById('payslipModal').style.display = 'flex';
+        }
+
+        // Live Calculate Math for Payslip
+        function updatePayslip() {
+            if(!activeStaff) return;
+
+            const monthVal = document.getElementById('slipMonth').value; // YYYY-MM
+            const dateObj = new Date(monthVal + "-01");
+            const monthName = dateObj.toLocaleString('default', { month: 'long', year: 'numeric' });
+            
+            document.getElementById('pl_month_text').innerText = monthName;
+
+            const baseSalary = Number(activeStaff.salary || 0);
+            const bonus = Number(document.getElementById('slipBonus').value || 0);
+            const deduct = Number(document.getElementById('slipDeduct').value || 0);
+            
+            const netPay = (baseSalary + bonus) - deduct;
+
+            document.getElementById('pl_basic').innerText = baseSalary.toLocaleString('en-IN') + '.00';
+            document.getElementById('pl_bonus').innerText = bonus.toLocaleString('en-IN') + '.00';
+            document.getElementById('pl_deduct').innerText = deduct.toLocaleString('en-IN') + '.00';
+            document.getElementById('pl_net').innerText = '₹ ' + netPay.toLocaleString('en-IN') + '.00';
+        }
+
+        // Print Functionality
+        function printPayslip() {
+            const printContent = document.getElementById('printablePayslip').innerHTML;
+            const originalContent = document.body.innerHTML;
+            
+            document.body.innerHTML = printContent;
+            window.print();
+            
+            // Restore original page content
+            document.body.innerHTML = originalContent;
+            window.location.reload(); // Reload to reactivate JS events
+        }
+    </script>
+    <script src="js/settings-client.js"></script>
+  <script src="js/role-ui.js"></script>
+</body>
+</html>

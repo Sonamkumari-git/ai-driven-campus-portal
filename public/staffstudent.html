@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZHI | Live Student Directory</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    
+    <style>
+        :root {
+            --sidebar-bg: #0f172a; --primary: #3b82f6; --success: #10b981; 
+            --danger: #ef4444; --warning: #f59e0b; --bg: #f8fafc; 
+            --text-dark: #1e293b; --text-light: #64748b; --white: #ffffff; 
+            --border: #e2e8f0; --hover-bg: #f1f5f9;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        body { background-color: var(--bg); color: var(--text-dark); display: flex; height: 100vh; overflow: hidden; }
+
+        /* --- SIDEBAR --- */
+        .sidebar { width: 260px; background: var(--sidebar-bg); color: #fff; display: flex; flex-direction: column; flex-shrink: 0; z-index: 1001; transition: transform 0.3s ease; }
+        .sidebar-header { padding: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; gap: 12px; }
+        .logo-img { width: 40px; height: 40px; border-radius: 8px; background: rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center; font-size: 24px; color: var(--primary); }
+        .sidebar-header h2 { font-size: 18px; font-weight: 700; }
+        .sidebar-header p { font-size: 11px; color: #94a3b8; letter-spacing: 1px; margin-top: 2px;}
+        
+        .sidebar-menu { list-style: none; padding: 15px 0; flex: 1; overflow-y: auto; }
+        .sidebar-menu li a { display: flex; align-items: center; gap: 12px; padding: 12px 20px; color: #cbd5e1; text-decoration: none; font-size: 14px; font-weight: 500; transition: 0.2s; }
+        .sidebar-menu li a i { font-size: 20px; }
+        .sidebar-menu li.active a, .sidebar-menu li a:hover { background: rgba(255,255,255,0.05); color: #fff; border-left: 4px solid var(--primary); }
+
+        /* --- MAIN WRAPPER & TOPBAR --- */
+        .main-wrapper { flex: 1; display: flex; flex-direction: column; overflow-y: auto; width: 100%; }
+        .topbar { height: 65px; background: var(--white); border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; padding: 0 25px; position: sticky; top: 0; z-index: 1000; }
+        .breadcrumb { font-size: 14px; color: var(--text-light); font-weight: 500; }
+        .breadcrumb span { color: var(--text-dark); font-weight: 600; }
+        .profile-area { display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 600; cursor: pointer; }
+        .profile-area img { width: 35px; height: 35px; border-radius: 50%; }
+
+        .content { padding: 25px; flex: 1; }
+
+        /* --- STATS CARDS --- */
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 25px; }
+        .stat-card { background: var(--white); padding: 20px; border-radius: 12px; border: 1px solid var(--border); display: flex; align-items: center; gap: 15px; box-shadow: 0 1px 2px rgba(0,0,0,0.02); }
+        .stat-icon { width: 50px; height: 50px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 24px; }
+        .stat-icon.blue { background: #eff6ff; color: var(--primary); }
+        .stat-icon.green { background: #ecfdf5; color: var(--success); }
+        .stat-icon.orange { background: #fffbeb; color: var(--warning); }
+        .stat-info h4 { font-size: 13px; color: var(--text-light); font-weight: 500; margin-bottom: 5px; }
+        .stat-info h2 { font-size: 24px; color: var(--text-dark); font-weight: 700; }
+
+        /* --- TOOLBAR --- */
+        .toolbar { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; margin-bottom: 20px; background: var(--white); padding: 15px; border-radius: 10px; border: 1px solid var(--border); }
+        .search-box { display: flex; align-items: center; background: var(--bg); border: 1px solid var(--border); border-radius: 6px; padding: 8px 15px; width: 300px; }
+        .search-box input { border: none; outline: none; margin-left: 10px; width: 100%; font-size: 14px; background: transparent;}
+        .filters { display: flex; gap: 10px; flex-wrap: wrap; }
+        .filters select { padding: 8px 12px; border: 1px solid var(--border); border-radius: 6px; font-size: 13px; outline: none; background: white;}
+        .btn { padding: 8px 16px; border-radius: 6px; font-weight: 500; cursor: pointer; font-size: 13px; display: flex; align-items: center; gap: 6px; text-decoration: none; border: none; }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-outline { background: white; border: 1px solid var(--border); color: var(--text-dark); }
+
+        /* --- TABLE --- */
+        .panel { background: var(--white); border-radius: 12px; border: 1px solid var(--border); overflow: hidden; }
+        .table-res { width: 100%; overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; text-align: left; min-width: 1000px; }
+        th { padding: 15px 20px; background: #f8fafc; font-size: 12px; text-transform: uppercase; color: var(--text-light); font-weight: 600; border-bottom: 1px solid var(--border); }
+        td { padding: 15px 20px; border-bottom: 1px solid var(--border); font-size: 13px; vertical-align: middle; }
+        tr:hover { background: var(--hover-bg); }
+        
+        .std-profile { display: flex; align-items: center; gap: 12px; }
+        .std-profile img { width: 42px; height: 42px; border-radius: 50%; object-fit: cover; }
+        .text-sub { font-size: 12px; color: var(--text-light); margin-top: 2px; display: block; }
+        
+        .badge { padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; }
+        .badge-success { background: #ecfdf5; color: var(--success); border: 1px solid #a7f3d0;}
+        .badge-danger { background: #fef2f2; color: var(--danger); border: 1px solid #fecaca;}
+        
+        .action-btns { display: flex; gap: 8px; }
+        .icon-btn { width: 32px; height: 32px; border-radius: 6px; border: 1px solid var(--border); background: white; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; font-size: 16px; }
+        .icon-btn.view { color: var(--primary); } .icon-btn.view:hover { background: #eff6ff; border-color: #bfdbfe; }
+        .icon-btn.edit { color: var(--warning); } .icon-btn.edit:hover { background: #fffbeb; border-color: #fde68a; }
+        .icon-btn.delete { color: var(--danger); } .icon-btn.delete:hover { background: #fef2f2; border-color: #fecaca; }
+
+        /* --- MODALS (VIEW & EDIT) --- */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(15, 23, 42, 0.6); z-index: 2000; justify-content: center; align-items: center; padding: 20px; backdrop-filter: blur(4px); }
+        .modal-box { background: white; width: 100%; max-width: 800px; border-radius: 12px; display: flex; flex-direction: column; max-height: 90vh; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+        .modal-header { padding: 20px 25px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; background: white; border-radius: 12px 12px 0 0; flex-shrink: 0;}
+        .modal-header h3 { font-size: 18px; color: var(--text-dark); }
+        .modal-close { background: none; border: none; font-size: 24px; color: var(--text-light); cursor: pointer; }
+        
+        .modal-body { padding: 25px; overflow-y: auto; flex: 1; }
+        #editForm { display: flex; flex-direction: column; flex: 1; min-height: 0; }
+        
+        .modal-footer { padding: 15px 25px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 10px; background: #f8fafc; border-radius: 0 0 12px 12px; flex-shrink: 0;}
+
+        .form-section-title { font-size: 14px; color: var(--primary); font-weight: 600; margin-bottom: 15px; margin-top: 20px; border-bottom: 1px solid var(--border); padding-bottom: 5px; }
+        .form-section-title:first-child { margin-top: 0; }
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; }
+        .form-group { display: flex; flex-direction: column; gap: 6px; }
+        .form-group label { font-size: 12px; font-weight: 600; color: var(--text-dark); }
+        .form-group input, .form-group select, .form-group textarea { padding: 10px 12px; border: 1px solid var(--border); border-radius: 6px; outline: none; font-size: 13px; font-family: inherit; }
+        .form-group input:focus, .form-group select:focus { border-color: var(--primary); }
+
+        .view-profile-header { display: flex; gap: 20px; align-items: center; margin-bottom: 25px; }
+        .view-profile-header img { width: 80px; height: 80px; border-radius: 50%; border: 3px solid #eff6ff; object-fit: cover; }
+        .detail-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 20px; background: var(--bg); padding: 15px; border-radius: 8px; border: 1px solid var(--border); }
+        .detail-item span { display: block; font-size: 11px; color: var(--text-light); text-transform: uppercase; font-weight: 600; margin-bottom: 4px; }
+        .detail-item strong { font-size: 14px; color: var(--text-dark); }
+
+    </style>
+    <script src="js/auth-client.js"></script>
+</head>
+<body>
+
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="logo-img"><i class='bx bxs-graduation'></i></div>
+            <div>
+                <h2>ZHI College</h2>
+                <p>ADMIN PORTAL</p>
+            </div>
+        </div>
+        <ul class="sidebar-menu">
+            <li><a href="director_dashboard.html"><i class='bx bx-grid-alt'></i> Dashboard</a></li>
+            <li class="active"><a href="#"><i class='bx bx-group'></i> Student Directory</a></li>
+            <li><a href="staff_directory.html"><i class='bx bx-briefcase-alt-2'></i> Staff Directory</a></li>
+            <li><a href="#"><i class='bx bx-file'></i> Applications</a></li>
+            <li><a href="#"><i class='bx bx-id-card'></i> ID Cards</a></li>
+            <li><a href="#"><i class='bx bx-rupee'></i> Fees Portal</a></li>
+            <li><a href="#"><i class='bx bx-calendar-event'></i> Leave Mgmt</a></li>
+            <li><a href="#"><i class='bx bx-message-square-error'></i> Complaints</a></li>
+            <li><a href="#"><i class='bx bx-clipboard'></i> Notice Board</a></li>
+        </ul>
+    </aside>
+
+    <div class="main-wrapper">
+        <header class="topbar">
+            <div class="breadcrumb">
+                Dashboard &nbsp;>&nbsp; <span>Student Directory</span>
+            </div>
+            <div class="profile-area">
+                <img src="https://ui-avatars.com/api/?name=Admin&background=3b82f6&color=fff" alt="Admin">
+                <span>Director Admin</span>
+                <i class='bx bx-chevron-down'></i>
+            </div>
+        </header>
+
+        <main class="content">
+            
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon blue"><i class='bx bx-group'></i></div>
+                    <div class="stat-info">
+                        <h4>Total Enrolled</h4>
+                        <h2 id="totalEnrolled">0</h2>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon green"><i class='bx bx-user-check'></i></div>
+                    <div class="stat-info">
+                        <h4>Active Students</h4>
+                        <h2 id="activeStudents">0</h2>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon orange"><i class='bx bx-award'></i></div>
+                    <div class="stat-info">
+                        <h4>Passouts / Alumni</h4>
+                        <h2 id="passoutStudents">0</h2>
+                    </div>
+                </div>
+            </div>
+
+            <div class="toolbar">
+                <div class="search-box">
+                    <i class='bx bx-search'></i>
+                    <input type="text" id="searchInput" placeholder="Search by Name, Reg No, Mobile..." onkeyup="filterStudents()">
+                </div>
+                <div class="filters">
+                    <select id="courseFilter" onchange="filterStudents()">
+                        <option value="All">All Courses</option>
+                        <option value="BCA">BCA</option>
+                        <option value="BBA">BBA</option>
+                        <option value="MCA">MCA</option>
+                        <option value="MBA">MBA</option>
+                    </select>
+                    <select id="semFilter" onchange="filterStudents()">
+                        <option value="All">All Semesters</option>
+                        <option value="1">Sem 1</option>
+                        <option value="2">Sem 2</option>
+                        <option value="3">Sem 3</option>
+                        <option value="4">Sem 4</option>
+                        <option value="5">Sem 5</option>
+                        <option value="6">Sem 6</option>
+                    </select>
+                    <select id="statusFilter" onchange="filterStudents()">
+                        <option value="All">All Status</option>
+                        <option value="Active">Active</option>
+                        <option value="Passout">Passout</option>
+                        <option value="Dropped">Dropped</option>
+                    </select>
+                    <button class="btn btn-outline"><i class='bx bx-export'></i> Export CSV</button>
+                    <button class="btn btn-primary" onclick="window.location.href='AdmissionForm.html'"><i class='bx bx-plus'></i> Add Student</button>
+                </div>
+            </div>
+
+            <div class="panel">
+                <div class="table-res">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Reg. No</th>
+                                <th>Student Info</th>
+                                <th>Academic Details</th>
+                                <th>Financial (Fees)</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="studentTableBody">
+                            <tr><td colspan="6" style="text-align: center; padding: 30px;">Loading Data...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div class="modal-overlay" id="viewModal">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3><i class='bx bx-user-circle'></i> Student Complete Profile</h3>
+                <button class="modal-close" onclick="closeModal('viewModal')"><i class='bx bx-x'></i></button>
+            </div>
+            <div class="modal-body" id="viewModalBody">
+                </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeModal('viewModal')">Close Panel</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="editModal">
+        <div class="modal-box" style="max-width: 900px;">
+            <div class="modal-header">
+                <h3><i class='bx bx-edit'></i> Edit Student Records</h3>
+                <button class="modal-close" onclick="closeModal('editModal')"><i class='bx bx-x'></i></button>
+            </div>
+            <form id="editForm" onsubmit="updateStudent(event)">
+                <div class="modal-body">
+                    
+                    <div class="form-section-title">Personal Information</div>
+                    <div class="form-grid">
+                        <div class="form-group"><label>Full Name</label><input type="text" id="e_name" required></div>
+                        <div class="form-group"><label>Date of Birth</label><input type="date" id="e_dob"></div>
+                        <div class="form-group"><label>Gender</label>
+                            <select id="e_gender">
+                                <option value="Male">Male</option><option value="Female">Female</option><option value="Other">Other</option>
+                            </select>
+                        </div>
+                        <div class="form-group"><label>Category</label>
+                            <select id="e_category">
+                                <option value="General">General</option><option value="OBC">OBC</option><option value="SC/ST">SC/ST</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-section-title">Contact & Parent Details</div>
+                    <div class="form-grid">
+                        <div class="form-group"><label>Mobile Number</label><input type="text" id="e_mobile" required></div>
+                        <div class="form-group"><label>Email Address</label><input type="email" id="e_email" required></div>
+                        <div class="form-group"><label>Login Password</label><input type="text" id="e_password" required></div>
+                        <div class="form-group"><label>Father's Name</label><input type="text" id="e_father"></div>
+                        <div class="form-group"><label>Parent's Contact</label><input type="text" id="e_parent_mobile"></div>
+                        <div class="form-group" style="grid-column: span 2;"><label>Full Address</label><input type="text" id="e_address"></div>
+                    </div>
+
+                    <div class="form-section-title">Academic & College Details</div>
+                    <div class="form-grid">
+                        <div class="form-group"><label>College Reg No.</label><input type="text" id="e_reg" readonly style="background:#f1f5f9;"></div>
+                        <div class="form-group"><label>Session / Batch</label><input type="text" id="e_batch"></div>
+                        <div class="form-group"><label>Course</label>
+                            <select id="e_course"><option value="BCA">BCA</option><option value="BBA">BBA</option><option value="MCA">MCA</option><option value="MBA">MBA</option></select>
+                        </div>
+                        <div class="form-group"><label>Semester</label>
+                            <select id="e_sem">
+                                <option value="1">1</option><option value="2">2</option><option value="3">3</option>
+                                <option value="4">4</option><option value="5">5</option><option value="6">6</option>
+                            </select>
+                        </div>
+                        <div class="form-group"><label>Current Status</label>
+                            <select id="e_status">
+                                <option value="Active">Active</option><option value="Passout">Passout</option><option value="Dropped">Dropped</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-section-title">Financial Details (Fees)</div>
+                    <div class="form-grid">
+                        <div class="form-group"><label>Total Course Fee (₹)</label><input type="number" id="e_total_fee"></div>
+                        <div class="form-group"><label>Fee Paid (₹)</label><input type="number" id="e_paid_fee"></div>
+                        <div class="form-group"><label>Fee Due (₹)</label><input type="number" id="e_due_fee" readonly style="background:#f1f5f9;"></div>
+                    </div>
+
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline" onclick="closeModal('editModal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary"><i class='bx bx-save'></i> Save Updates</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        let allStudents = [];
+        let currentEditId = null;
+
+        window.onload = () => { fetchStudents(); };
+
+        // Auto calculate due fee
+        document.getElementById('e_total_fee').addEventListener('input', calculateDue);
+        document.getElementById('e_paid_fee').addEventListener('input', calculateDue);
+        function calculateDue() {
+            let total = Number(document.getElementById('e_total_fee').value) || 0;
+            let paid = Number(document.getElementById('e_paid_fee').value) || 0;
+            document.getElementById('e_due_fee').value = total - paid;
+        }
+
+        async function fetchStudents() {
+            try {
+                const response = await fetch('/api/students'); 
+                const result = await response.json();
+                
+                if(result.success) {
+                    allStudents = result.data.map(std => ({
+                        ...std,
+                        status: std.status || 'Active',
+                        dob: std.dob || 'N/A',
+                        gender: std.gender || 'Male',
+                        fatherName: std.fatherName || 'N/A',
+                        parentMobile: std.parentMobile || 'N/A',
+                        address: std.address || 'N/A',
+                        totalFee: std.totalFee || 120000,
+                        paidFee: std.amountCollected || std.paidFee || 0, // FIXED: Fetch amountCollected from database
+                        dueFee: (std.totalFee || 120000) - (std.amountCollected || std.paidFee || 0),
+                        password: std.password || '' // Include Password in the mapping
+                    }));
+                    
+                    updateStats();
+                    renderTable(allStudents);
+                }
+            } catch (error) {
+                console.error(error);
+                document.getElementById('studentTableBody').innerHTML = '<tr><td colspan="6" style="text-align:center; color:red;">Failed to fetch API data.</td></tr>';
+            }
+        }
+
+        function updateStats() {
+            document.getElementById('totalEnrolled').innerText = allStudents.length;
+            document.getElementById('activeStudents').innerText = allStudents.filter(s => s.status === 'Active').length;
+            document.getElementById('passoutStudents').innerText = allStudents.filter(s => s.status === 'Passout').length;
+        }
+
+        function renderTable(data) {
+            const tbody = document.getElementById('studentTableBody');
+            tbody.innerHTML = '';
+            
+            if(data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">No records found.</td></tr>';
+                return;
+            }
+
+            data.forEach(std => {
+                let imgUrl = std.profilePicUrl || 'https://via.placeholder.com/40?text=S';
+                let badgeClass = 'badge-success';
+                if(std.status === 'Dropped') badgeClass = 'badge-danger';
+                if(std.status === 'Passout') badgeClass = 'badge-success'; 
+
+                tbody.innerHTML += `
+                    <tr onclick="openViewModal('${std._id}')" style="cursor: pointer;">
+                        <td><b>${std.collegeRegNo || 'N/A'}</b></td>
+                        <td>
+                            <div class="std-profile">
+                                <img src="${imgUrl}" alt="Photo">
+                                <div>
+                                    <b style="color: var(--text-dark);">${std.studentName}</b>
+                                    <span class="text-sub">${std.email} | ${std.studentMobile}</span>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <b>${std.course || 'N/A'}</b> (Sem ${std.semester || '-'})
+                            <span class="text-sub">Batch: ${std.sessionBatch || 'N/A'}</span>
+                        </td>
+                        <td>
+                            <span style="font-size:12px; color:var(--text-light);">Total: ₹${std.totalFee}</span><br>
+                            <span style="font-size:12px; color:var(--success); font-weight:600;">Paid: ₹${std.paidFee}</span><br>
+                            <span style="font-size:12px; color:var(--danger); font-weight:600;">Due: ₹${std.dueFee}</span>
+                        </td>
+                        <td><span class="badge ${badgeClass}">${std.status}</span></td>
+                        <td onclick="event.stopPropagation();">
+                            <div class="action-btns">
+                                <button class="icon-btn view" onclick="openViewModal('${std._id}')" title="View Profile"><i class='bx bx-show'></i></button>
+                                <button class="icon-btn edit" onclick="openEditModal('${std._id}')" title="Edit Profile"><i class='bx bx-edit-alt'></i></button>
+                                <button class="icon-btn delete" onclick="deleteStudent('${std._id}')" title="Delete"><i class='bx bx-trash'></i></button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        function filterStudents() {
+            const search = document.getElementById('searchInput').value.toLowerCase();
+            const course = document.getElementById('courseFilter').value;
+            const sem = document.getElementById('semFilter').value;
+            const status = document.getElementById('statusFilter').value;
+
+            let filtered = allStudents.filter(std => {
+                let matchSearch = (std.studentName && std.studentName.toLowerCase().includes(search)) || 
+                                  (std.collegeRegNo && std.collegeRegNo.toLowerCase().includes(search)) ||
+                                  (std.studentMobile && std.studentMobile.includes(search));
+                let matchCourse = course === 'All' || std.course === course;
+                let matchSem = sem === 'All' || std.semester === sem;
+                let matchStatus = status === 'All' || std.status === status;
+                
+                return matchSearch && matchCourse && matchSem && matchStatus;
+            });
+            renderTable(filtered);
+        }
+
+        // --- MODALS CLOSE ---
+        function closeModal(id) {
+            document.getElementById(id).style.display = 'none';
+        }
+
+        // --- 1. VIEW PROFILE (Fixed & Fetching Real Marks) ---
+        async function openViewModal(id) {
+            const std = allStudents.find(s => s._id === id);
+            if(!std) return;
+
+            document.getElementById('viewModalBody').innerHTML = '<div style="text-align:center; padding:30px;">Loading profile & results...</div>';
+            document.getElementById('viewModal').style.display = 'flex';
+
+            let imgUrl = std.profilePicUrl || 'https://via.placeholder.com/80?text=Photo';
+            
+            // Fetching Marks for this student from our Backend API
+            let marksHtml = '<p style="color:var(--text-light); font-size:13px;">No examination records found for this student.</p>';
+            
+            try {
+                const marksRes = await fetch('/api/marks/student?studentId=' + id);
+                const marksResult = await marksRes.json();
+                
+                if(marksResult.success && marksResult.data.length > 0) {
+                    marksHtml = `
+                    <div class="table-res" style="border: 1px solid var(--border); border-radius: 8px;">
+                        <table style="min-width: 100%; font-size: 13px;">
+                            <thead style="background: #f8fafc;">
+                                <tr>
+                                    <th style="padding: 10px;">Exam Name</th>
+                                    <th style="padding: 10px;">Subject</th>
+                                    <th style="padding: 10px;">Marks</th>
+                                    <th style="padding: 10px;">Class Rank</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                    `;
+                    marksResult.data.forEach(m => {
+                        let mkText = m.attendanceStatus === 'Present' 
+                                     ? `<b style="color:var(--success)">${m.marksObtained} / ${m.maxMarks}</b>` 
+                                     : `<b style="color:var(--danger)">${m.attendanceStatus}</b>`;
+                        
+                        let rankText = m.rank > 0 ? `Rank ${m.rank}` : '-';
+
+                        marksHtml += `
+                            <tr>
+                                <td style="padding: 10px;">${m.examName}</td>
+                                <td style="padding: 10px; font-weight:600;">${m.subject}</td>
+                                <td style="padding: 10px;">${mkText}</td>
+                                <td style="padding: 10px;"><b>${rankText}</b></td>
+                            </tr>
+                        `;
+                    });
+                    marksHtml += `</tbody></table></div>`;
+                }
+            } catch (e) {
+                console.error("Could not fetch marks", e);
+            }
+
+            // Constructing the full Body HTML (With Password Added)
+            const bodyHtml = `
+                <div class="view-profile-header">
+                    <img src="${imgUrl}" alt="Profile">
+                    <div>
+                        <h2 style="font-size:22px;">${std.studentName}</h2>
+                        <p style="color:var(--text-light); font-size:14px; margin-top:5px;">Reg No: <b>${std.collegeRegNo}</b> &nbsp;|&nbsp; Status: <b style="color:var(--primary)">${std.status}</b></p>
+                    </div>
+                </div>
+
+                <div class="form-section-title">Academic Information</div>
+                <div class="detail-grid">
+                    <div class="detail-item"><span>Course</span><strong>${std.course}</strong></div>
+                    <div class="detail-item"><span>Current Semester</span><strong>Semester ${std.semester}</strong></div>
+                    <div class="detail-item"><span>Session / Batch</span><strong>${std.sessionBatch || 'N/A'}</strong></div>
+                </div>
+
+                <div class="form-section-title">Examination Results</div>
+                ${marksHtml}
+
+                <div class="form-section-title">Personal Information</div>
+                <div class="detail-grid">
+                    <div class="detail-item"><span>Date of Birth</span><strong>${std.dob}</strong></div>
+                    <div class="detail-item"><span>Gender</span><strong>${std.gender}</strong></div>
+                    <div class="detail-item"><span>Father's Name</span><strong>${std.fatherName}</strong></div>
+                    <div class="detail-item"><span>Mobile Number</span><strong>${std.studentMobile}</strong></div>
+                    <div class="detail-item"><span>Email Address</span><strong>${std.email}</strong></div>
+                    <div class="detail-item"><span>App Password</span><strong style="color:var(--danger);">${std.password || 'N/A'}</strong></div>
+                    <div class="detail-item" style="grid-column: span 3;"><span>Address</span><strong>${std.address}</strong></div>
+                </div>
+
+                <div class="form-section-title">Financial Status (Fees)</div>
+                <div class="detail-grid" style="grid-template-columns: repeat(3, 1fr); background: #f8fafc;">
+                    <div class="detail-item"><span>Total Course Fee</span><strong style="font-size:16px;">₹${std.totalFee}</strong></div>
+                    <div class="detail-item"><span>Total Paid</span><strong style="color:var(--success); font-size:16px;">₹${std.paidFee}</strong></div>
+                    <div class="detail-item"><span>Pending Dues</span><strong style="color:var(--danger); font-size:16px;">₹${std.dueFee}</strong></div>
+                </div>
+            `;
+            
+            document.getElementById('viewModalBody').innerHTML = bodyHtml;
+        }
+
+        // --- 2. EDIT PROFILE ---
+        function openEditModal(id) {
+            const std = allStudents.find(s => s._id === id);
+            if(!std) return;
+            currentEditId = id;
+
+            // Pre-fill form fields
+            document.getElementById('e_name').value = std.studentName || '';
+            document.getElementById('e_dob').value = std.dob || '';
+            document.getElementById('e_gender').value = std.gender || 'Male';
+            document.getElementById('e_category').value = std.category || 'General';
+            
+            document.getElementById('e_mobile').value = std.studentMobile || '';
+            document.getElementById('e_email').value = std.email || '';
+            document.getElementById('e_password').value = std.password || ''; // ADDED: Password field mapped
+            document.getElementById('e_father').value = std.fatherName || '';
+            document.getElementById('e_parent_mobile').value = std.parentMobile || '';
+            document.getElementById('e_address').value = std.address || '';
+
+            document.getElementById('e_reg').value = std.collegeRegNo || '';
+            document.getElementById('e_batch').value = std.sessionBatch || '';
+            document.getElementById('e_course').value = std.course || 'BCA';
+            document.getElementById('e_sem').value = std.semester || '1';
+            document.getElementById('e_status').value = std.status || 'Active';
+
+            document.getElementById('e_total_fee').value = std.totalFee || 0;
+            document.getElementById('e_paid_fee').value = std.paidFee || 0;
+            document.getElementById('e_due_fee').value = std.dueFee || 0;
+
+            document.getElementById('editModal').style.display = 'flex';
+        }
+
+        async function updateStudent(e) {
+            e.preventDefault();
+            
+            const updatePayload = {
+                studentName: document.getElementById('e_name').value,
+                dob: document.getElementById('e_dob').value,
+                gender: document.getElementById('e_gender').value,
+                category: document.getElementById('e_category').value,
+                studentMobile: document.getElementById('e_mobile').value,
+                email: document.getElementById('e_email').value,
+                password: document.getElementById('e_password').value, // Send Password to database
+                fatherName: document.getElementById('e_father').value,
+                parentMobile: document.getElementById('e_parent_mobile').value,
+                address: document.getElementById('e_address').value,
+                course: document.getElementById('e_course').value,
+                semester: document.getElementById('e_sem').value,
+                sessionBatch: document.getElementById('e_batch').value,
+                status: document.getElementById('e_status').value,
+                totalFee: document.getElementById('e_total_fee').value,
+                amountCollected: document.getElementById('e_paid_fee').value, // Update amountCollected back to DB
+                paidFee: document.getElementById('e_paid_fee').value 
+            };
+
+            try {
+                const res = await fetch('/api/students/' + currentEditId, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(updatePayload)
+                });
+                const result = await res.json();
+                
+                if(result.success) {
+                    alert("✅ Record updated successfully!");
+                    closeModal('editModal');
+                    fetchStudents(); 
+                } else {
+                    alert("❌ Update failed: " + result.message);
+                }
+            } catch (err) {
+                console.error(err);
+                alert("❌ Server Error!");
+            }
+        }
+
+        // --- 3. DELETE PROFILE ---
+        async function deleteStudent(id) {
+            if(!confirm("⚠️ WARNING: Are you sure you want to permanently delete this Student and all related records?")) return;
+            
+            try {
+                const res = await fetch('/api/students/' + id, { method: 'DELETE' });
+                const result = await res.json();
+                if(result.success) {
+                    alert("🗑️ Student Record Deleted.");
+                    fetchStudents();
+                }
+            } catch (err) { alert("❌ Delete Failed!"); }
+        }
+
+    </script>
+    <script src="js/settings-client.js"></script>
+  <script src="js/role-ui.js"></script>
+</body>
+</html>

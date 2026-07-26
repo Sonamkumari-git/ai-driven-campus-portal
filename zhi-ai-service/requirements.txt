@@ -1,0 +1,32 @@
+# ---- Web framework ----
+fastapi==0.115.5
+uvicorn[standard]==0.32.1
+python-multipart==0.0.19
+
+# ---- Config / validation ----
+pydantic==2.10.3
+pydantic-settings==2.6.1
+python-dotenv==1.0.1
+
+# ---- MongoDB ----
+motor==3.6.0
+pymongo==4.9.2
+
+# ---- ML ----
+numpy==1.26.4
+pandas==2.2.3
+scikit-learn==1.5.2
+xgboost==2.1.2
+joblib==1.4.2
+
+# ---- OCR / Document AI ----
+pytesseract==0.3.13
+Pillow==11.0.0
+pdf2image==1.17.0
+opencv-python-headless==4.10.0.84
+# Optional heavy alternative:
+# paddleocr==2.9.1
+# paddlepaddle==2.6.2
+
+# ---- Misc ----
+httpx==0.28.1

@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZHI Director | Exams & Results</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --sidebar-bg: #0b1320; --primary: #3b82f6; --success: #10b981; 
+            --warning: #f59e0b; --danger: #ef4444; --bg: #f8fafc;
+            --text-dark: #0f172a; --text-light: #64748b; --border: #e2e8f0;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        body { background-color: var(--bg); display: flex; height: 100vh; overflow: hidden; color: var(--text-dark); }
+
+        /* SIDEBAR - EXACT MATCH */
+        .sidebar { width: 260px; background: var(--sidebar-bg); color: #fff; display: flex; flex-direction: column; z-index: 1001; transition: 0.3s; flex-shrink: 0;}
+        .sidebar-header { display: flex; align-items: center; gap: 15px; padding: 20px; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .logo-circle { width: 40px; height: 40px; background: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: bold; color: #0b1320; border: 2px solid #ef4444;}
+        .sidebar-header h2 { font-size: 18px; margin: 0; color: white;}
+        .sidebar-header p { font-size: 11px; color: var(--danger); font-weight: 700; margin: 0; margin-top: 3px; letter-spacing: 0.5px;}
+        
+        .sidebar-menu { list-style: none; padding: 15px 0; overflow-y: auto; }
+        .sidebar-menu li a { display: flex; align-items: center; gap: 15px; padding: 14px 25px; color: #cbd5e1; text-decoration: none; font-size: 14px; font-weight: 500; transition: 0.2s; }
+        .sidebar-menu li a span { font-size: 16px; opacity: 0.8; }
+        .sidebar-menu li.active a, .sidebar-menu li a:hover { background: rgba(255,255,255,0.05); color: #fff; border-left: 4px solid var(--primary); }
+        .sidebar-menu li.active a span { opacity: 1; color: var(--primary); }
+
+        .main-wrapper { flex: 1; display: flex; flex-direction: column; overflow-y: auto; }
+        .topbar { height: 65px; background: #fff; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; padding: 0 25px; position: sticky; top: 0; z-index: 1000; }
+        .menu-btn { display: none; background: none; border: none; font-size: 24px; cursor: pointer; }
+        .content { padding: 20px; }
+
+        .panel { background: #fff; border-radius: 12px; border: 1px solid var(--border); box-shadow: 0 1px 3px rgba(0,0,0,0.05); margin-bottom: 20px; overflow: hidden;}
+        .panel-header { padding: 15px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; background: #f8fafc; flex-wrap: wrap; gap: 10px;}
+        
+        /* TOPPER BOARD */
+        .topper-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; padding: 20px; background: linear-gradient(to right, #f8fafc, #f1f5f9); }
+        .topper-card { text-align: center; padding: 20px; border-radius: 12px; border: 1px solid var(--border); position: relative; background: white;}
+        .topper-card img { width: 70px; height: 70px; border-radius: 50%; border: 3px solid var(--border); margin-bottom: 10px;}
+        .rank-badge { position: absolute; top: -12px; left: 50%; transform: translateX(-50%); width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; color: white; font-size: 12px; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.1);}
+        .rank-1 { background: #fbbf24; width: 36px; height: 36px; font-size: 14px;} /* Gold */
+        .rank-2 { background: #94a3b8; } /* Silver */
+        .rank-3 { background: #d97706; } /* Bronze */
+
+        /* TABLE & FORM */
+        .form-control { padding: 6px 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 13px; outline: none; }
+        .btn-primary { background: var(--primary); color: white; border: none; padding: 8px 15px; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 13px; }
+        
+        table { width: 100%; border-collapse: collapse; }
+        th { text-align: left; padding: 12px 15px; background: #f8fafc; font-size: 12px; text-transform: uppercase; color: var(--text-light); border-bottom: 1px solid var(--border);}
+        td { padding: 12px 15px; border-bottom: 1px solid var(--border); font-size: 13px; font-weight: 500;}
+        .badge-grade { padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 700; background: #d1fae5; color: #059669; }
+
+        /* TOGGLE SWITCH */
+        .switch { position: relative; display: inline-block; width: 44px; height: 22px; vertical-align: middle; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #cbd5e1; transition: .4s; border-radius: 34px; }
+        .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: var(--success); }
+        input:checked + .slider:before { transform: translateX(22px); }
+
+        /* MOBILE RESPONSIVE */
+        @media (max-width: 768px) {
+            .sidebar { position: fixed; left: -260px; height: 100vh; }
+            .sidebar.active { transform: translateX(260px); }
+            .menu-btn { display: block; }
+            .topper-grid { grid-template-columns: 1fr; }
+            .panel-header { flex-direction: column; align-items: flex-start; }
+            
+            table, thead, tbody, th, td, tr { display: block; }
+            thead tr { display: none; }
+            tr { border: 1px solid var(--border); margin-bottom: 15px; border-radius: 8px; padding: 10px; }
+            td { border: none; padding: 8px 0; display: flex; justify-content: space-between; align-items: center; }
+            td::before { content: attr(data-label); font-weight: 600; font-size: 11px; color: var(--text-light); text-transform: uppercase; }
+        }
+    </style>
+    <script src="js/auth-client.js"></script>
+</head>
+<body>
+
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="logo-circle">Z</div>
+            <div>
+                <h2>ZHI College</h2>
+                <p>DIRECTOR PANEL</p>
+            </div>
+        </div>
+        <ul class="sidebar-menu">
+            <li><a href="admin_dashboard.html"><span>⊞</span> Dashboard</a></li>
+            <li><a href="users_roles.html"><span>👥</span> Users & Roles</a></li>
+            <li><a href="students.html"><span>👤</span> Students</a></li>
+          
+            <li><a href="Finance.html"><span>💲</span> Finance</a></li>
+            <li><a href="Reports&Analytics.html"><span>📊</span> Reports & Analytics</a></li>
+            <li class="active"><a href="#"><span>📄</span> Exams & Results</a></li>
+            <li><a href="GlobalNotice.html"><span>💬</span> Global Notices</a></li>
+            <li><a href="SystemSettings.html"><span>⚙️</span> System Settings</a></li>
+            <li><a href="AuditLogs.html"><span>🔄</span> Audit Logs</a></li>
+        </ul>
+    </aside>
+
+    <div class="main-wrapper">
+        <header class="topbar">
+            <div style="display: flex; align-items: center; gap: 15px;">
+                <button class="menu-btn" onclick="toggleSidebar()">☰</button>
+                <h2 style="font-size: 18px;">Examinations & Results</h2>
+            </div>
+        </header>
+
+        <main class="content">
+            
+            <div class="panel">
+                <div class="panel-header" style="border-bottom: none;">
+                    <h3 style="font-size: 15px;">🏆 Course Toppers (BCA - Sem 3)</h3>
+                </div>
+                <div class="topper-grid">
+                    <div class="topper-card" style="margin-top: 20px;">
+                        <div class="rank-badge rank-2">2</div>
+                        <img src="https://ui-avatars.com/api/?name=Priya&background=f1f5f9" alt="Priya">
+                        <h4>Priya Singh</h4>
+                        <h2 style="color: var(--primary); margin-top: 5px;">9.2 CGPA</h2>
+                    </div>
+                    <div class="topper-card" style="border-color: #fbbf24; box-shadow: 0 4px 15px rgba(251,191,36,0.15); z-index: 1;">
+                        <div class="rank-badge rank-1">1</div>
+                        <img src="https://ui-avatars.com/api/?name=Aman&background=fef3c7" alt="Aman" style="border-color: #fbbf24;">
+                        <h4>Aman Verma</h4>
+                        <h2 style="color: #d97706; margin-top: 5px;">9.8 CGPA</h2>
+                    </div>
+                    <div class="topper-card" style="margin-top: 20px;">
+                        <div class="rank-badge rank-3">3</div>
+                        <img src="https://ui-avatars.com/api/?name=Rahul&background=fffbeb" alt="Rahul">
+                        <h4>Rahul Dev</h4>
+                        <h2 style="color: var(--primary); margin-top: 5px;">8.9 CGPA</h2>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel">
+                <div class="panel-header">
+                    <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                        <h3 style="font-size: 15px;">📝 Subject-wise Marks Entry</h3>
+                        <select class="form-control"><option>BCA - Sem 3</option></select>
+                        <select class="form-control"><option>Data Structures</option></select>
+                    </div>
+                    <button class="btn-primary">Save & Generate Result</button>
+                </div>
+                
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Student Details</th>
+                            <th>Total Marks</th>
+                            <th>CGPA</th>
+                            <th>Grade</th>
+                            <th>Status (Publish)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td data-label="Student"><b>ZHI-24-001</b><br><span style="font-size: 11px; color: var(--text-light);">Aman Verma</span></td>
+                            <td data-label="Marks">
+                                <input type="number" class="form-control" value="95" style="width: 60px; text-align: center;"> / 100
+                            </td>
+                            <td data-label="CGPA"><b>9.8</b></td>
+                            <td data-label="Grade"><span class="badge-grade">A+</span></td>
+                            <td data-label="Publish">
+                                <label class="switch">
+                                    <input type="checkbox" checked onchange="alert('Result is now LIVE for Aman!')">
+                                    <span class="slider"></span>
+                                </label>
+                                <span style="font-size: 11px; color: var(--success); font-weight: bold; margin-left: 5px;">Live</span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td data-label="Student"><b>ZHI-24-002</b><br><span style="font-size: 11px; color: var(--text-light);">Sneha Roy</span></td>
+                            <td data-label="Marks">
+                                <input type="number" class="form-control" value="65" style="width: 60px; text-align: center;"> / 100
+                            </td>
+                            <td data-label="CGPA"><b>7.2</b></td>
+                            <td data-label="Grade"><span class="badge-grade" style="background:#e0f2fe; color:#0369a1;">B</span></td>
+                            <td data-label="Publish">
+                                <label class="switch">
+                                    <input type="checkbox">
+                                    <span class="slider"></span>
+                                </label>
+                                <span style="font-size: 11px; color: var(--text-light); font-weight: bold; margin-left: 5px;">Hidden</span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+        </main>
+    </div>
+
+    <script>
+        function toggleSidebar() { document.getElementById('sidebar').classList.toggle('active'); }
+    </script>
+    <script src="js/settings-client.js"></script>
+  <script src="js/role-ui.js"></script>
+</body>
+</html>

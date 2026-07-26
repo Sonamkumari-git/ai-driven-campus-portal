@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZHI | Course & Syllabus Management</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    
+    <style>
+        :root {
+            --sidebar-bg: #0f172a; 
+            --primary: #3b82f6; 
+            --warning: #f59e0b; 
+            --bg: #f8fafc;
+            --text-dark: #1e293b;
+            --text-light: #64748b;
+            --white: #ffffff;
+            --border: #e2e8f0;
+            --card-curve: 12px; /* Uniform curve definition */
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        body { background-color: var(--bg); display: flex; height: 100vh; overflow: hidden; color: var(--text-dark); -webkit-font-smoothing: antialiased; }
+
+        /* ------------------ SIDEBAR (Restore Original Style) ------------------ */
+        .sidebar { width: 260px; background: var(--sidebar-bg); color: #fff; display: flex; flex-direction: column; flex-shrink: 0; z-index: 1001; transition: transform 0.3s ease; }
+        .sidebar-header { padding: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-between; align-items: center; }
+        .sidebar-header h2 { font-size: 18px; color: #fff; font-weight: 700;}
+        .sidebar-header p { font-size: 11px; color: var(--warning); font-weight: 700; letter-spacing: 1px; margin-top: 2px;}
+        .logo-img { width: 42px; height: 42px; border-radius: 50%; background: #fff; padding: 2px; display: flex; align-items: center; justify-content: center; }
+
+        .sidebar-menu { list-style: none; padding: 15px 0; flex: 1; overflow-y: auto; }
+        
+        /* Fixed Sidebar Hover Effect (Premium Slide) */
+        .sidebar-menu li a { 
+            display: flex; align-items: center; gap: 12px; padding: 12px 20px; 
+            color: #cbd5e1; text-decoration: none; font-size: 14px; font-weight: 500; 
+            transition: all 0.3s ease; 
+            border-left: 4px solid transparent; /* Prevents jumping */
+        }
+        .sidebar-menu li a i { font-size: 20px; transition: transform 0.3s ease; }
+        
+        .sidebar-menu li a:hover { 
+            background: rgba(255,255,255,0.05); 
+            color: #fff; 
+            border-left: 4px solid var(--primary); 
+            padding-left: 25px; /* Smooth slide effect on hover */
+        }
+        .sidebar-menu li a:hover i { transform: scale(1.1); }
+        
+        .sidebar-menu li.active a { 
+            background: rgba(255,255,255,0.05); 
+            color: #fff; 
+            border-left: 4px solid var(--primary); 
+        }
+
+        /* ------------------ MAIN CONTENT & TOPBAR (Integrated Layout) ------------------ */
+        .main-wrapper { flex: 1; display: flex; flex-direction: column; overflow: hidden; width: 100%; position: relative;}
+        
+        /* Integrated Topbar with navy top space */
+        .topbar { 
+            height: 70px; background: var(--white); border-bottom: 1px solid var(--border); 
+            display: flex; justify-content: space-between; align-items: center; padding: 0 25px; 
+            position: sticky; top: 0; z-index: 1000; box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+        }
+        
+        .user-profile { display: flex; align-items: center; gap: 10px; cursor: pointer; padding: 5px; border-radius: 8px; transition: background 0.2s;}
+        .user-profile:hover { background: #f1f5f9; }
+        .user-profile img { width: 35px; height: 35px; border-radius: 50%; object-fit: cover; border: 2px solid var(--primary);}
+        .user-profile div { display: flex; flex-direction: column; }
+        .user-profile b { font-size: 13px; color: var(--text-dark); }
+        .user-profile span { font-size: 11px; color: var(--text-light); }
+
+        /* Content Scroll Area */
+        .content { padding: 25px; flex: 1; overflow-y: auto; }
+        .page-title { font-size: 22px; font-weight: 700; color: var(--text-dark); margin-bottom: 20px;}
+
+        /* ================= SYLLABUS FORM UI (With Original Dashboard Curve Style) ================= */
+        .form-card { 
+            background: #ffffff; border-radius: var(--card-curve); 
+            border: 1px solid var(--border); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); 
+            overflow: hidden; max-width: 900px; margin: 0 auto 40px auto; 
+        }
+        .form-header { padding: 20px 25px; background: #f8fafc; border-bottom: 1px solid var(--border); }
+        .form-header h3 { font-size: 18px; color: var(--text-dark); display: flex; align-items: center; gap: 10px; font-weight: 700; }
+        
+        .form-body { padding: 30px 25px; display: flex; flex-direction: column; gap: 20px; }
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        
+        .form-group { display: flex; flex-direction: column; gap: 8px; }
+        .form-group label { font-weight: 600; color: #475569; font-size: 13px; }
+        .form-group select {
+            padding: 12px; border: 1px solid #cbd5e1; border-radius: 6px; outline: none; font-size: 14px;
+            background: #f8fafc; transition: 0.2s; width: 100%; cursor: pointer;
+        }
+        .form-group select:focus { border-color: var(--primary); background: #fff; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1); }
+        .form-group select:disabled { background-color: var(--border); cursor: not-allowed; color: #94a3b8; }
+
+        /* Subjects Display Area */
+        .subjects-container { 
+            margin-top: 20px; padding: 20px; border: 1px solid var(--border); border-radius: 8px; 
+            background: #f8fafc; display: none; 
+        }
+        .subjects-title { font-weight: 700; color: var(--text-dark); margin-bottom: 20px; font-size: 16px; border-bottom: 2px solid var(--border); padding-bottom: 10px; display: flex; justify-content: space-between; align-items: center;}
+        
+        .syllabus-grid { display: grid; grid-template-columns: 1fr; gap: 15px; }
+        
+        /* Syllabus Card Hover Effect & Curves matching Original */
+        .syllabus-card {
+            background: #ffffff; border: 1px solid var(--border); border-left: 4px solid var(--primary);
+            border-radius: 8px; padding: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+            transition: all 0.3s ease; /* Added smooth transition */
+            cursor: pointer;
+        }
+        .syllabus-card:hover {
+            transform: translateY(-4px); /* Original dashboard lift effect */
+            box-shadow: 0 8px 16px rgba(0,0,0,0.06);
+            border-color: #a5b4fc;
+        }
+        .syllabus-card h4 { color: var(--text-dark); font-size: 15px; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+        .syllabus-card p { color: #475569; font-size: 13px; line-height: 1.6; }
+
+    </style>
+    <script src="js/auth-client.js"></script>
+</head>
+<body>
+
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <div class="logo-img">
+                    <i class='bx bxs-graduation' style="color:var(--primary); font-size: 26px;"></i>
+                </div>
+                <div>
+                    <h2>ZHI College</h2>
+                    <p>ADMIN OFFICE</p>
+                </div>
+            </div>
+        </div>
+        
+        <ul class="sidebar-menu">
+            <li><a href="dashboard.html"><i class='bx bx-home-alt'></i> Dashboard Home</a></li>
+            
+            <li style="margin: 15px 0 5px 20px; font-size: 11px; color: #64748b; font-weight: 700; text-transform: uppercase;">Students & Admissions</li>
+            <li><a href="admissionform.html"><i class='bx bx-user-plus'></i> New Admission</a></li>
+            <li><a href="student.html"><i class='bx bx-group'></i> Student Directory</a></li>
+            
+            <li style="margin: 15px 0 5px 20px; font-size: 11px; color: #64748b; font-weight: 700; text-transform: uppercase;">Staff & Academics</li>
+            <li><a href="staffDirectory.html"><i class='bx bx-briefcase-alt-2'></i> Staff Records</a></li>
+            <li><a href="addstaff.html"><i class='bx bx-user-pin'></i> Add Teacher/Staff</a></li>
+            <li class="active"><a href="course_subjects.html"><i class='bx bx-book-bookmark'></i> Course & Subjects</a></li> 
+            <li style="margin: 15px 0 5px 20px; font-size: 11px; color: #64748b; font-weight: 700; text-transform: uppercase;">Office Tools</li>
+            <li><a href="#"><i class='bx bx-id-card'></i> Generate ID Cards</a></li>
+            <li><a href="GlobalNotice.html"><i class='bx bx-message-square-detail'></i> Notice Board</a></li>
+            <li><a href="#"><i class='bx bx-pie-chart-alt-2'></i> Office Reports</a></li>
+        </ul>
+    </aside>
+
+    <main class="main-wrapper">
+        
+        <header class="topbar">
+            <div style="font-size: 18px; font-weight: 600; color: var(--text-dark);">Office Administration</div>
+            <div class="user-profile">
+                <div style="text-align: right;">
+                    <b id="adminName">Office Admin</b>
+                    <span>Management Staff</span>
+                </div>
+                <img src="https://ui-avatars.com/api/?name=Admin+Staff&background=3b82f6&color=fff" alt="Admin">
+            </div>
+        </header>
+
+        <div class="content">
+            <div class="page-title">Manage Course & Syllabus</div>
+            
+            <div class="form-card">
+                <div class="form-header">
+                    <h3><i class='bx bx-cog' style='color:var(--primary)'></i> Configuration</h3>
+                </div>
+                
+                <div class="form-body">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Select Course *</label>
+                            <select id="courseSelect" onchange="updateSemesters()">
+                                <option value="">-- Choose Course --</option>
+                                <option value="BCA">BCA (Bachelor of Computer Applications)</option>
+                                <option value="BBA">BBA (Bachelor of Business Administration)</option>
+                                <option value="MCA">MCA (Master of Computer Applications)</option>
+                                <option value="MBA">MBA (Master of Business Administration)</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Select Semester *</label>
+                            <select id="semesterSelect" onchange="showSyllabus()" disabled>
+                                <option value="">-- Choose Semester --</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="subjects-container" id="subjectsContainer">
+                        <div class="subjects-title">
+                            <span><i class='bx bx-list-ul'></i> Assigned Subjects & Syllabus</span>
+                            <span id="courseSemLabel" style="font-size: 13px; color: var(--primary); background: #e0e7ff; padding: 4px 10px; border-radius: 20px;"></span>
+                        </div>
+                        <div class="syllabus-grid" id="syllabusList">
+                            </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <script>
+        // Name from localStorage matching original dashboard
+        window.onload = () => {
+            const userName = localStorage.getItem('userName');
+            if(userName) {
+                document.getElementById('adminName').innerText = userName;
+            }
+        };
+
+        // Data Structure
+        const academicData = {
+            "BCA": {
+                "Semester 1": [
+                    { subject: "C Programming", syllabus: "Introduction to C, Data Types, Control Statements, Arrays, Functions, Pointers, and File Handling." },
+                    { subject: "Mathematics-I", syllabus: "Set Theory, Matrices, Determinants, Differential Calculus, integral Calculus." },
+                    { subject: "IT Fundamentals", syllabus: "Computer Architecture basics, Input/Output devices, Number System, Operating System basics." },
+                    { subject: "English Communication", syllabus: "Grammar, Vocabulary, Business Letter Writing, Presentation Skills, and Group Discussions." }
+                ],
+                "Semester 2": [
+                    { subject: "Data Structures", syllabus: "Stacks, Queues, Linked Lists, Trees, Graphs, Sorting, and Searching Algorithms." },
+                    { subject: "C++ Programming", syllabus: "OOPS concepts, Classes, Objects, Inheritance, Polymorphism, Exception Handling." },
+                    { subject: "Mathematics-II", syllabus: "Discrete Mathematics, Boolean Algebra, Graph Theory, and Probability." },
+                    { subject: "Environmental Science", syllabus: "Ecosystems, Biodiversity, Pollution, Environmental Policies and Practices." }
+                ]
+            },
+            "BBA": {
+                "Semester 1": [
+                    { subject: "Principles of Management", syllabus: "Planning, Organizing, Leading, Controlling, Motivation Theories, and Leadership." },
+                    { subject: "Business Economics", syllabus: "Microeconomics, Demand & Supply, Cost Analysis, Market Structures." },
+                    { subject: "Financial Accounting", syllabus: "Journal, Ledger, Trial Balance, Final Accounts, Depreciation, and Bank Reconciliation." }
+                ],
+                "Semester 2": [
+                    { subject: "Marketing Management", syllabus: "Marketing Mix, Consumer Behavior, Market Segmentation, Product Life Cycle." },
+                    { subject: "Human Resource Management", syllabus: "Recruitment, Selection, Training & Development, Performance Appraisal." },
+                    { subject: "Business Law", syllabus: "Indian Contract Act, Sale of Goods Act, Company Law Basics." }
+                ]
+            },
+            "MCA": {
+                "Semester 1": [
+                    { subject: "Advanced Java", syllabus: "JDBC, Servlets, JSP, Hibernate, Spring Framework basics." },
+                    { subject: "Database Management System", syllabus: "ER Models, Relational Algebra, SQL, Normalization, Transaction Processing." },
+                    { subject: "Python Programming", syllabus: "Python basics, Data Structures, Pandas, NumPy, and basic Data Analysis." }
+                ],
+                "Semester 2": [
+                    { subject: "Artificial Intelligence", syllabus: "Search Algorithms, Knowledge Representation, Neural Networks, Fuzzy Logic." },
+                    { subject: "Cloud Computing", syllabus: "IaaS, PaaS, SaaS, Virtualization, AWS/GCP basics, Cloud Security." },
+                    { subject: "Machine Learning", syllabus: "Supervised & Unsupervised Learning, Regression, Classification, SVM, Decision Trees." }
+                ]
+            },
+            "MBA": {
+                "Semester 1": [
+                    { subject: "Organizational Behavior", syllabus: "Individual Behavior, Group Dynamics, Organizational Culture, Conflict Management." },
+                    { subject: "Financial Management", syllabus: "Capital Budgeting, Cost of Capital, Working Capital Management, Dividend Policy." },
+                    { subject: "Business Statistics", syllabus: "Measures of Central Tendency, Probability Distributions, Hypothesis Testing." }
+                ],
+                "Semester 2": [
+                    { subject: "Strategic Management", syllabus: "Strategic Vision, SWOT Analysis, Porter's Five Forces, Corporate Level Strategies." },
+                    { subject: "Operations Management", syllabus: "Production Planning, Quality Control, Supply Chain Management, Inventory Control." },
+                    { subject: "Business Ethics", syllabus: "Corporate Social Responsibility (CSR), Ethical Dilemmas, Corporate Governance." }
+                ]
+            }
+        };
+
+        const courseSelect = document.getElementById("courseSelect");
+        const semesterSelect = document.getElementById("semesterSelect");
+        const subjectsContainer = document.getElementById("subjectsContainer");
+        const syllabusList = document.getElementById("syllabusList");
+        const courseSemLabel = document.getElementById("courseSemLabel");
+
+        // Course select hone par Semesters load karna
+        function updateSemesters() {
+            const selectedCourse = courseSelect.value;
+            
+            // Reset
+            semesterSelect.innerHTML = '<option value="">-- Choose Semester --</option>';
+            semesterSelect.disabled = true;
+            subjectsContainer.style.display = "none";
+
+            if (selectedCourse && academicData[selectedCourse]) {
+                const semesters = Object.keys(academicData[selectedCourse]);
+                
+                semesters.forEach(sem => {
+                    let option = document.createElement("option");
+                    option.value = sem;
+                    option.textContent = sem;
+                    semesterSelect.appendChild(option);
+                });
+                
+                semesterSelect.disabled = false;
+            }
+        }
+
+        // Semester select hone par Syllabus cards dikhana
+        function showSyllabus() {
+            const selectedCourse = courseSelect.value;
+            const selectedSemester = semesterSelect.value;
+
+            if (selectedCourse && selectedSemester && academicData[selectedCourse][selectedSemester]) {
+                const subjects = academicData[selectedCourse][selectedSemester];
+                
+                courseSemLabel.textContent = `${selectedCourse} | ${selectedSemester}`;
+                syllabusList.innerHTML = '';
+
+                subjects.forEach(item => {
+                    let card = document.createElement("div");
+                    card.className = "syllabus-card";
+                    card.innerHTML = `
+                        <h4>📘 ${item.subject}</h4>
+                        <p><strong>Syllabus:</strong> ${item.syllabus}</p>
+                    `;
+                    syllabusList.appendChild(card);
+                });
+
+                subjectsContainer.style.display = "block";
+            } else {
+                subjectsContainer.style.display = "none";
+            }
+        }
+    </script>
+    <script src="js/settings-client.js"></script>
+  <script src="js/role-ui.js"></script>
+</body>
+</html>

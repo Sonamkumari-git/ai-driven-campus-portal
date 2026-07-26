@@ -1,0 +1,65 @@
+# Render Blueprint for the ZHI AI-Powered College Management System.
+# Push this to the repo root; then in Render Dashboard:
+#   New + → Blueprint → connect repo → both services created together.
+services:
+  # ---------- Existing Node.js ERP ----------
+  - type: web
+    name: zhi-erp
+    env: node
+    rootDir: .
+    plan: free
+    buildCommand: npm install
+    startCommand: node server.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: MONGO_URI
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: ADMIN_EMAIL
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: CORS_ORIGIN
+        value: "*"
+      - key: AI_SERVICE_URL
+        fromService:
+          type: web
+          name: zhi-ai-service
+          property: hostport
+      - key: AI_SERVICE_API_KEY
+        sync: false
+      - key: AI_SERVICE_TIMEOUT_MS
+        value: "60000"
+
+  # ---------- New Python FastAPI AI service ----------
+  - type: web
+    name: zhi-ai-service
+    env: python
+    rootDir: zhi-ai-service
+    plan: starter          # free tier RAM is tight for OCR — use starter
+    buildCommand: |
+      pip install --upgrade pip
+      pip install -r requirements.txt
+      python train_dummy_models.py
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: AI_SERVICE_ENV
+        value: production
+      - key: AI_SERVICE_API_KEY
+        sync: false
+      - key: AI_CORS_ORIGINS
+        sync: false                # e.g. https://zhi-erp.onrender.com
+      - key: MONGO_URI
+        sync: false
+      - key: MONGO_DB_NAME
+        value: zhi_college
+      - key: ML_MODELS_DIR
+        value: ./ml_models
+      - key: TESSERACT_CMD
+        value: /usr/bin/tesseract
+      - key: OCR_LANG
+        value: eng

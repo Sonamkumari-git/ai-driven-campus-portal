@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZHI | Upload Marks (Teacher)</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    
+    <style>
+        :root { 
+            --sidebar-bg: #0f172a; 
+            --primary: #10b981; 
+            --warning: #f59e0b; 
+            --danger: #ef4444; 
+            --success: #10b981; 
+            --bg: #f8fafc; 
+            --text-dark: #1e293b; 
+            --text-light: #64748b; 
+            --white: #ffffff; 
+            --border: #e2e8f0; 
+            --card-curve: 12px; 
+        }
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        body { background-color: var(--bg); display: flex; height: 100vh; overflow: hidden; color: var(--text-dark); }
+
+        .sidebar { width: 260px; background: var(--sidebar-bg); color: #fff; display: flex; flex-direction: column; flex-shrink: 0; z-index: 1001; transition: transform 0.3s ease; }
+        .sidebar-header { padding: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; gap: 12px; }
+        .sidebar-header h2 { font-size: 18px; color: #fff; font-weight: 700;}
+        .sidebar-header p { font-size: 11px; color: var(--success); font-weight: 700; letter-spacing: 1px;}
+        .logo-img { width: 42px; height: 42px; border-radius: 50%; background: #fff; display: flex; align-items: center; justify-content: center; color: var(--primary); font-size: 26px;}
+
+        .sidebar-menu { list-style: none; padding: 15px 0; flex: 1; overflow-y: auto; }
+        .sidebar-menu li a { display: flex; align-items: center; gap: 12px; padding: 12px 20px; color: #cbd5e1; text-decoration: none; font-size: 14px; font-weight: 500; transition: 0.2s; border-left: 4px solid transparent;}
+        .sidebar-menu li a:hover, .sidebar-menu li.active a { background: rgba(255,255,255,0.05); color: #fff; border-left: 4px solid var(--primary); padding-left: 25px;}
+        .sidebar-menu li.active a { padding-left: 20px; }
+        .logout-btn a { color: var(--danger) !important; }
+        .logout-btn a:hover { border-left-color: var(--danger) !important; background: rgba(239, 68, 68, 0.1) !important; }
+
+        .main-wrapper { flex: 1; display: flex; flex-direction: column; overflow-y: auto; width: 100%; position: relative;}
+        .topbar { height: 70px; background: var(--white); border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; padding: 0 25px; position: sticky; top: 0; z-index: 1000;}
+        .menu-btn { display: none; background: none; border: none; font-size: 26px; cursor: pointer; color: var(--text-dark); }
+        .user-profile { display: flex; align-items: center; gap: 10px; cursor: pointer; padding: 5px; border-radius: 8px; }
+        .user-profile img { width: 35px; height: 35px; border-radius: 50%; object-fit: cover; border: 2px solid var(--success);}
+        .user-profile div { display: flex; flex-direction: column; text-align: right;}
+        
+        .content { padding: 30px; flex: 1; }
+        .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
+        .page-title { font-size: 24px; font-weight: 700; color: var(--text-dark); }
+
+        .filter-card { background: var(--white); padding: 20px; border-radius: var(--card-curve); border: 1px solid var(--border); margin-bottom: 25px; display: flex; gap: 15px; align-items: flex-end; flex-wrap: wrap;}
+        .form-group { display: flex; flex-direction: column; gap: 6px; flex: 1; min-width: 150px;}
+        .form-group label { font-size: 13px; font-weight: 600; color: var(--text-light); }
+        .form-control { padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 6px; outline: none; font-size: 14px; background: var(--bg); width: 100%; transition: 0.2s;}
+        .form-control:focus { border-color: var(--primary); background: #fff;}
+        .btn-primary { background: var(--primary); color: white; border: none; padding: 11px 20px; border-radius: 6px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; transition: 0.2s;}
+        .btn-primary:hover { background: #059669; }
+
+        .card { background: var(--white); border-radius: var(--card-curve); border: 1px solid var(--border); box-shadow: 0 2px 6px rgba(0,0,0,0.02); overflow: hidden; display: none; }
+        .card-header { padding: 18px 20px; background: #f8fafc; border-bottom: 1px solid var(--border); font-size: 16px; font-weight: 600; display: flex; justify-content: space-between; align-items: center;}
+        
+        table { width: 100%; border-collapse: collapse; text-align: left; min-width: 800px;}
+        th { padding: 15px 20px; background: var(--primary); font-size: 13px; text-transform: uppercase; color: #fff; font-weight: 600; border-bottom: 1px solid var(--border);}
+        td { padding: 10px 20px; border-bottom: 1px solid var(--border); font-size: 14px; vertical-align: middle;}
+        
+        .mark-input { width: 80px; padding: 8px; border: 2px solid #cbd5e1; border-radius: 6px; text-align: center; font-weight: 700; outline: none; transition: 0.2s; font-size: 15px;}
+        .mark-input:focus { border-color: var(--primary); }
+        .mark-input:disabled, .mark-input[readonly] { background-color: #e2e8f0; color: #64748b; cursor: not-allowed; border-color: #cbd5e1; }
+        
+        .rank-badge { background: #f1f5f9; color: var(--text-light); padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 700; border: 1px solid #cbd5e1; }
+        .rank-1 { background: #fef08a; color: #854d0e; border-color: #fde047; } 
+        .rank-2 { background: #e2e8f0; color: #475569; border-color: #cbd5e1; } 
+        .rank-3 { background: #fed7aa; color: #9a3412; border-color: #fdba74; } 
+
+        .btn-success { background: var(--success); color: white; border: none; padding: 14px 25px; border-radius: 6px; font-weight: 600; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 8px; width: 100%; font-size: 15px; transition: 0.2s;}
+        .btn-success:hover { background: #059669; }
+
+        @media (max-width: 768px) { .sidebar { position: fixed; left: -260px; height: 100vh; } .sidebar.active { transform: translateX(260px); } .menu-btn { display: block; } }
+    </style>
+    <script src="js/auth-client.js"></script>
+</head>
+<body>
+
+    <script>
+        const staffId = localStorage.getItem("staffId");
+        if (!staffId) {
+            alert("Security Alert: Please login first!");
+            window.location.href = "login.html"; 
+        }
+    </script>
+
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="logo-img"><i class='bx bx-book-reader'></i></div>
+            <div><h2>ZHI Academics</h2><p>TEACHER PANEL</p></div>
+        </div>
+        <ul class="sidebar-menu">
+            <li><a href="teacher_dashboard.html"><i class='bx bx-grid-alt'></i> Dashboard Home</a></li>
+            
+            <li style="margin: 15px 0 5px 20px; font-size: 11px; color: #64748b; font-weight: 700; text-transform: uppercase;">Academics</li>
+            <li><a href="teacher_timetable.html"><i class='bx bx-calendar'></i> My Timetable</a></li>
+            <li><a href="upload_notes.html"><i class='bx bx-folder-plus'></i> Upload Notes</a></li>
+            <li><a href="manage_assignments.html"><i class='bx bx-task'></i> Assignments</a></li>
+            
+            <li style="margin: 15px 0 5px 20px; font-size: 11px; color: #64748b; font-weight: 700; text-transform: uppercase;">Classroom</li>
+            <li><a href="mark_attendance.html"><i class='bx bx-check-shield'></i> Mark Attendance</a></li>
+            <li class="active"><a href="upload_marks.html"><i class='bx bx-bar-chart-alt-2'></i> Upload Marks</a></li>
+            <li><a href="apply_leave.html"><i class='bx bx-envelope'></i> Apply Leave</a></li>
+
+            <li style="margin: 15px 0 5px 20px; font-size: 11px; color: #64748b; font-weight: 700; text-transform: uppercase;">Personal</li>
+            <li><a href="teacher_profile.html"><i class='bx bx-user'></i> My Profile</a></li>
+
+            <li class="logout-btn" style="margin-top: 20px;">
+                <a href="#" onclick="logoutTeacher()"><i class='bx bx-log-out'></i> Logout Securely</a>
+            </li>
+        </ul>
+    </aside>
+
+    <main class="main-wrapper">
+        <header class="topbar">
+            <div style="display: flex; align-items: center; gap: 15px;">
+                <button class="menu-btn" onclick="toggleSidebar()"><i class='bx bx-menu'></i></button>
+                <div style="font-size: 18px; font-weight: 600; color: var(--text-dark);">Classroom Management</div>
+            </div>
+            
+            <div class="user-profile">
+                <div>
+                    <b id="teacherNameTxt" style="font-size: 13px; color: var(--text-dark);">Loading...</b>
+                    <span style="font-size: 11px; color: var(--text-light);">Faculty</span>
+                </div>
+                <img id="teacherImg" src="https://ui-avatars.com/api/?name=Teacher&background=10b981&color=fff" alt="Teacher">
+            </div>
+        </header>
+
+        <div class="content">
+            <div class="page-header"><div class="page-title">Upload Examination Marks</div></div>
+
+            <div class="filter-card">
+                <div class="form-group">
+                    <label>Select Course</label>
+                    <select id="courseSelect" class="form-control">
+                        <option value="BCA">BCA</option>
+                        <option value="BBA">BBA</option>
+                        <option value="MCA">MCA</option>
+                        <option value="MBA">MBA</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Select Batch</label>
+                    <select id="batchSelect" class="form-control">
+                        <option value="2023-2026">2023-2026</option>
+                        <option value="2024-2027">2024-2027</option>
+                        <option value="2025-2028">2025-2028</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>Select Semester</label>
+                    <select id="semSelect" class="form-control">
+                        <option value="1">Sem 1</option>
+                        <option value="2">Sem 2</option>
+                        <option value="3">Sem 3</option>
+                        <option value="4">Sem 4</option>
+                        <option value="5">Sem 5</option>
+                        <option value="6">Sem 6</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>Select Subject</label>
+                    <select id="subjectSelect" class="form-control">
+                        <option value="">Loading your subjects...</option>
+                    </select>
+                </div>
+
+                <div class="form-group" style="flex: 1.5;">
+                    <label>Exam Name (Type manually)</label>
+                    <input type="text" id="examName" class="form-control" placeholder="e.g. Mid-Term 1, Class Test...">
+                </div>
+
+                <div class="form-group">
+                    <label>Date of Exam</label>
+                    <input type="date" id="examDate" class="form-control">
+                </div>
+
+                <div class="form-group" style="min-width: 100px;">
+                    <label>Max Marks</label>
+                    <input type="number" id="maxMarks" class="form-control" value="100">
+                </div>
+                
+                <div class="form-group" style="min-width: 120px;">
+                    <button type="button" class="btn-primary" onclick="loadStudentsList()" id="fetchBtn" style="height: 42px; margin-top: auto;">
+                        <i class='bx bx-list-ul'></i> Fetch Class
+                    </button>
+                </div>
+            </div>
+
+            <div class="card" id="marksTableCard">
+                <div class="card-header">
+                    <span id="tableTitle"><i class='bx bx-edit' style="color: var(--primary);"></i> Entering Marks for Class</span>
+                    <span style="font-size: 12px; color: var(--text-light);"><i class='bx bx-info-circle'></i> Rank is auto-calculated on typing</span>
+                </div>
+                <form onsubmit="submitMarks(event)">
+                    <div style="overflow-x: auto;">
+                        <table id="marksTable">
+                            <thead>
+                                <tr>
+                                    <th style="width: 80px;">Rank</th>
+                                    <th>Roll No</th>
+                                    <th>Student Name</th>
+                                    <th>Attendance</th>
+                                    <th>Marks Obtained</th>
+                                    <th>Remarks (Optional)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="studentTableBody">
+                                </tbody>
+                        </table>
+                    </div>
+                    <div style="padding: 20px; border-top: 1px solid var(--border); background: #f8fafc;">
+                        <button type="submit" class="btn-success" id="saveBtn"><i class='bx bx-cloud-upload'></i> Save & Upload Marks to Database</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const API_BASE_URL = "/api";
+
+        function toggleSidebar() { document.getElementById('sidebar').classList.toggle('active'); }
+        function logoutTeacher() {
+            if(confirm("Are you sure you want to logout?")) {
+                localStorage.clear();
+                window.location.href = "login.html"; 
+            }
+        }
+
+        window.onload = function() {
+            const staffName = localStorage.getItem("staffName") || "Faculty";
+            document.getElementById("teacherNameTxt").innerText = staffName;
+            document.getElementById("teacherImg").src = `https://ui-avatars.com/api/?name=${staffName.replace(" ", "+")}&background=10b981&color=fff`;
+            
+            document.getElementById('examDate').valueAsDate = new Date();
+            
+            fetchTeacherSubjects();
+        }
+
+        async function fetchTeacherSubjects() {
+            try {
+                const subSelect = document.getElementById('subjectSelect');
+                const response = await fetch(`${API_BASE_URL}/get-teacher-skills?staffId=${staffId}`);
+                const result = await response.json();
+
+                subSelect.innerHTML = "";
+                
+                if (result.success && result.skills.length > 0) {
+                    result.skills.forEach(sub => {
+                        let opt = document.createElement("option");
+                        opt.value = sub;
+                        opt.innerText = sub;
+                        subSelect.appendChild(opt);
+                    });
+                } else {
+                    subSelect.innerHTML = "<option value=''>No subjects assigned to you</option>";
+                }
+            } catch (error) {
+                console.error("Error fetching skills", error);
+            }
+        }
+
+        // 🔴 NEW: Logic to disable marks input if absent/debarred
+        function handleAttendanceChange(selectElement) {
+            const row = selectElement.closest('tr');
+            const marksInput = row.querySelector('.mark-input');
+            
+            if (selectElement.value !== "Present") {
+                marksInput.value = 0;
+                marksInput.readOnly = true;
+            } else {
+                marksInput.readOnly = false;
+                marksInput.value = ""; // Clear so teacher can enter marks
+            }
+            calculateLiveRanks(); // Recalculate ranks since marks changed to 0
+        }
+
+        async function loadStudentsList() {
+            const course = document.getElementById('courseSelect').value;
+            const batch = document.getElementById('batchSelect').value; // 🔴 Fetch Batch
+            const sem = document.getElementById('semSelect').value;
+            const subject = document.getElementById('subjectSelect').value;
+            const examName = document.getElementById('examName').value;
+            const maxMarks = document.getElementById('maxMarks').value;
+            
+            if(!examName) {
+                alert("Please type an Exam Name (e.g. Mid-Term) first!");
+                document.getElementById('examName').focus();
+                return;
+            }
+
+            if(!subject) {
+                alert("You have no valid subjects to evaluate!");
+                return;
+            }
+
+            const btn = document.getElementById('fetchBtn');
+            btn.innerHTML = "<i class='bx bx-loader bx-spin'></i> Fetching...";
+
+            try {
+                // 🔴 API call me ab sessionBatch pass ho raha hai
+                const checkRes = await fetch(`${API_BASE_URL}/marks/check?course=${course}&sessionBatch=${batch}&semester=${sem}&subject=${subject}&examName=${examName}`);
+                const checkResult = await checkRes.json();
+                
+                let existingMarksData = null;
+                if(checkResult.exists) {
+                    if(confirm("Marks for this exam and batch already exist! Do you want to edit them?")) {
+                        existingMarksData = checkResult.data.studentsMarkList;
+                    } else {
+                        btn.innerHTML = "<i class='bx bx-list-ul'></i> Fetch Class";
+                        return;
+                    }
+                }
+
+                // 🔴 API call me sessionBatch pass ho raha hai for exact students
+                const studentRes = await fetch(`${API_BASE_URL}/get-students?course=${course}&sessionBatch=${batch}&semester=${sem}`);
+                const studentResult = await studentRes.json();
+
+                const tbody = document.getElementById('studentTableBody');
+                tbody.innerHTML = "";
+
+                if(studentResult.success && studentResult.students.length > 0) {
+                    document.getElementById('tableTitle').innerHTML = `<i class='bx bx-edit' style="color: var(--primary);"></i> Entering Marks for ${course} (${batch}) - Sem ${sem}`;
+                    
+                    studentResult.students.forEach(student => {
+                        let currentMark = "";
+                        let currentRemark = "";
+                        let currentRank = "-";
+                        let currentAttendance = "Present";
+                        
+                        if(existingMarksData) {
+                            let found = existingMarksData.find(m => m.studentId === student._id);
+                            if(found) {
+                                currentMark = found.marksObtained;
+                                currentRemark = found.remarks;
+                                currentRank = `Rank ${found.rank}`;
+                                currentAttendance = found.attendanceStatus || "Present";
+                            }
+                        }
+
+                        let isReadOnly = currentAttendance !== "Present" ? "readonly" : "";
+
+                        let tr = document.createElement('tr');
+                        tr.dataset.studentid = student._id;
+                        tr.innerHTML = `
+                            <td><span class="rank-badge rank-cell">${currentRank}</span></td>
+                            <td class="roll-cell"><b>${student.roll}</b></td>
+                            <td class="name-cell">${student.name}</td>
+                            <td>
+                                <select class="form-control attendance-select" onchange="handleAttendanceChange(this)" style="padding: 6px; width: 110px;">
+                                    <option value="Present" ${currentAttendance === 'Present' ? 'selected' : ''}>Present</option>
+                                    <option value="Absent" ${currentAttendance === 'Absent' ? 'selected' : ''}>Absent</option>
+                                    <option value="Debarred" ${currentAttendance === 'Debarred' ? 'selected' : ''}>Debarred</option>
+                                </select>
+                            </td>
+                            <td><input type="number" class="mark-input" min="0" max="${maxMarks}" value="${currentMark}" onkeyup="calculateLiveRanks()" onchange="calculateLiveRanks()" required ${isReadOnly}></td>
+                            <td><input type="text" class="form-control remarks-input" value="${currentRemark}" placeholder="e.g. Good"></td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+
+                    document.getElementById('marksTableCard').style.display = 'block';
+                    if(existingMarksData) calculateLiveRanks(); 
+
+                } else {
+                    alert("No students found in this Course, Batch & Semester combination.");
+                    document.getElementById('marksTableCard').style.display = 'none';
+                }
+
+            } catch (error) {
+                alert("Server error connecting to database!");
+                console.error(error);
+            } finally {
+                btn.innerHTML = "<i class='bx bx-list-ul'></i> Fetch Class";
+            }
+        }
+
+        function calculateLiveRanks() {
+            let rows = Array.from(document.querySelectorAll('#studentTableBody tr'));
+            
+            rows.forEach(row => {
+                let mark = row.querySelector('.mark-input').value;
+                row.dataset.mark = mark === "" ? -1 : parseFloat(mark); 
+            });
+
+            let sortedRows = [...rows].filter(r => r.dataset.mark >= 0).sort((a, b) => b.dataset.mark - a.dataset.mark);
+
+            let currentRank = 1;
+            let previousMark = null;
+            let actualCount = 1;
+
+            sortedRows.forEach(row => {
+                let mark = parseFloat(row.dataset.mark);
+                
+                if (mark !== previousMark) {
+                    currentRank = actualCount;
+                }
+                
+                let rankBadge = row.querySelector('.rank-cell');
+                rankBadge.innerText = `Rank ${currentRank}`;
+                
+                rankBadge.className = 'rank-badge rank-cell'; 
+                if(currentRank === 1) rankBadge.classList.add('rank-1');
+                if(currentRank === 2) rankBadge.classList.add('rank-2');
+                if(currentRank === 3) rankBadge.classList.add('rank-3');
+
+                previousMark = mark;
+                actualCount++;
+            });
+
+            rows.filter(r => r.dataset.mark == -1).forEach(row => {
+                row.querySelector('.rank-cell').innerText = "-";
+                row.querySelector('.rank-cell').className = 'rank-badge rank-cell';
+            });
+        }
+
+        async function submitMarks(e) {
+            e.preventDefault();
+            calculateLiveRanks();
+
+            const btn = document.getElementById('saveBtn');
+            btn.innerHTML = "<i class='bx bx-loader bx-spin'></i> Uploading...";
+            btn.disabled = true;
+
+            const marksData = [];
+            let rows = document.querySelectorAll('#studentTableBody tr');
+            
+            rows.forEach(row => {
+                let studentId = row.dataset.studentid;
+                let roll = row.querySelector('.roll-cell').innerText;
+                let name = row.querySelector('.name-cell').innerText;
+                let attendance = row.querySelector('.attendance-select').value; // 🔴 NEW
+                let mark = row.querySelector('.mark-input').value;
+                let rankStr = row.querySelector('.rank-cell').innerText.replace('Rank ', '');
+                let remarks = row.querySelector('.remarks-input').value;
+
+                marksData.push({
+                    studentId: studentId,
+                    rollNo: roll,
+                    studentName: name,
+                    attendanceStatus: attendance, // 🔴 Push to array
+                    marksObtained: Number(mark),
+                    rank: Number(rankStr) || 0,
+                    remarks: remarks
+                });
+            });
+
+            const finalPayload = {
+                teacherId: staffId,
+                course: document.getElementById('courseSelect').value,
+                sessionBatch: document.getElementById('batchSelect').value, // 🔴 Include Batch
+                semester: document.getElementById('semSelect').value,
+                subject: document.getElementById('subjectSelect').value,
+                examName: document.getElementById('examName').value,
+                examDate: document.getElementById('examDate').value,
+                maxMarks: document.getElementById('maxMarks').value,
+                status: 'Published', // 🔴 As per schema
+                studentsMarkList: marksData
+            };
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/marks/upload`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(finalPayload)
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    alert("✅ Success: Marks Uploaded Successfully!");
+                    document.getElementById('marksTableCard').style.display = 'none';
+                    document.getElementById('examName').value = "";
+                } else {
+                    alert("❌ Error: " + result.message);
+                }
+
+            } catch(e) {
+                alert("❌ Critical Error: Could not reach the server!");
+            } finally {
+                btn.innerHTML = "<i class='bx bx-cloud-upload'></i> Save & Upload Marks to Database";
+                btn.disabled = false;
+            }
+        }
+    </script>
+    <script src="js/settings-client.js"></script>
+  <script src="js/role-ui.js"></script>
+</body>
+</html>

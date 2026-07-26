@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZHI | Add New Staff</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    
+    <style>
+        :root {
+            --primary: #3b82f6; 
+            --success: #10b981; 
+            --danger: #ef4444; 
+            --bg: #f8fafc;
+            --text-dark: #0f172a;
+            --text-light: #64748b;
+            --white: #ffffff;
+            --border: #e2e8f0;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        body { background-color: var(--bg); color: var(--text-dark); -webkit-font-smoothing: antialiased; }
+
+        /* ------------------ HEADER ------------------ */
+        .header { background: var(--white); padding: 15px 30px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 10px rgba(0,0,0,0.02); }
+        .header-left { display: flex; align-items: center; gap: 12px; }
+        .logo-img { width: 40px; height: 40px; background: var(--bg); border-radius: 50%; display: flex; justify-content: center; align-items: center; color: var(--primary); font-size: 24px; }
+        .header-title h1 { font-size: 18px; color: var(--text-dark); font-weight: 700; }
+        .header-title p { font-size: 12px; color: var(--text-light); text-transform: uppercase; letter-spacing: 1px; font-weight: 600; }
+        .back-btn { text-decoration: none; color: var(--primary); font-weight: 600; font-size: 14px; display: flex; align-items: center; gap: 5px; padding: 8px 15px; background: #eff6ff; border-radius: 6px; transition: 0.2s; }
+        .back-btn:hover { background: #dbeafe; }
+
+        /* ------------------ FORM CONTAINER ------------------ */
+        .form-wrapper { max-width: 900px; margin: 30px auto; padding: 0 15px; }
+        .form-card { background: var(--white); border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); border: 1px solid var(--border); overflow: hidden; }
+        .card-header { padding: 20px 25px; border-bottom: 1px solid var(--border); background: #f8fafc; }
+        .card-header h2 { font-size: 18px; color: var(--text-dark); }
+        
+        .card-body { padding: 30px 25px; display: flex; flex-direction: column; gap: 25px; }
+
+        .form-section { background: var(--white); border: 1px solid var(--border); border-radius: 8px; padding: 20px; box-shadow: 0 1px 2px rgba(0,0,0,0.02); }
+        .section-title { font-size: 14px; font-weight: 700; color: var(--primary); text-transform: uppercase; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid var(--border); padding-bottom: 10px; }
+        
+        .form-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
+        .form-grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; }
+        .form-group { display: flex; flex-direction: column; gap: 5px; overflow: hidden; } 
+        .form-group.full-width { grid-column: 1 / -1; }
+        
+        .form-group label { font-size: 13px; font-weight: 600; color: var(--text-dark); }
+        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 6px; outline: none; font-size: 14px; font-family: inherit; background: #fff; transition: all 0.2s; }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1); }
+        
+        .form-group input[type="file"] { padding: 7px; background: #f8fafc; font-size: 13px; color: var(--text-light); cursor: pointer; box-sizing: border-box; max-width: 100%; text-overflow: ellipsis; white-space: nowrap; }
+        .form-group input[type="file"]::file-selector-button { background: var(--primary); color: white; border: none; padding: 6px 12px; border-radius: 4px; margin-right: 10px; cursor: pointer; font-weight: 500; }
+
+        .hide-section { display: none !important; }
+
+        .card-footer { padding: 20px 25px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 12px; background: #f8fafc; }
+        .btn-cancel { text-decoration: none; padding: 10px 20px; border: 1px solid var(--border); background: white; border-radius: 6px; color: var(--text-dark); font-weight: 600; transition: 0.2s; }
+        .btn-cancel:hover { background: #f1f5f9; }
+        .btn-primary { background: var(--primary); color: white; border: none; padding: 10px 24px; border-radius: 6px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px; font-size: 14px; transition: 0.2s; }
+        .btn-primary:hover { background: #2563eb; }
+
+        /* 📱 MOBILE RESPONSIVENESS */
+        @media (max-width: 992px) {
+            .form-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+        @media (max-width: 768px) {
+            .header { padding: 15px; }
+            .header-title h1 { font-size: 16px; }
+            .header-title p { font-size: 10px; }
+            .back-btn span { display: none; } /* Hide text on phone, keep icon */
+            
+            .form-wrapper { margin: 15px auto; padding: 0 10px; }
+            .card-body { padding: 20px 15px; gap: 15px; }
+            .form-section { padding: 15px; }
+            .form-grid, .form-grid-2 { grid-template-columns: 1fr; gap: 12px; } 
+            .card-footer { flex-direction: column; padding: 15px; }
+            .card-footer a, .card-footer button { width: 100%; text-align: center; justify-content: center; }
+        }
+    </style>
+    <script src="js/auth-client.js"></script>
+</head>
+<body>
+
+    <header class="header">
+        <div class="header-left">
+            <div class="logo-img">
+                <i class='bx bxs-graduation'></i>
+            </div>
+            <div class="header-title">
+                <h1>Zakir Hussain College</h1>
+                <p>Staff Registration Portal</p>
+            </div>
+        </div>
+      
+    </header>
+
+    <div class="form-wrapper">
+        <div class="form-card">
+            <div class="card-header">
+                <h2><i class='bx bx-user-plus' style="color: var(--primary);"></i> Add New Employee Record</h2>
+            </div>
+            
+            <form id="addStaffForm" onsubmit="saveNewUser(event)">
+                <div class="card-body">
+                    
+                    <div class="form-section" style="background: #eff6ff; border-color: #bfdbfe;">
+                        <div class="form-grid-2">
+                            <div class="form-group">
+                                <label>Staff Category (Main Category) *</label>
+                                <select id="staffCategory" required onchange="handleCategoryChange()" style="font-weight: 600; color: var(--primary);">
+                                    <option value="">-- Select Category --</option>
+                                    <option value="management">🏢 Management Staff (Admin/Office)</option>
+                                    <option value="teacher">🎓 Teaching Faculty (Professors)</option>
+                                    <option value="nonteaching">🛠️ Non-Teaching Staff (Support)</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Specific Role / Designation *</label>
+                                <select id="staffRole" required>
+                                    <option value="">-- First select Category --</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <div class="section-title"><i class='bx bx-user'></i> Basic Personal Details</div>
+                        <div class="form-grid">
+                            <div class="form-group"><label>Full Name *</label><input type="text" id="fullName" required placeholder="Full Legal Name"></div>
+                            <div class="form-group"><label>Father/Guardian Name</label><input type="text" id="fatherName" placeholder="Father's Name"></div>
+                            <div class="form-group"><label>Date of Birth</label><input type="date" id="dob"></div>
+                            <div class="form-group"><label>Gender</label>
+                                <select id="gender"><option value="Male">Male</option><option value="Female">Female</option><option value="Other">Other</option></select>
+                            </div>
+                            <div class="form-group"><label>Mobile Number *</label><input type="text" id="mobile" required placeholder="10-digit number"></div>
+                            
+                            <div class="form-group" id="emailGroup"><label>Email ID (Login ID) *</label><input type="email" id="email" placeholder="official@zhi.edu"></div>
+                            <div class="form-group" id="passwordGroup"><label>Login Password *</label><input type="text" id="password" placeholder="Default: Mobile Number"></div>
+                            
+                            <div class="form-group full-width"><label>Full Permanent Address</label><textarea id="address" rows="2" placeholder="House No, Street, City, State, Pincode"></textarea></div>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <div class="section-title"><i class='bx bx-id-card'></i> Identity & Documents</div>
+                        <div class="form-grid">
+                            <div class="form-group"><label>Aadhaar Number *</label><input type="text" id="aadhaar" required placeholder="12-digit Aadhaar"></div>
+                            <div class="form-group" id="panGroup"><label>PAN Card Number</label><input type="text" id="pan" placeholder="ABCDE1234F"></div>
+                            <div class="form-group"><label>Profile Photo</label><input type="file" id="profilePic" accept="image/*"></div>
+                            
+                            <div class="form-group" id="resumeGroup"><label>Upload Resume / CV</label><input type="file" id="resumeFile" accept=".pdf,.doc,.docx"></div>
+                            <div class="form-group" id="certGroup"><label>Degree/Certificates</label><input type="file" id="certFile" accept=".pdf"></div>
+                        </div>
+                    </div>
+
+                    <div class="form-section" id="educationSection">
+                        <div class="section-title"><i class='bx bxs-graduation'></i> Education & Experience</div>
+                        <div class="form-grid">
+                            <div class="form-group"><label>Highest Qualification *</label>
+                                <input type="text" id="qualification" placeholder="e.g. MCA, MBA, Ph.D">
+                            </div>
+                            <div class="form-group" id="universityGroup"><label>University / Board</label><input type="text" id="university" placeholder="e.g. Magadh University"></div>
+                            <div class="form-group"><label>Total Experience (Years)</label><input type="number" id="experience" placeholder="e.g. 5"></div>
+                            <div class="form-group full-width" id="skillsGroup"><label>Key Skills / Subjects to Teach</label><input type="text" id="skills" placeholder="e.g. Java, Python"></div>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <div class="section-title"><i class='bx bx-briefcase'></i> College Job Details</div>
+                        <div class="form-grid">
+                            <div class="form-group"><label>Employee ID *</label><input type="text" id="empId" required placeholder="e.g. ZHI-EMP-101"></div>
+                            <div class="form-group"><label>Joining Date *</label><input type="date" id="joinDate" required></div>
+                            <div class="form-group"><label>Department / Area</label>
+                                <select id="department">
+                                    <option value="Computer Science">Computer Science (IT/BCA)</option>
+                                    <option value="Management">Management (BBA/MBA)</option>
+                                    <option value="Administration">Administration & HR</option>
+                                    <option value="Accounts">Accounts & Finance</option>
+                                    <option value="Campus Maintenance">Campus Maintenance & Security</option>
+                                </select>
+                            </div>
+                            <div class="form-group" id="shiftGroup"><label>Duty Shift</label>
+                                <select id="shift"><option value="Day Shift (General)">Day Shift (General)</option><option value="Morning Shift">Morning Shift</option><option value="Night Shift">Night Shift</option></select>
+                            </div>
+                            <div class="form-group"><label>Basic Salary (₹) *</label><input type="number" id="salary" required placeholder="Monthly Salary"></div>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <div class="section-title"><i class='bx bxs-bank'></i> Bank & Payroll Details</div>
+                        <div class="form-grid">
+                            <div class="form-group"><label>Bank Name</label><input type="text" id="bankName" placeholder="e.g. SBI, HDFC"></div>
+                            <div class="form-group"><label>Account Number</label><input type="text" id="accNumber" placeholder="Account No"></div>
+                            <div class="form-group"><label>IFSC Code</label><input type="text" id="ifsc" placeholder="IFSC Code"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-footer">
+                    <a href="users_roles.html" class="btn-cancel">Cancel</a>
+                    <button type="submit" class="btn-primary" id="saveBtn"><i class='bx bx-save'></i> Save Staff Record</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // --- DYNAMIC FORM LOGIC ---
+        const roleOptions = {
+            management: ["Director", "Principal", "Vice Principal", "HOD (Head of Department)", "Admin Staff", "Accountant", "Office Staff"],
+            teacher: ["Professor", "Assistant Professor", "Lecturer", "Guest Faculty"],
+            nonteaching: ["Guard", "Sweeper", "Peon", "Clerk", "Driver", "Electrician"]
+        };
+
+        function handleCategoryChange() {
+            const category = document.getElementById('staffCategory').value;
+            const roleDropdown = document.getElementById('staffRole');
+            
+            roleDropdown.innerHTML = '<option value="">-- Select Specific Role --</option>';
+            if(category && roleOptions[category]) {
+                roleOptions[category].forEach(role => {
+                    roleDropdown.innerHTML += `<option value="${role}">${role}</option>`;
+                });
+            }
+
+            const isNonTeaching = (category === 'nonteaching');
+            
+            document.getElementById('emailGroup').classList.toggle('hide-section', isNonTeaching);
+            document.getElementById('email').required = !isNonTeaching;
+            
+            document.getElementById('passwordGroup').classList.toggle('hide-section', isNonTeaching);
+            document.getElementById('password').required = !isNonTeaching;
+
+            document.getElementById('panGroup').classList.toggle('hide-section', isNonTeaching);
+            document.getElementById('resumeGroup').classList.toggle('hide-section', isNonTeaching);
+            document.getElementById('certGroup').classList.toggle('hide-section', isNonTeaching);
+            document.getElementById('universityGroup').classList.toggle('hide-section', isNonTeaching);
+            
+            const skillsLabel = document.querySelector('#skillsGroup label');
+            if(category === 'teacher') skillsLabel.innerText = "Subjects to Teach *";
+            else if(category === 'management') skillsLabel.innerText = "Management/Admin Skills";
+            else skillsLabel.innerText = "Previous Work Skills";
+
+            document.getElementById('skills').required = (category === 'teacher');
+        }
+
+        // --- SAVE DATA TO SERVER ---
+        async function saveNewUser(event) {
+            event.preventDefault();
+            
+            const btn = document.getElementById('saveBtn');
+            btn.innerHTML = "<i class='bx bx-loader-alt bx-spin'></i> Uploading Data...";
+            btn.disabled = true;
+
+            const category = document.getElementById('staffCategory').value;
+            const mobile = document.getElementById('mobile').value;
+            
+            const formData = new FormData();
+            formData.append('category', category);
+            formData.append('role', document.getElementById('staffRole').value);
+            formData.append('name', document.getElementById('fullName').value);
+            formData.append('fatherName', document.getElementById('fatherName').value);
+            formData.append('dob', document.getElementById('dob').value);
+            formData.append('gender', document.getElementById('gender').value);
+            formData.append('mobile', mobile);
+            formData.append('email', document.getElementById('email').value);
+            
+            let passwordValue = document.getElementById('password').value;
+            if(!passwordValue) passwordValue = mobile; 
+            formData.append('password', passwordValue);
+
+            formData.append('address', document.getElementById('address').value);
+            formData.append('aadhaar', document.getElementById('aadhaar').value);
+            formData.append('pan', document.getElementById('pan').value);
+            formData.append('qualification', document.getElementById('qualification').value);
+            formData.append('university', document.getElementById('university').value);
+            formData.append('experience', document.getElementById('experience').value);
+            formData.append('skills', document.getElementById('skills').value);
+            formData.append('empId', document.getElementById('empId').value);
+            formData.append('joinDate', document.getElementById('joinDate').value);
+            formData.append('dept', document.getElementById('department').value);
+            formData.append('shift', document.getElementById('shift').value);
+            formData.append('salary', document.getElementById('salary').value);
+            formData.append('bankName', document.getElementById('bankName').value);
+            formData.append('accNumber', document.getElementById('accNumber').value);
+            formData.append('ifsc', document.getElementById('ifsc').value);
+            
+            let contactField = category === 'nonteaching' ? mobile : document.getElementById('email').value;
+            formData.append('contact', contactField);
+
+            const profilePic = document.getElementById('profilePic').files[0];
+            if (profilePic) formData.append('profilePic', profilePic);
+            
+            const resumeFile = document.getElementById('resumeFile').files[0];
+            if (resumeFile) formData.append('resumeFile', resumeFile);
+            
+            const certFile = document.getElementById('certFile').files[0];
+            if (certFile) formData.append('certFile', certFile);
+
+            try {
+                const response = await fetch('/api/staff', {
+                    method: 'POST',
+                    body: formData 
+                });
+                
+                const result = await response.json();
+
+                if (result.success) {
+                    alert("✅ New Staff Added Successfully!");
+                    // 🔴 SUCCESS HONE PAR WAPAS MAIN PAGE PAR BHEJ DEGA
+                    window.location.href = "users_roles.html"; 
+                } else {
+                    alert("❌ Failed: " + result.message);
+                }
+
+            } catch (error) {
+                alert("❌ Server Error: Could not save data. Please check your Node.js Backend.");
+            }
+
+            btn.innerHTML = "<i class='bx bx-save'></i> Save Staff Record";
+            btn.disabled = false;
+        }
+    </script>
+    <script src="js/settings-client.js"></script>
+  <script src="js/role-ui.js"></script>
+</body>
+</html>

@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZHI | All Transactions Ledger</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    
+    <style>
+        :root {
+            --sidebar-bg: #0f172a; 
+            --primary: #3b82f6; 
+            --warning: #f59e0b; 
+            --danger: #ef4444;
+            --success: #10b981;
+            --bg: #f8fafc;
+            --text-dark: #1e293b;
+            --text-light: #64748b;
+            --white: #ffffff;
+            --border: #e2e8f0;
+            --card-curve: 12px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        body { background-color: var(--bg); display: flex; height: 100vh; overflow: hidden; color: var(--text-dark); }
+
+        /* ------------------ SIDEBAR ------------------ */
+        .sidebar { width: 260px; background: var(--sidebar-bg); color: #fff; display: flex; flex-direction: column; flex-shrink: 0; z-index: 1001; transition: transform 0.3s ease; }
+        .sidebar-header { padding: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; gap: 12px; }
+        .sidebar-header h2 { font-size: 18px; color: #fff; font-weight: 700;}
+        .sidebar-header p { font-size: 11px; color: var(--success); font-weight: 700; letter-spacing: 1px;}
+        .logo-img { width: 42px; height: 42px; border-radius: 50%; background: #fff; display: flex; align-items: center; justify-content: center; color: var(--success); font-size: 26px;}
+
+        .sidebar-menu { list-style: none; padding: 15px 0; flex: 1; overflow-y: auto; }
+        .sidebar-menu li a { display: flex; align-items: center; gap: 12px; padding: 12px 20px; color: #cbd5e1; text-decoration: none; font-size: 14px; font-weight: 500; transition: 0.2s; border-left: 4px solid transparent;}
+        .sidebar-menu li a i { font-size: 20px; transition: transform 0.3s ease;}
+        .sidebar-menu li a:hover { background: rgba(255,255,255,0.05); color: #fff; border-left: 4px solid var(--primary); padding-left: 25px;}
+        .sidebar-menu li a:hover i { transform: scale(1.1); }
+        .sidebar-menu li.active a { background: rgba(255,255,255,0.05); color: #fff; border-left: 4px solid var(--primary); }
+
+        /* ------------------ MAIN CONTENT & TOPBAR ------------------ */
+        .main-wrapper { flex: 1; display: flex; flex-direction: column; overflow-y: auto; width: 100%; position: relative;}
+        
+        .topbar { height: 70px; background: var(--white); border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; padding: 0 25px; position: sticky; top: 0; z-index: 1000; box-shadow: 0 1px 2px rgba(0,0,0,0.02);}
+        .menu-btn { display: none; background: none; border: none; font-size: 26px; cursor: pointer; color: var(--text-dark); transition: transform 0.2s;}
+        
+        .user-profile { display: flex; align-items: center; gap: 10px; cursor: pointer; padding: 5px; border-radius: 8px; transition: background 0.2s;}
+        .user-profile img { width: 35px; height: 35px; border-radius: 50%; object-fit: cover; border: 2px solid var(--success);}
+        .user-profile div { display: flex; flex-direction: column; }
+        .user-profile b { font-size: 13px; color: var(--text-dark); }
+        .user-profile span { font-size: 11px; color: var(--text-light); }
+
+        .content { padding: 30px; flex: 1; }
+        .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
+        .page-title { font-size: 24px; font-weight: 700; color: var(--text-dark); }
+
+        /* ------------------ TABLE & FILTERS ------------------ */
+        .table-card { background: var(--white); border-radius: var(--card-curve); border: 1px solid var(--border); box-shadow: 0 2px 6px rgba(0,0,0,0.02); overflow: hidden; }
+        .table-header { padding: 20px 25px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; background: #f8fafc; flex-wrap: wrap; gap: 15px;}
+        .table-header h3 { font-size: 18px; font-weight: 600; color: var(--text-dark); display: flex; align-items: center; gap: 8px;}
+        
+        .filter-group { display: flex; gap: 15px; align-items: center; }
+        
+        .filter-box { display: flex; align-items: center; background: #fff; border: 1px solid var(--border); border-radius: 6px; padding: 5px 12px; }
+        .filter-box input, .filter-box select { border: none; outline: none; padding: 5px; font-size: 13px; background: transparent; }
+        .filter-box i { color: var(--text-light); font-size: 18px; margin-right: 5px;}
+
+        .table-res { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; text-align: left; min-width: 900px; }
+        th { padding: 15px 25px; background: #f8fafc; font-size: 13px; text-transform: uppercase; color: var(--text-light); font-weight: 600; border-bottom: 1px solid var(--border);}
+        td { padding: 18px 25px; border-bottom: 1px solid var(--border); font-size: 14px; color: var(--text-dark); transition: background 0.2s;}
+        tbody tr:hover td { background-color: #f1f5f9; }
+        
+        .badge { padding: 5px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; display: inline-flex; align-items: center; gap: 4px;}
+        .badge.credit { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0;} /* Income */
+        .badge.debit { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca;}  /* Expense */
+        
+        .amt-credit { color: var(--success); font-weight: 700; }
+        .amt-debit { color: var(--danger); font-weight: 700; }
+        
+        .btn-export { background: #f1f5f9; color: var(--text-dark); border: 1px solid var(--border); padding: 8px 14px; border-radius: 6px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px; font-size: 13px; transition: 0.2s; }
+        .btn-export:hover { background: #e2e8f0; }
+
+        /* Mobile Adjustments */
+        @media (max-width: 768px) {
+            .sidebar { position: fixed; left: -260px; height: 100vh; }
+            .sidebar.active { transform: translateX(260px); }
+            .menu-btn { display: block; }
+            .content { padding: 20px; }
+            .table-header { flex-direction: column; align-items: flex-start; }
+            .filter-group { width: 100%; flex-wrap: wrap; }
+            .filter-box { flex: 1; min-width: 150px; }
+        }
+    </style>
+    <script src="js/auth-client.js"></script>
+</head>
+<body>
+
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <div class="logo-img"><i class='bx bx-wallet'></i></div>
+                <div><h2>ZHI Finance</h2><p>ACCOUNTANT PANEL</p></div>
+            </div>
+            <button class="menu-btn close-btn" onclick="toggleSidebar()" style="color:white; display:none;"><i class='bx bx-x'></i></button>
+        </div>
+        
+        <ul class="sidebar-menu">
+            <li><a href="accountant_dashboard.html"><i class='bx bx-home-alt'></i> Dashboard Home</a></li>
+            
+            <li style="margin: 15px 0 5px 20px; font-size: 11px; color: #64748b; font-weight: 700; text-transform: uppercase;">Students & Fees</li>
+            <li><a href="fee_collection.html"><i class='bx bx-rupee'></i> Fee Collection</a></li>
+            <li><a href="#"><i class='bx bx-list-ol'></i> Fee Structure setup</a></li>
+            <li><a href="#"><i class='bx bx-user-x'></i> Pending Dues List</a></li>
+            
+            <li style="margin: 15px 0 5px 20px; font-size: 11px; color: #64748b; font-weight: 700; text-transform: uppercase;">Staff & Payroll</li>
+            <li><a href="salary_management.html"><i class='bx bx-credit-card-front'></i> Salary Management</a></li>
+            <li><a href="#"><i class='bx bx-file-blank'></i> Generate Payslips</a></li>
+            
+            <li style="margin: 15px 0 5px 20px; font-size: 11px; color: #64748b; font-weight: 700; text-transform: uppercase;">Accounts & Ledger</li>
+            <li class="active"><a href="all_transactions.html"><i class='bx bx-transfer'></i> All Transactions</a></li>
+            <li><a href="manage_expenses.html"><i class='bx bx-trending-down'></i> Manage Expenses</a></li>
+            <li><a href="Reports&Analytics.html"><i class='bx bx-pie-chart-alt-2'></i> Financial Reports</a></li>
+        </ul>
+    </aside>
+
+    <main class="main-wrapper">
+        <header class="topbar">
+            <div style="display: flex; align-items: center; gap: 15px;">
+                <button class="menu-btn" onclick="toggleSidebar()"><i class='bx bx-menu'></i></button>
+                <div style="font-size: 18px; font-weight: 600; color: var(--text-dark);">Accounts & Ledger</div>
+            </div>
+            <div class="user-profile">
+                <div style="text-align: right;"><b id="adminName">Accountant</b><span>Finance Dept</span></div>
+                <img src="https://ui-avatars.com/api/?name=Accounts&background=10b981&color=fff" alt="Admin">
+            </div>
+        </header>
+
+        <div class="content">
+            <div class="page-header">
+                <div class="page-title">Master Ledger (All Transactions)</div>
+                <button class="btn-export" onclick="window.print()"><i class='bx bx-printer'></i> Print / PDF</button>
+            </div>
+
+            <div class="table-card">
+                <div class="table-header">
+                    <h3><i class='bx bx-book-content' style="color: var(--primary);"></i> Transaction History</h3>
+                    
+                    <div class="filter-group">
+                        <div class="filter-box">
+                            <i class='bx bx-filter'></i>
+                            <select id="typeFilter" onchange="applyFilters()">
+                                <option value="All">All Transactions</option>
+                                <option value="Income">Income (Fees) Only</option>
+                                <option value="Expense">Expenses Only</option>
+                            </select>
+                        </div>
+                        <div class="filter-box">
+                            <i class='bx bx-search'></i>
+                            <input type="text" id="searchInput" placeholder="Search description..." onkeyup="applyFilters()">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="table-res">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Date & Time</th>
+                                <th>Description / Ref No.</th>
+                                <th>Type</th>
+                                <th>Payment Mode</th>
+                                <th>Amount (₹)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="txTableBody">
+                            <tr><td colspan="5" style="text-align: center; color: var(--text-light);"><i class='bx bx-loader-alt bx-spin'></i> Syncing ledger data...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const SERVER_URL = '';
+        let allTransactions = []; // Store combined data here
+
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('active');
+        }
+
+        window.onload = () => {
+            const userName = localStorage.getItem('userName');
+            if(userName) document.getElementById('adminName').innerText = userName;
+            fetchLedgerData();
+        };
+
+        async function fetchLedgerData() {
+            try {
+                const response = await fetch(`${SERVER_URL}/api/finance/dashboard`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    processTransactions(data.fees || [], data.expenses || []);
+                } else {
+                    showError("Failed to fetch data from server.");
+                }
+            } catch (error) {
+                console.error("Error:", error);
+                showError("Network Error. Cannot connect to database.");
+            }
+        }
+
+        function processTransactions(fees, expenses) {
+            allTransactions = [];
+
+            // 1. Format Fees (Income)
+            fees.forEach(fee => {
+                allTransactions.push({
+                    date: new Date(fee.date),
+                    desc: `Fee Receipt - ${fee.studentName || 'Student'} (${fee.head || 'Fee'})`,
+                    type: 'Income',
+                    mode: fee.paymentMode || 'N/A',
+                    amount: Number(fee.paidAmount || 0)
+                });
+            });
+
+            // 2. Format Expenses
+            expenses.forEach(exp => {
+                allTransactions.push({
+                    date: new Date(exp.date || exp.createdAt),
+                    desc: exp.description ? `${exp.category}: ${exp.description}` : exp.category,
+                    type: 'Expense',
+                    mode: exp.mode || 'N/A',
+                    amount: Number(exp.amount || 0)
+                });
+            });
+
+            // 3. Sort by Date (Newest First)
+            allTransactions.sort((a, b) => b.date - a.date);
+
+            // 4. Render
+            renderTable(allTransactions);
+        }
+
+        function renderTable(dataArray) {
+            const tbody = document.getElementById('txTableBody');
+            tbody.innerHTML = '';
+
+            if (dataArray.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-light);">No transactions found.</td></tr>`;
+                return;
+            }
+
+            dataArray.forEach(tx => {
+                // Formatting Date
+                const dateStr = tx.date.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+                const timeStr = tx.date.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
+
+                // Badge & Color Logic
+                let badgeHTML = '';
+                let amountClass = '';
+                let amountPrefix = '';
+
+                if (tx.type === 'Income') {
+                    badgeHTML = `<span class="badge credit"><i class='bx bx-trending-up'></i> Income</span>`;
+                    amountClass = 'amt-credit';
+                    amountPrefix = '+ ₹';
+                } else {
+                    badgeHTML = `<span class="badge debit"><i class='bx bx-trending-down'></i> Expense</span>`;
+                    amountClass = 'amt-debit';
+                    amountPrefix = '- ₹';
+                }
+
+                const amountStr = tx.amount.toLocaleString('en-IN');
+
+                tbody.innerHTML += `
+                    <tr>
+                        <td><b>${dateStr}</b><br><small style="color:var(--text-light);">${timeStr}</small></td>
+                        <td>${tx.desc}</td>
+                        <td>${badgeHTML}</td>
+                        <td>${tx.mode}</td>
+                        <td class="${amountClass}">${amountPrefix}${amountStr}</td>
+                    </tr>
+                `;
+            });
+        }
+
+        function applyFilters() {
+            const typeVal = document.getElementById('typeFilter').value;
+            const searchVal = document.getElementById('searchInput').value.toLowerCase();
+
+            const filteredData = allTransactions.filter(tx => {
+                // Filter by Type
+                let matchType = true;
+                if (typeVal !== 'All') {
+                    matchType = (tx.type === typeVal);
+                }
+
+                // Filter by Search (Description)
+                let matchSearch = tx.desc.toLowerCase().includes(searchVal);
+
+                return matchType && matchSearch;
+            });
+
+            renderTable(filteredData);
+        }
+
+        function showError(msg) {
+            document.getElementById('txTableBody').innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--danger);">${msg}</td></tr>`;
+        }
+    </script>
+    <script src="js/settings-client.js"></script>
+  <script src="js/role-ui.js"></script>
+</body>
+</html>
