@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Dashboard | ZHI College</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --sidebar-bg: #0f172a;
+            --primary: #3b82f6;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --bg: #f3f4f6;
+            --text-dark: #1f2937;
+            --text-light: #6b7280;
+            --white: #ffffff;
+            --border: #e5e7eb;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        body { background-color: var(--bg); display: flex; height: 100vh; overflow: hidden; color: var(--text-dark); }
+        
+        /* Sidebar */
+        .sidebar { width: 260px; background: var(--sidebar-bg); color: #fff; display: flex; flex-direction: column; z-index: 1001; transition: 0.3s; flex-shrink: 0; }
+        .sidebar-header { display: flex; align-items: center; gap: 15px; padding: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .logo-circle { width: 45px; height: 45px; background: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+        .logo-circle img { width: 100%; height: 100%; object-fit: contain; }
+        .sidebar-header h2 { font-size: 18px; color: white; }
+        .sidebar-header p { font-size: 11px; color: #ef4444; font-weight: 700; margin-top: 3px; }
+        .sidebar-menu { list-style: none; padding: 15px 0; overflow-y: auto; flex: 1; }
+        .sidebar-menu li a { display: flex; align-items: center; gap: 15px; padding: 14px 25px; color: #cbd5e1; text-decoration: none; font-size: 14px; font-weight: 500; transition: 0.2s; border-left: 4px solid transparent; }
+        .sidebar-menu li.active a, .sidebar-menu li a:hover { background: rgba(59, 130, 246, 0.1); color: #60a5fa; border-left-color: var(--primary); padding-left: 22px; }
+        
+        /* Main Content */
+        .main-wrapper { flex: 1; display: flex; flex-direction: column; overflow-y: auto; }
+        .topbar { height: 70px; background: var(--white); border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; padding: 0 30px; position: sticky; top: 0; z-index: 999; }
+        .topbar-left { display: flex; align-items: center; gap: 15px; }
+        .menu-btn { display: none; background: none; border: none; font-size: 24px; cursor: pointer; color: var(--text-dark); }
+        .topbar-profile { display: flex; align-items: center; gap: 12px; padding-left: 20px; border-left: 1px solid var(--border); }
+        .topbar-profile img { width: 40px; height: 40px; border-radius: 50%; border: 2px solid var(--primary); object-fit: cover; }
+        .topbar-profile .user-info h4 { font-size: 14px; color: var(--text-dark); }
+        .topbar-profile .user-info p { font-size: 11px; color: var(--primary); font-weight: 600; }
+        
+        /* Content Area */
+        .content { padding: 25px 30px; }
+        
+        /* Welcome Section */
+        .welcome-card { background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); border-radius: 12px; padding: 25px; color: white; margin-bottom: 25px; display: flex; justify-content: space-between; align-items: center; }
+        .welcome-card h1 { font-size: 24px; margin-bottom: 5px; }
+        .welcome-card p { opacity: 0.9; font-size: 14px; }
+        .welcome-stats { display: flex; gap: 30px; }
+        .stat-item { text-align: center; }
+        .stat-item h3 { font-size: 28px; font-weight: 700; }
+        .stat-item p { font-size: 12px; opacity: 0.8; margin-top: 3px; }
+        
+        /* Dashboard Grid */
+        .dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 20px; margin-bottom: 25px; }
+        
+        /* Cards */
+        .card { background: var(--white); border-radius: 12px; border: 1px solid var(--border); padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); transition: 0.3s; }
+        .card:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(0,0,0,0.08); }
+        .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding-bottom: 12px; border-bottom: 1px solid var(--border); }
+        .card-header h3 { font-size: 16px; font-weight: 600; color: var(--text-dark); display: flex; align-items: center; gap: 8px; }
+        .card-icon { width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+        .icon-blue { background: #eff6ff; color: #3b82f6; }
+        .icon-green { background: #ecfdf5; color: #10b981; }
+        .icon-purple { background: #faf5ff; color: #a855f7; }
+        .icon-orange { background: #fff7ed; color: #f97316; }
+        .icon-red { background: #fef2f2; color: #ef4444; }
+        
+        /* Form Elements */
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; font-size: 12px; font-weight: 600; color: var(--text-light); margin-bottom: 6px; text-transform: uppercase; }
+        .form-control { width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 6px; font-size: 13px; outline: none; transition: 0.2s; }
+        .form-control:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1); }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        
+        /* Buttons */
+        .btn { padding: 10px 20px; border: none; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; transition: 0.2s; display: inline-flex; align-items: center; gap: 8px; }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-primary:hover { background: #2563eb; }
+        .btn-success { background: var(--success); color: white; }
+        .btn-success:hover { background: #059669; }
+        .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text-dark); }
+        .btn-outline:hover { background: var(--bg); }
+        .btn-block { width: 100%; justify-content: center; }
+        
+        /* Result Box */
+        .result-box { margin-top: 15px; padding: 15px; background: var(--bg); border-radius: 8px; font-size: 13px; }
+        .result-box.success { background: #ecfdf5; border: 1px solid #a7f3d0; }
+        .result-box.warning { background: #fffbeb; border: 1px solid #fde68a; }
+        .result-box.danger { background: #fef2f2; border: 1px solid #fecaca; }
+        .result-box.info { background: #eff6ff; border: 1px solid #bfdbfe; }
+        .result-title { font-weight: 600; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+        .badge { padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+        .badge-safe { background: #10b981; color: white; }
+        .badge-at-risk { background: #f59e0b; color: white; }
+        .badge-critical { background: #ef4444; color: white; }
+        .badge-low { background: #10b981; color: white; }
+        .badge-medium { background: #f59e0b; color: white; }
+        .badge-high { background: #ef4444; color: white; }
+        
+        /* File Upload */
+        .file-upload-area { border: 2px dashed var(--border); border-radius: 8px; padding: 25px; text-align: center; cursor: pointer; transition: 0.2s; }
+        .file-upload-area:hover { border-color: var(--primary); background: #eff6ff; }
+        .file-upload-area input[type="file"] { display: none; }
+        .upload-icon { font-size: 32px; color: var(--text-light); margin-bottom: 10px; }
+        .upload-text { font-size: 13px; color: var(--text-light); }
+        
+        /* Loading Spinner */
+        .spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid #f3f3f3; border-top: 2px solid var(--primary); border-radius: 50%; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
+        /* Modal */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.7); z-index: 2000; justify-content: center; align-items: center; padding: 20px; backdrop-filter: blur(3px); }
+        .modal-box { background: white; width: 100%; max-width: 600px; border-radius: 12px; max-height: 85vh; overflow-y: auto; animation: popIn 0.3s ease; }
+        @keyframes popIn { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        .modal-header { padding: 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+        .modal-header h3 { font-size: 18px; }
+        .modal-body { padding: 20px; }
+        .close-modal { background: none; border: none; font-size: 24px; cursor: pointer; color: var(--text-light); }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .sidebar { position: fixed; left: -260px; height: 100vh; }
+            .sidebar.active { transform: translateX(260px); }
+            .menu-btn { display: block; }
+            .sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; }
+            .sidebar-overlay.active { display: block; }
+            .topbar { padding: 0 15px; }
+            .welcome-card { flex-direction: column; text-align: center; gap: 15px; }
+            .welcome-stats { flex-wrap: wrap; justify-content: center; }
+            .dashboard-grid { grid-template-columns: 1fr; }
+            .content { padding: 15px; }
+        }
+    </style>
+    <script src="js/auth-client.js"></script>
+    <script src="js/ai-client.js"></script>
+</head>
+<body>
+    <div id="sidebarOverlay" class="sidebar-overlay"></div>
+    
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="logo-circle">
+                <img src="zhi_logo.png" alt="ZHI Logo">
+            </div>
+            <div>
+                <h2>ZHI College</h2>
+                <p>STUDENT PORTAL</p>
+            </div>
+        </div>
+        <ul class="sidebar-menu">
+            <li class="active"><a href="#"><span>📊</span> Dashboard</a></li>
+            <li><a href="teacher_profile.html"><span>👤</span> My Profile</a></li>
+            <li><a href="Exams&Results.html"><span>📝</span> Academics</a></li>
+            <li><a href="attendance_overview.html"><span>📅</span> Attendance</a></li>
+            <li><a href="fee_collection.html"><span>💰</span> Fee Status</a></li>
+            <li><a href="upload_notes.html"><span>📚</span> Study Material</a></li>
+            <li><a href="GlobalNotice.html"><span>📢</span> Notices</a></li>
+        </ul>
+    </aside>
+
+    <div class="main-wrapper">
+        <header class="topbar">
+            <div class="topbar-left">
+                <button class="menu-btn" onclick="toggleSidebar()">☰</button>
+                <h2 style="font-size: 18px;">My Dashboard</h2>
+            </div>
+            <div class="topbar-profile" id="topbarProfile">
+                <div class="user-info">
+                    <h4 id="studentNameDisplay">Loading...</h4>
+                    <p id="studentRollDisplay">Student</p>
+                </div>
+                <img src="https://ui-avatars.com/api/?name=Student&background=3b82f6&color=fff" alt="Profile" id="profilePic">
+            </div>
+        </header>
+
+        <main class="content">
+            <!-- Welcome Card -->
+            <div class="welcome-card">
+                <div>
+                    <h1>Welcome back, <span id="welcomeName">Student</span>! 👋</h1>
+                    <p>Here's your academic overview and AI-powered insights</p>
+                </div>
+                <div class="welcome-stats">
+                    <div class="stat-item">
+                        <h3 id="statAttendance">--%</h3>
+                        <p>Attendance</p>
+                    </div>
+                    <div class="stat-item">
+                        <h3 id="statCGPA">--</h3>
+                        <p>Current CGPA</p>
+                    </div>
+                    <div class="stat-item">
+                        <h3 id="statBacklogs">0</h3>
+                        <p>Backlogs</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dashboard Grid -->
+            <div class="dashboard-grid">
+                
+                <!-- Attendance Risk Checker -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3><span class="card-icon icon-green">🎯</span> Safe Bunk / Attendance Checker</h3>
+                    </div>
+                    <div class="form-group">
+                        <label>Classes Attended</label>
+                        <input type="number" id="attAttended" class="form-control" placeholder="e.g., 45" min="0">
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Total Conducted</label>
+                            <input type="number" id="attConducted" class="form-control" placeholder="e.g., 60" min="1">
+                        </div>
+                        <div class="form-group">
+                            <label>Target Threshold %</label>
+                            <input type="number" id="attThreshold" class="form-control" placeholder="e.g., 75" value="75" min="1" max="100">
+                        </div>
+                    </div>
+                    <button class="btn btn-primary btn-block" onclick="checkAttendanceRisk()">
+                        🔍 Check Attendance Status
+                    </button>
+                    <div id="attendanceResult" class="result-box info" style="display: none;"></div>
+                </div>
+
+                <!-- Performance Predictor -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3><span class="card-icon icon-purple">📈</span> Predict Final Grade</h3>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Current Attendance %</label>
+                            <input type="number" id="perfAttendance" class="form-control" placeholder="e.g., 82" min="0" max="100">
+                        </div>
+                        <div class="form-group">
+                            <label>Avg Internal Marks %</label>
+                            <input type="number" id="perfInternal" class="form-control" placeholder="e.g., 78" min="0" max="100">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Backlogs Count</label>
+                            <input type="number" id="perfBacklogs" class="form-control" placeholder="e.g., 0" min="0" value="0">
+                        </div>
+                        <div class="form-group">
+                            <label>Fee Pending Months</label>
+                            <input type="number" id="perfFeePending" class="form-control" placeholder="e.g., 0" min="0" value="0">
+                        </div>
+                    </div>
+                    <button class="btn btn-primary btn-block" onclick="predictPerformance()">
+                        🎓 Predict Final Score & Grade
+                    </button>
+                    <div id="performanceResult" class="result-box info" style="display: none;"></div>
+                </div>
+
+                <!-- Document Auto-fill (OCR) -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3><span class="card-icon icon-orange">📄</span> Document Auto-Fill (OCR)</h3>
+                    </div>
+                    <p style="font-size: 12px; color: var(--text-light); margin-bottom: 15px;">
+                        Upload your ID card or marksheet to auto-extract and fill your profile data.
+                    </p>
+                    <label class="file-upload-area" for="ocrFileInput">
+                        <div class="upload-icon">📁</div>
+                        <div class="upload-text">Click to upload document<br><small>(Image or PDF, max 15MB)</small></div>
+                        <input type="file" id="ocrFileInput" accept="image/*,application/pdf" onchange="handleDocumentUpload()">
+                    </label>
+                    <div id="ocrResult" class="result-box info" style="display: none; margin-top: 15px;"></div>
+                </div>
+
+                <!-- Quick Stats Card -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3><span class="card-icon icon-blue">📊</span> Academic Summary</h3>
+                    </div>
+                    <div style="padding: 10px 0;">
+                        <div style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--border);">
+                            <span style="color: var(--text-light); font-size: 13px;">Course</span>
+                            <span id="summaryCourse" style="font-weight: 600;">--</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--border);">
+                            <span style="color: var(--text-light); font-size: 13px;">Semester</span>
+                            <span id="summarySemester" style="font-weight: 600;">--</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--border);">
+                            <span style="color: var(--text-light); font-size: 13px;">Session</span>
+                            <span id="summarySession" style="font-weight: 600;">--</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; padding: 12px 0;">
+                            <span style="color: var(--text-light); font-size: 13px;">Registration No.</span>
+                            <span id="summaryRegNo" style="font-weight: 600;">--</span>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- OCR Result Modal -->
+    <div class="modal-overlay" id="ocrModal">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3>📄 Document Extraction Result</h3>
+                <button class="close-modal" onclick="closeOcrModal()">×</button>
+            </div>
+            <div class="modal-body" id="ocrModalBody">
+                <!-- Results will be inserted here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ============================================
+        // Student Dashboard JavaScript
+        // ============================================
+        
+        let currentStudentData = null;
+
+        // Toggle Sidebar for Mobile
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('active');
+            document.getElementById('sidebarOverlay').classList.toggle('active');
+        }
+        document.getElementById('sidebarOverlay')?.addEventListener('click', toggleSidebar);
+
+        // Load Student Data on Page Load
+        async function loadStudentData() {
+            try {
+                const token = localStorage.getItem('token');
+                if (!token) {
+                    window.location.href = '/index.html';
+                    return;
+                }
+
+                // Fetch student profile from API
+                const response = await fetch('/api/profile/student', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    currentStudentData = data.data || data.student || data;
+                    
+                    // Populate UI
+                    populateStudentInfo(currentStudentData);
+                } else {
+                    // Try alternate endpoint
+                    const res2 = await fetch('/api/students/me', {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    if (res2.ok) {
+                        const data2 = await res2.json();
+                        currentStudentData = data2.data || data2;
+                        populateStudentInfo(currentStudentData);
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading student data:', error);
+            }
+        }
+
+        function populateStudentInfo(student) {
+            const name = student.studentName || student.name || 'Student';
+            const roll = student.collegeRegNo || student.univRegNo || student.rollNo || 'N/A';
+            const course = student.course || 'N/A';
+            const semester = student.semester || 'N/A';
+            const session = student.sessionBatch || 'N/A';
+            
+            // Update UI elements
+            document.getElementById('studentNameDisplay').textContent = name;
+            document.getElementById('studentRollDisplay').textContent = roll;
+            document.getElementById('welcomeName').textContent = name.split(' ')[0];
+            document.getElementById('summaryCourse').textContent = course;
+            document.getElementById('summarySemester').textContent = semester;
+            document.getElementById('summarySession').textContent = session;
+            document.getElementById('summaryRegNo').textContent = roll;
+            
+            // Update profile picture
+            if (student.profilePicUrl) {
+                document.getElementById('profilePic').src = student.profilePicUrl;
+            } else {
+                const initials = name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+                document.getElementById('profilePic').src = `https://ui-avatars.com/api/?name=${initials}&background=3b82f6&color=fff`;
+            }
+            
+            // Pre-fill attendance checker with actual data if available
+            if (student.attendanceData) {
+                document.getElementById('attAttended').value = student.attendanceData.classesAttended || '';
+                document.getElementById('attConducted').value = student.attendanceData.totalClasses || '';
+                document.getElementById('statAttendance').textContent = (student.attendanceData.percentage || 0).toFixed(1) + '%';
+            }
+            
+            // Pre-fill performance predictor
+            if (student.academicData) {
+                document.getElementById('perfAttendance').value = student.academicData.attendancePct || '';
+                document.getElementById('perfInternal').value = student.academicData.avgInternalMarks || '';
+                document.getElementById('perfBacklogs').value = student.academicData.backlogs || 0;
+                document.getElementById('statBacklogs').textContent = student.academicData.backlogs || 0;
+                if (student.academicData.cgpa) {
+                    document.getElementById('statCGPA').textContent = student.academicData.cgpa.toFixed(2);
+                }
+            }
+        }
+
+        // ============================================
+        // AI Feature: Attendance Risk Checker
+        // ============================================
+        async function checkAttendanceRisk() {
+            const attended = parseInt(document.getElementById('attAttended').value);
+            const conducted = parseInt(document.getElementById('attConducted').value);
+            const threshold = parseInt(document.getElementById('attThreshold').value);
+            
+            if (!attended || !conducted || !threshold) {
+                showResult('attendanceResult', 'Please fill all fields', 'warning');
+                return;
+            }
+            
+            const resultBox = document.getElementById('attendanceResult');
+            resultBox.style.display = 'block';
+            resultBox.innerHTML = '<span class="spinner"></span> Analyzing...';
+            resultBox.className = 'result-box info';
+            
+            try {
+                const result = await window.ZhiAI.attendanceRisk({
+                    classes_attended: attended,
+                    classes_conducted: conducted,
+                    target_threshold: threshold
+                });
+                
+                if (result.success) {
+                    const d = result.data;
+                    let badgeClass = 'badge-safe';
+                    let boxClass = 'success';
+                    
+                    if (d.status === 'AT_RISK') {
+                        badgeClass = 'badge-at-risk';
+                        boxClass = 'warning';
+                    } else if (d.status === 'CRITICAL' || d.status === 'IMPOSSIBLE') {
+                        badgeClass = 'badge-critical';
+                        boxClass = 'danger';
+                    }
+                    
+                    resultBox.className = `result-box ${boxClass}`;
+                    resultBox.innerHTML = `
+                        <div class="result-title">
+                            Status: <span class="badge ${badgeClass}">${d.status}</span>
+                        </div>
+                        <div style="margin-top: 10px;">
+                            <strong>Current:</strong> ${d.current_pct}% | 
+                            <strong>Need:</strong> ${d.classes_needed_to_reach_threshold} more classes
+                        </div>
+                        <div style="margin-top: 5px; color: #6b7280;">
+                            ${d.recommendation}
+                        </div>
+                        ${d.max_classes_can_miss > 0 ? `<div style="margin-top: 5px; color: #10b981;"><strong>Can miss up to ${d.max_classes_can_miss} classes</strong></div>` : ''}
+                    `;
+                } else {
+                    showResult('attendanceResult', result.error || 'Failed to analyze', 'danger');
+                }
+            } catch (error) {
+                showResult('attendanceResult', error.message || 'Network error', 'danger');
+            }
+        }
+
+        // ============================================
+        // AI Feature: Performance Predictor
+        // ============================================
+        async function predictPerformance() {
+            const attendance = parseFloat(document.getElementById('perfAttendance').value);
+            const internal = parseFloat(document.getElementById('perfInternal').value);
+            const backlogs = parseInt(document.getElementById('perfBacklogs').value) || 0;
+            const feePending = parseInt(document.getElementById('perfFeePending').value) || 0;
+            
+            if (!attendance || !internal) {
+                showResult('performanceResult', 'Please fill attendance and internal marks', 'warning');
+                return;
+            }
+            
+            const resultBox = document.getElementById('performanceResult');
+            resultBox.style.display = 'block';
+            resultBox.innerHTML = '<span class="spinner"></span> Predicting...';
+            resultBox.className = 'result-box info';
+            
+            try {
+                const result = await window.ZhiAI.predictPerformance({
+                    attendance_pct: attendance,
+                    avg_internal_marks: internal,
+                    backlogs_count: backlogs,
+                    fee_pending_months: feePending
+                });
+                
+                if (result.success) {
+                    const d = result.data;
+                    let riskBadge = 'badge-low';
+                    let boxClass = 'success';
+                    
+                    if (d.risk_category === 'MEDIUM') {
+                        riskBadge = 'badge-medium';
+                        boxClass = 'warning';
+                    } else if (d.risk_category === 'HIGH') {
+                        riskBadge = 'badge-high';
+                        boxClass = 'danger';
+                    }
+                    
+                    resultBox.className = `result-box ${boxClass}`;
+                    resultBox.innerHTML = `
+                        <div class="result-title">
+                            Predicted Final Score: <strong>${d.predicted_final_score}%</strong>
+                        </div>
+                        <div style="margin-top: 10px;">
+                            <strong>Predicted Grade:</strong> ${d.predicted_grade} |
+                            <strong>Risk Level:</strong> <span class="badge ${riskBadge}">${d.risk_category}</span>
+                        </div>
+                        <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(0,0,0,0.1); font-size: 12px; color: #6b7280;">
+                            Based on your current performance metrics
+                        </div>
+                    `;
+                } else {
+                    showResult('performanceResult', result.error || 'Prediction failed', 'danger');
+                }
+            } catch (error) {
+                showResult('performanceResult', error.message || 'Network error', 'danger');
+            }
+        }
+
+        // ============================================
+        // AI Feature: Document OCR Upload
+        // ============================================
+        async function handleDocumentUpload() {
+            const fileInput = document.getElementById('ocrFileInput');
+            const file = fileInput.files[0];
+            
+            if (!file) return;
+            
+            const resultBox = document.getElementById('ocrResult');
+            resultBox.style.display = 'block';
+            resultBox.innerHTML = '<span class="spinner"></span> Processing document...';
+            resultBox.className = 'result-box info';
+            
+            try {
+                const result = await window.ZhiAI.uploadDocument(file);
+                
+                if (result.success) {
+                    const d = result.data;
+                    const extractedFields = Object.entries(d.extracted || {});
+                    
+                    let fieldsHtml = '';
+                    if (extractedFields.length > 0) {
+                        fieldsHtml = '<div style="margin-top: 15px;"><strong>Extracted Fields:</strong><br>';
+                        extractedFields.forEach(([key, value]) => {
+                            fieldsHtml += `<div style="margin: 5px 0;"><strong>${key}:</strong> ${value}</div>`;
+                        });
+                        fieldsHtml += '</div>';
+                        
+                        // Auto-fill form if possible
+                        autoFillFromOCR(d.extracted);
+                    }
+                    
+                    resultBox.innerHTML = `
+                        <div><strong>Document Type:</strong> ${d.doc_type_guess}</div>
+                        ${fieldsHtml}
+                        <details style="margin-top: 10px; cursor: pointer;">
+                            <summary style="color: #3b82f6;">Show Raw Text</summary>
+                            <pre style="white-space: pre-wrap; background: #f1f5f9; padding: 10px; border-radius: 6px; font-size: 11px; margin-top: 8px; max-height: 200px; overflow-y: auto;">${d.raw_text || 'No raw text available'}</pre>
+                        </details>
+                    `;
+                } else {
+                    showResult('ocrResult', result.error || 'OCR processing failed', 'danger');
+                }
+            } catch (error) {
+                showResult('ocrResult', error.message || 'Network error', 'danger');
+            }
+        }
+
+        function autoFillFromOCR(extracted) {
+            if (!extracted || !currentStudentData) return;
+            
+            // Map common OCR field names to form fields
+            const mappings = {
+                'name': ['studentName'],
+                'roll_no': ['collegeRegNo', 'univRegNo'],
+                'registration_no': ['collegeRegNo', 'univRegNo'],
+                'course': ['course'],
+                'semester': ['semester'],
+                'session': ['sessionBatch'],
+                'father_name': ['fatherName'],
+                'mother_name': ['motherName'],
+                'dob': ['dob'],
+                'aadhar': ['aadharNumber']
+            };
+            
+            let updatesNeeded = {};
+            
+            for (const [ocrField, studentFields] of Object.entries(mappings)) {
+                if (extracted[ocrField]) {
+                    for (const sf of studentFields) {
+                        if (currentStudentData[sf] && currentStudentData[sf] !== extracted[ocrField]) {
+                            updatesNeeded[sf] = extracted[ocrField];
+                        }
+                    }
+                }
+            }
+            
+            if (Object.keys(updatesNeeded).length > 0) {
+                const confirmUpdate = confirm(`Found ${Object.keys(updatesNeeded).length} fields that can be updated from the document. Update now?`);
+                if (confirmUpdate) {
+                    updateStudentProfile(updatesNeeded);
+                }
+            }
+        }
+
+        async function updateStudentProfile(updates) {
+            try {
+                const token = localStorage.getItem('token');
+                const response = await fetch('/api/profile/student', {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(updates)
+                });
+                
+                if (response.ok) {
+                    alert('Profile updated successfully!');
+                    loadStudentData(); // Refresh
+                } else {
+                    alert('Update failed. Please try manually.');
+                }
+            } catch (error) {
+                console.error('Update error:', error);
+                alert('Update failed. Please try manually.');
+            }
+        }
+
+        // Helper: Show Result
+        function showResult(elementId, message, type) {
+            const el = document.getElementById(elementId);
+            el.style.display = 'block';
+            el.className = `result-box ${type}`;
+            el.innerHTML = message;
+        }
+
+        // Modal Functions
+        function closeOcrModal() {
+            document.getElementById('ocrModal').style.display = 'none';
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', loadStudentData);
+    </script>
+</body>
+</html>

@@ -97,6 +97,7 @@
         }
     </style>
     <script src="js/auth-client.js"></script>
+    <script src="js/ai-client.js"></script>
 </head>
 <body>
 
@@ -249,7 +250,13 @@
 
             <div id="tab-income" class="page-tab-content">
                 <div class="panel">
-                    <div class="panel-header"><h3>Recent Fee Transactions</h3></div>
+                    <div class="panel-header">
+                        <h3>Recent Fee Transactions</h3>
+                        <button class="btn btn-danger" onclick="runFinanceAudit()" style="font-size:12px;">
+                            🔍 Run AI Audit
+                        </button>
+                    </div>
+                    <div id="financeAuditResult" class="result-box" style="display:none; margin-bottom:15px;"></div>
                     <div class="table-responsive">
                         <table>
                             <thead><tr><th>Receipt No</th><th>Student</th><th>Date</th><th>Mode</th><th>Amount</th><th>Action</th></tr></thead>
@@ -641,6 +648,79 @@
             };
             let res = await fetch(`${BASE_URL}/expense`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
             if(res.ok) { alert("Expense Saved!"); closeExpenseModal(); loadDashboard(); }
+        }
+
+        // ============================================
+        // AI Feature: Finance Fraud Detection (Audit)
+        // ============================================
+        async function runFinanceAudit() {
+            const resultBox = document.getElementById('financeAuditResult');
+            resultBox.style.display = 'block';
+            resultBox.innerHTML = '<span class="spinner"></span> Scanning transactions for anomalies...';
+            resultBox.className = 'result-box info';
+
+            try {
+                const result = await window.ZhiAI.financeAnomaly({ scan_recent_days: 30 });
+
+                if (result.success) {
+                    const d = result.data;
+                    const anomalies = (d.items || []).filter(i => i.is_anomaly);
+
+                    if (anomalies.length === 0) {
+                        resultBox.className = 'result-box success';
+                        resultBox.innerHTML = `
+                            <div style="text-align:center;">
+                                <div style="font-size:32px;margin-bottom:10px;">✅</div>
+                                <h4 style="color:#16a34a;">No Anomalies Detected</h4>
+                                <p style="color:#6b7280;font-size:13px;margin-top:5px;">Scanned ${d.total_checked} transactions in the last 30 days. All transactions appear normal.</p>
+                            </div>
+                        `;
+                    } else {
+                        let tableRows = anomalies.slice(0, 20).map(a => `
+                            <tr style="background:#fef2f2;">
+                                <td><strong>${a.tx_id || 'N/A'}</strong></td>
+                                <td>${a.student_name || 'N/A'}</td>
+                                <td>₹${a.amount.toLocaleString()}</td>
+                                <td>${new Date(a.date).toLocaleDateString()}</td>
+                                <td><span style="color:#ef4444;font-weight:600;">${(a.anomaly_score * 100).toFixed(1)}%</span></td>
+                            </tr>
+                        `).join('');
+
+                        resultBox.className = 'result-box warning';
+                        resultBox.innerHTML = `
+                            <div>
+                                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;">
+                                    <h4 style="color:#d97706;">⚠️ ${anomalies.length} Anomalous Transaction(s) Found</h4>
+                                    <span style="font-size:12px;color:#6b7280;">Out of ${d.total_checked} scanned</span>
+                                </div>
+                                <div class="table-responsive">
+                                    <table style="min-width:100%;">
+                                        <thead>
+                                            <tr style="background:#f8fafc;">
+                                                <th>Receipt/Txn ID</th>
+                                                <th>Student</th>
+                                                <th>Amount</th>
+                                                <th>Date</th>
+                                                <th>Anomaly Score</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>${tableRows}</tbody>
+                                    </table>
+                                </div>
+                                <p style="margin-top:15px;font-size:12px;color:#6b7280;">
+                                    💡 <strong>Action Required:</strong> Review flagged transactions manually. High anomaly scores indicate unusual patterns (e.g., round figures, off-cycle payments, duplicate amounts).
+                                </p>
+                            </div>
+                        `;
+                    }
+                } else {
+                    resultBox.className = 'result-box danger';
+                    resultBox.innerHTML = `<div style="text-align:center;color:#ef4444;">❌ Audit failed: ${result.error}</div>`;
+                }
+            } catch (error) {
+                resultBox.className = 'result-box danger';
+                resultBox.innerHTML = `<div style="text-align:center;color:#ef4444;">❌ Error: ${error.message}</div>`;
+            }
         }
 
         // Initialization

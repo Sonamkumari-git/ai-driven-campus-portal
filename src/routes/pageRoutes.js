@@ -7,6 +7,7 @@ const router = express.Router();
 
 const pages = [
   { name: 'admin_dashboard', file: 'admin_dashboard.html', roles: ['director'] },
+  { name: 'student_dashboard', file: 'student_dashboard.html', roles: ['student'] },
   { name: 'users_roles', file: 'users_roles.html', roles: ['director'] },
   { name: 'students', file: 'students.html', roles: ['director', 'hod', 'staff'] },
   { name: 'admissionform', file: 'admissionform.html', roles: ['director', 'staff'] },

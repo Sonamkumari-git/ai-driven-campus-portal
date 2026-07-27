@@ -128,6 +128,7 @@
         }
     </style>
     <script src="js/auth-client.js"></script>
+    <script src="js/ai-client.js"></script>
 </head>
 <body>
 
@@ -586,6 +587,7 @@
                                 <button class="view-btn" onclick="viewStudentProfile(${index}); event.stopPropagation();" title="View Profile">👁️</button>
                                 <button class="edit-btn" onclick="openEditStudentModal(${index}); event.stopPropagation();" title="Edit Full Details">✏️</button>
                                 <button class="del-btn" onclick="deleteStudent(${index}); event.stopPropagation();" title="Delete">🗑️</button>
+                                <button style="color:#ef4444; margin-left:8px;" onclick="analyzeDropoutRisk(${index}); event.stopPropagation();" title="Analyze Dropout Risk">🎯</button>
                             </td>
                         `;
                         tbody.appendChild(tr);
@@ -774,6 +776,93 @@
         document.getElementById('searchInput').addEventListener('input', filterTable);
         document.getElementById('filterCourse').addEventListener('change', filterTable);
         document.getElementById('filterSem').addEventListener('change', filterTable);
+
+        // ============================================
+        // AI Feature: Analyze Dropout Risk (At-Risk)
+        // ============================================
+        async function analyzeDropoutRisk(index) {
+            const student = allStudentsData[index];
+            if (!student) return;
+
+            // Prepare data for AI model
+            const payload = {
+                attendance_pct: parseFloat(student.attendancePct) || 70,
+                avg_internal_marks: parseFloat(student.avgInternalMarks) || 65,
+                backlogs_count: parseInt(student.backlogsCount) || 0,
+                fee_pending_months: parseInt(student.feePendingMonths) || 0,
+                disciplinary_actions: parseInt(student.disciplinaryActions) || 0
+            };
+
+            // Show loading modal
+            const modalHtml = `
+                <div class="modal-overlay" id="dropoutriskModal" style="display:flex;">
+                    <div class="modal-box" style="max-width:500px;">
+                        <div class="modal-header">
+                            <h3>🎯 Dropout Risk Analysis</h3>
+                            <button onclick="document.getElementById('dropoutriskModal').remove()" style="background:none;border:none;font-size:24px;cursor:pointer;">×</button>
+                        </div>
+                        <div class="modal-body">
+                            <div style="text-align:center;padding:30px;">
+                                <div class="spinner" style="width:40px;height:40px;border-width:4px;"></div>
+                                <p style="margin-top:15px;color:#6b7280;">Analyzing ${student.studentName}'s risk factors...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
+
+            try {
+                const result = await window.ZhiAI.predictAtRisk(payload);
+                
+                const modal = document.getElementById('dropoutriskModal');
+                if (result.success) {
+                    const d = result.data;
+                    let badgeClass = 'badge-success';
+                    let color = '#10b981';
+                    
+                    if (d.risk_level === 'MEDIUM') {
+                        badgeClass = 'badge-warning';
+                        color = '#f59e0b';
+                    } else if (d.risk_level === 'HIGH') {
+                        badgeClass = 'badge-danger';
+                        color = '#ef4444';
+                    }
+
+                    const factorsList = (d.top_factors || []).map(f => `<li>${f}</li>`).join('');
+
+                    modal.querySelector('.modal-body').innerHTML = `
+                        <div style="text-align:center;">
+                            <div style="font-size:48px;margin-bottom:10px;">${d.risk_level === 'HIGH' ? '⚠️' : d.risk_level === 'MEDIUM' ? '⚡' : '✅'}</div>
+                            <h2 style="color:${color};margin-bottom:10px;">${d.risk_level} RISK</h2>
+                            <p style="font-size:18px;margin-bottom:20px;">Dropout Probability: <strong>${(d.dropout_probability * 100).toFixed(1)}%</strong></p>
+                            
+                            <div style="background:#f8fafc;padding:15px;border-radius:8px;text-align:left;">
+                                <h4 style="margin-bottom:10px;color:#1f2937;">Top Risk Factors:</h4>
+                                <ul style="color:#6b7280;line-height:1.8;">${factorsList || '<li>No significant risk factors identified</li>'}</ul>
+                            </div>
+                            
+                            <div style="margin-top:20px;padding:12px;background:#eff6ff;border-radius:8px;font-size:13px;color:#3b82f6;">
+                                💡 Recommendation: ${d.risk_level === 'HIGH' ? 'Immediate intervention required. Schedule counseling session.' : d.risk_level === 'MEDIUM' ? 'Monitor closely and provide academic support.' : 'Student is on track. Continue regular monitoring.'}
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    modal.querySelector('.modal-body').innerHTML = `
+                        <div style="text-align:center;color:#ef4444;">
+                            <p>❌ Analysis failed: ${result.error}</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                const modal = document.getElementById('dropoutriskModal');
+                modal.querySelector('.modal-body').innerHTML = `
+                    <div style="text-align:center;color:#ef4444;">
+                        <p>❌ Error: ${error.message}</p>
+                    </div>
+                `;
+            }
+        }
 
         window.onclick = function(event) {
             const profileModal = document.getElementById('profileModal');
