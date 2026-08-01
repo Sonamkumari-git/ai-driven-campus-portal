@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ZHI | My Fees</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+<link rel="stylesheet" href="/css/student-portal.css">
+<script src="/js/auth-client.js"></script>
+</head>
+<body>
+<main class="main-wrapper" id="zsMain">
+  <div class="content">
+    <h1 class="page-title"><i class='bx bx-money'></i>My Fees &amp; Payments</h1>
+    <p class="section-subtitle">All amounts are updated automatically by the Accounts office. For queries, visit the fee counter.</p>
+
+    <div class="stats-grid">
+      <div class="stat-card"><div class="stat-icon blue"><i class='bx bx-wallet'></i></div>
+        <div class="stat-info"><h4 id="totalAmount">₹ 0</h4><p>Total Fees</p></div></div>
+      <div class="stat-card"><div class="stat-icon green"><i class='bx bx-check-double'></i></div>
+        <div class="stat-info"><h4 id="totalPaid">₹ 0</h4><p>Paid</p></div></div>
+      <div class="stat-card"><div class="stat-icon red"><i class='bx bx-error-circle'></i></div>
+        <div class="stat-info"><h4 id="totalDue">₹ 0</h4><p>Due</p></div></div>
+      <div class="stat-card"><div class="stat-icon orange"><i class='bx bx-purchase-tag'></i></div>
+        <div class="stat-info"><h4 id="totalDisc">₹ 0</h4><p>Discount</p></div></div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-header"><h3><i class='bx bx-list-check'></i> Fee Heads</h3></div>
+      <div style="overflow-x:auto;">
+        <table>
+          <thead><tr>
+            <th>Head</th><th>Due Date</th><th>Amount</th><th>Discount</th><th>Fine</th><th>Paid</th><th>Balance</th><th>Status</th>
+          </tr></thead>
+          <tbody id="headBody"><tr><td colspan="8" class="empty-state">Loading…</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="panel mt-3">
+      <div class="panel-header"><h3><i class='bx bx-receipt'></i> Payment Receipts</h3></div>
+      <div style="overflow-x:auto;">
+        <table>
+          <thead><tr>
+            <th>Receipt No</th><th>Date</th><th>Head</th><th>Mode</th><th>Amount</th><th>Remarks</th>
+          </tr></thead>
+          <tbody id="txBody"><tr><td colspan="6" class="empty-state">Loading…</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script src="/js/student-portal.js"></script>
+<script>
+(async () => {
+  await ZS.mount({ active: 'fees', pageTitle: 'Fees' });
+
+  try {
+    const r = await ZS.apiGet('/student/fees');
+    const fee = r.data;
+    const tx = r.transactions || [];
+
+    if (fee) {
+      document.getElementById('totalAmount').textContent = ZS.fmtMoney(fee.totalAmount);
+      document.getElementById('totalPaid').textContent = ZS.fmtMoney(fee.totalPaid);
+      document.getElementById('totalDue').textContent = ZS.fmtMoney(fee.totalDue);
+      document.getElementById('totalDisc').textContent = ZS.fmtMoney(fee.totalDiscount);
+
+      const hb = document.getElementById('headBody');
+      if (!fee.feeHeads?.length) {
+        hb.innerHTML = '<tr><td colspan="8" class="empty-state"><i class="bx bx-info-circle"></i><br>No fee heads set up.</td></tr>';
+      } else {
+        hb.innerHTML = fee.feeHeads.map(h => `
+          <tr>
+            <td><b>${h.headName || '—'}</b></td>
+            <td>${h.dueDate || '—'}</td>
+            <td>${ZS.fmtMoney(h.amount)}</td>
+            <td>${ZS.fmtMoney(h.discount)}</td>
+            <td>${ZS.fmtMoney(h.fine)}</td>
+            <td>${ZS.fmtMoney(h.paid)}</td>
+            <td><b>${ZS.fmtMoney(h.due)}</b></td>
+            <td><span class="badge ${h.status === 'Paid' ? 'badge-success' : h.status === 'Partial' ? 'badge-warning' : 'badge-danger'}">${h.status}</span></td>
+          </tr>
+        `).join('');
+      }
+    } else {
+      document.getElementById('headBody').innerHTML = '<tr><td colspan="8" class="empty-state"><i class="bx bx-info-circle"></i><br>Fee ledger not created yet.</td></tr>';
+    }
+
+    const tb = document.getElementById('txBody');
+    if (!tx.length) {
+      tb.innerHTML = '<tr><td colspan="6" class="empty-state"><i class="bx bx-info-circle"></i><br>No payments recorded.</td></tr>';
+    } else {
+      tb.innerHTML = tx.map(t => `
+        <tr>
+          <td><b>${t.receiptNo || '—'}</b></td>
+          <td>${ZS.fmtDate(t.date)}</td>
+          <td>${t.feeHeadName || '—'}</td>
+          <td><span class="badge badge-info">${t.mode || 'Cash'}</span></td>
+          <td><b>${ZS.fmtMoney(t.amount)}</b></td>
+          <td>${t.remarks || ''}</td>
+        </tr>
+      `).join('');
+    }
+  } catch (err) { ZS.toast(err.message, 'error'); }
+})();
+</script>
+</body>
+</html>

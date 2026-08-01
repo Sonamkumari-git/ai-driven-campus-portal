@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ZHI | Attendance</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+<link rel="stylesheet" href="/css/student-portal.css">
+<script src="/js/auth-client.js"></script>
+</head>
+<body>
+<main class="main-wrapper" id="zsMain">
+  <div class="content">
+    <h1 class="page-title"><i class='bx bx-calendar-check'></i>My Attendance</h1>
+
+    <div class="stats-grid">
+      <div class="stat-card"><div class="stat-icon blue"><i class='bx bx-list-ul'></i></div>
+        <div class="stat-info"><h4 id="totalClasses">0</h4><p>Total Classes</p></div></div>
+      <div class="stat-card"><div class="stat-icon green"><i class='bx bx-check-circle'></i></div>
+        <div class="stat-info"><h4 id="presentClasses">0</h4><p>Present</p></div></div>
+      <div class="stat-card"><div class="stat-icon red"><i class='bx bx-x-circle'></i></div>
+        <div class="stat-info"><h4 id="absentClasses">0</h4><p>Absent</p></div></div>
+      <div class="stat-card"><div class="stat-icon purple"><i class='bx bx-bar-chart-alt-2'></i></div>
+        <div class="stat-info"><h4 id="overallPct">0%</h4><p>Overall %</p></div></div>
+    </div>
+
+    <div class="grid-2">
+      <div class="panel">
+        <div class="panel-header"><h3><i class='bx bx-donut-chart'></i> Subject Distribution</h3></div>
+        <div class="panel-body"><div class="chart-container"><canvas id="donut"></canvas></div></div>
+      </div>
+      <div class="panel">
+        <div class="panel-header"><h3><i class='bx bx-line-chart'></i> Subject-wise %</h3></div>
+        <div class="panel-body"><div class="chart-container"><canvas id="bar"></canvas></div></div>
+      </div>
+    </div>
+
+    <div class="panel mt-3">
+      <div class="panel-header"><h3><i class='bx bx-history'></i> Attendance History</h3></div>
+      <div style="overflow-x:auto;">
+        <table>
+          <thead><tr>
+            <th>Date</th><th>Subject</th><th>Teacher</th><th>Time</th><th>Status</th>
+          </tr></thead>
+          <tbody id="attBody"><tr><td colspan="5" class="empty-state">Loading…</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="/js/student-portal.js"></script>
+<script>
+(async () => {
+  await ZS.mount({ active: 'attendance', pageTitle: 'Attendance' });
+
+  try {
+    const r = await ZS.apiGet('/student/attendance');
+    const rows = r.data || [];
+    const subjects = r.subjectStats || [];
+
+    let present = 0, absent = 0;
+    rows.forEach(x => { x.status === 'P' ? present++ : absent++; });
+    document.getElementById('totalClasses').textContent = rows.length;
+    document.getElementById('presentClasses').textContent = present;
+    document.getElementById('absentClasses').textContent = absent;
+    document.getElementById('overallPct').textContent = rows.length
+      ? Math.round((present / rows.length) * 10000) / 100 + '%'
+      : '0%';
+
+    const body = document.getElementById('attBody');
+    body.innerHTML = '';
+    if (!rows.length) {
+      body.innerHTML = '<tr><td colspan="5" class="empty-state"><i class="bx bx-info-circle"></i><br>No attendance records yet.</td></tr>';
+    } else {
+      rows.slice(0, 200).forEach(x => {
+        body.insertAdjacentHTML('beforeend', `
+          <tr>
+            <td>${ZS.fmtDate(x.date)}</td>
+            <td>${x.subject}</td>
+            <td>${x.teacher}</td>
+            <td>${x.startTime || ''} - ${x.endTime || ''}</td>
+            <td><span class="badge ${x.status === 'P' ? 'badge-success' : 'badge-danger'}">${x.status === 'P' ? 'Present' : 'Absent'}</span></td>
+          </tr>
+        `);
+      });
+    }
+
+    new Chart(document.getElementById('donut'), {
+      type: 'doughnut',
+      data: {
+        labels: ['Present', 'Absent'],
+        datasets: [{ data: [present, absent], backgroundColor: ['#10b981', '#ef4444'], borderWidth: 0 }]
+      },
+      options: { responsive: true, maintainAspectRatio: false, cutout: '68%' }
+    });
+    new Chart(document.getElementById('bar'), {
+      type: 'bar',
+      data: {
+        labels: subjects.map(s => s.subject),
+        datasets: [{
+          label: 'Attendance %',
+          data: subjects.map(s => s.percentage),
+          backgroundColor: subjects.map(s => s.percentage >= 75 ? '#10b981' : s.percentage >= 60 ? '#f59e0b' : '#ef4444'),
+          borderRadius: 6
+        }]
+      },
+      options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, max: 100 } }, plugins: { legend: { display: false } } }
+    });
+  } catch (err) { ZS.toast(err.message, 'error'); }
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZHI College | Centralized Admin Portal</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        
+        body { 
+            background: linear-gradient(rgba(15, 23, 42, 0.85), rgba(15, 23, 42, 0.95)), url('https://images.unsplash.com/photo-1562774053-701939374585?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80') center/cover no-repeat fixed; 
+            min-height: 100vh; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            color: #ffffff; 
+            padding: 20px; 
+        }
+
+        .glass-panel { 
+            background: rgba(255, 255, 255, 0.08); 
+            backdrop-filter: blur(16px); 
+            -webkit-backdrop-filter: blur(16px); 
+            border: 1px solid rgba(255, 255, 255, 0.2); 
+            border-radius: 20px; 
+            padding: 40px 30px; 
+            width: 100%; 
+            max-width: 420px; 
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.5); 
+            text-align: center; 
+        }
+
+        .logo-area img { width: 80px; background: #ffffff; border-radius: 50%; padding: 5px; margin-bottom: 15px; box-shadow: 0 0 15px rgba(255,255,255,0.2); }
+        .logo-area h1 { font-size: 24px; font-weight: 700; letter-spacing: 1px; color: #ffffff; margin-bottom: 5px; }
+        .logo-area p { font-size: 11px; color: #94a3b8; letter-spacing: 2px; margin-bottom: 30px; text-transform: uppercase; }
+        
+        .input-group { margin-bottom: 20px; text-align: left; }
+        .input-group label { display: block; font-size: 12px; color: #cbd5e1; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px; font-weight: 600; }
+        .input-group input, .input-group select { 
+            width: 100%; 
+            padding: 14px 15px; 
+            background: rgba(255, 255, 255, 0.06); 
+            border: 1px solid rgba(255, 255, 255, 0.15); 
+            border-radius: 10px; 
+            color: white; 
+            font-size: 14px; 
+            outline: none; 
+            transition: all 0.3s ease; 
+        }
+        .input-group input::placeholder { color: rgba(255, 255, 255, 0.4); }
+        .input-group input:focus, .input-group select:focus { background: rgba(255, 255, 255, 0.15); border-color: #3b82f6; box-shadow: 0 0 15px rgba(59, 130, 246, 0.4); }
+        .input-group select option { background-color: #0f172a; color: white; padding: 10px; }
+        
+        .login-btn { width: 100%; padding: 15px; margin-top: 10px; background: #2563eb; color: white; border: none; border-radius: 10px; font-size: 15px; font-weight: 700; cursor: pointer; transition: all 0.3s; text-transform: uppercase; letter-spacing: 1.5px; box-shadow: 0 10px 20px rgba(37, 99, 235, 0.3); }
+        .login-btn:hover { background: #1d4ed8; transform: translateY(-2px); box-shadow: 0 15px 25px rgba(37, 99, 235, 0.4); }
+        .login-btn:disabled { background: #64748b; cursor: not-allowed; transform: none; box-shadow: none; }
+
+        .footer { margin-top: 25px; font-size: 12px; }
+        .footer a { color: #94a3b8; text-decoration: none; margin: 0 10px; transition: color 0.3s; }
+        .footer a:hover { color: #ffffff; }
+
+        @media (max-width: 480px) {
+            .glass-panel { padding: 30px 20px; }
+            .logo-area h1 { font-size: 20px; }
+            .input-group input, .input-group select { padding: 12px; font-size: 13px;}
+        }
+    </style>
+    <script src="js/auth-client.js"></script>
+</head>
+<body>
+
+    <div class="glass-panel">
+        <div class="logo-area">
+            <img src="zhi_logo.png" alt="ZHI Logo" onerror="this.style.display='none'">
+            <h1>ZAKIR HUSAIN INSTITUTE</h1>
+            <p>Admin & Faculty Portal</p>
+        </div>
+
+        <form id="loginForm">
+            <div class="input-group">
+                <label>System Role</label>
+                <select id="userRole" required>
+                    <option value="" disabled selected>Select your role...</option>
+                    <option value="director">Director (Super Admin)</option>
+                    <option value="accountant">Accountant</option>
+                    <option value="hod">Academic HOD</option>
+                    <option value="staff">Staff</option>
+                    <option value="teacher">Teacher</option>
+                    <option value="student">Student</option>
+                </select>
+            </div>
+
+            <div class="input-group">
+                <label>Official Email ID</label>
+                <input type="email" id="email" placeholder="email@zhi.edu.in" required>
+            </div>
+
+            <div class="input-group">
+                <label>Secure Password</label>
+                <input type="password" id="password" placeholder="••••••••" required>
+            </div>
+
+            <button type="submit" class="login-btn" id="loginBtn">Authenticate</button>
+        </form>
+
+        <div class="footer">
+            <a href="#">Forgot Password?</a> | <a href="#">IT Support</a>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('loginForm').onsubmit = async (e) => {
+            e.preventDefault();
+
+            const btn = document.getElementById('loginBtn');
+            btn.innerHTML = "Authenticating...";
+            btn.disabled = true;
+
+            const loginData = {
+                role: document.getElementById('userRole').value,
+                email: document.getElementById('email').value,
+                password: document.getElementById('password').value
+            };
+
+            try {
+                const response = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(loginData)
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    // Save JWT token, user details and route to protected pages
+                    window.ZHIAuth.saveLogin(result);
+
+                    const routes = {
+                        director: '/admin_dashboard',
+                        accountant: '/accountant_dashboard',
+                        hod: '/academic_dashboard',
+                        staff: '/staff_dashboard',
+                        teacher: '/teacher_dashboard',
+                        student: '/students_dashboard'
+                    };
+                    window.location.href = routes[loginData.role] || '/index.html';
+                } else {
+                    alert("❌ Access Denied: " + result.message);
+                    btn.innerHTML = "Authenticate";
+                    btn.disabled = false;
+                }
+            } catch (error) {
+                console.error("Error:", error);
+                alert("⚠️ Server Error! Backend chalu hai ya nahi check karo.");
+                btn.innerHTML = "Authenticate";
+                btn.disabled = false;
+            }
+        };
+    </script>
+    <script src="js/settings-client.js"></script>
+  <script src="js/role-ui.js"></script>
+</body>
+</html>

@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ZHI | Timetable</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+<link rel="stylesheet" href="/css/student-portal.css">
+<style>
+  .day-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
+  .day-card { background: #fff; border-radius: 14px; border: 1px solid var(--border); overflow: hidden; }
+  .day-head { background: linear-gradient(135deg, #3b82f6, #8b5cf6); color: #fff; padding: 12px 16px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; font-size: 13px; }
+  .slot { padding: 12px 16px; border-bottom: 1px solid var(--border); font-size: 13px; }
+  .slot:last-child { border-bottom: none; }
+  .slot .time { font-weight: 700; color: var(--primary); font-size: 12px; }
+  .slot .subject { font-weight: 600; margin: 3px 0; }
+  .slot .meta { font-size: 11px; color: var(--text-muted); }
+</style>
+<script src="/js/auth-client.js"></script>
+</head>
+<body>
+<main class="main-wrapper" id="zsMain">
+  <div class="content">
+    <h1 class="page-title"><i class='bx bx-time-five'></i>Class Timetable</h1>
+    <p class="section-subtitle" id="metaLine">Loading…</p>
+    <div id="grid" class="day-grid"></div>
+  </div>
+</main>
+
+<script src="/js/student-portal.js"></script>
+<script>
+(async () => {
+  await ZS.mount({ active: 'timetable', pageTitle: 'Timetable' });
+
+  const ORDER = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+
+  try {
+    const r = await ZS.apiGet('/student/timetable');
+    const rows = r.data || [];
+    document.getElementById('metaLine').textContent = `Course: ${r.meta?.course || '—'} · Semester: ${r.meta?.semester || '—'}`;
+
+    const byDay = {};
+    rows.forEach(x => {
+      const key = (x.dayOfWeek || '').trim();
+      if (!byDay[key]) byDay[key] = [];
+      byDay[key].push(x);
+    });
+
+    const grid = document.getElementById('grid');
+    if (!rows.length) {
+      grid.innerHTML = '<div class="empty-state"><i class="bx bx-info-circle"></i><br>No timetable published for your class yet.</div>';
+      return;
+    }
+    ORDER.filter(d => byDay[d] && byDay[d].length).forEach(day => {
+      const slots = byDay[day].sort((a, b) => (a.startTime || '').localeCompare(b.startTime || ''));
+      grid.insertAdjacentHTML('beforeend', `
+        <div class="day-card">
+          <div class="day-head">${day}</div>
+          ${slots.map(s => `
+            <div class="slot">
+              <div class="time">${s.startTime} – ${s.endTime}</div>
+              <div class="subject">${s.subject}</div>
+              <div class="meta">
+                <i class='bx bx-user'></i> ${s.teacherId?.name || s.teacherName || 'Faculty'}
+                ${s.roomNumber ? `· <i class='bx bx-map'></i> Room ${s.roomNumber}` : ''}
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      `);
+    });
+  } catch (err) { ZS.toast(err.message, 'error'); }
+})();
+</script>
+</body>
+</html>

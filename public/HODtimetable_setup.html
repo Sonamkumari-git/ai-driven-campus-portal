@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZHI Academics | Professional Timetable Manager</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --bg: #f8fafc;
+            --sidebar: #1b2132; 
+            --sidebar-active: #2a3143;
+            --text-main: #1e293b;
+            --text-light: #64748b;
+            --white: #ffffff;
+            --border: #e2e8f0;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        body { background-color: var(--bg); color: var(--text-main); display: flex; height: 100vh; overflow: hidden; }
+
+        /* Sidebar Styling */
+        .sidebar { width: 260px; background: var(--sidebar); color: white; display: flex; flex-direction: column; transition: 0.3s; border-right: 1px solid #111827; flex-shrink: 0;}
+        .sidebar-header { padding: 24px 20px; background: #1b2132; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .logo-box { width: 40px; height: 40px; background: var(--white); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 22px; color: var(--primary); box-shadow: 0 0 10px rgba(99,102,241,0.2);}
+        
+        .nav-menu { padding: 10px 0; flex: 1; overflow-y: auto; }
+        .nav-category { font-size: 10px; color: #64748b; margin: 20px 24px 8px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+        
+        .nav-item { padding: 12px 24px; display: flex; align-items: center; gap: 12px; color: #cbd5e1; text-decoration: none; transition: all 0.3s ease; font-size: 13.5px; font-weight: 500; border-left: 3px solid transparent; }
+        .nav-item:hover { background: rgba(99, 102, 241, 0.12); color: white; padding-left: 32px; border-left-color: var(--primary); }
+        .nav-item.active { background: var(--sidebar-active); color: white; border-left-color: var(--primary); font-weight: 600;}
+        .nav-item i { font-size: 18px; color: #94a3b8; transition: all 0.3s ease; }
+        .nav-item:hover i { color: var(--primary); transform: scale(1.1); }
+        .nav-item.active i { color: var(--primary); }
+
+        /* Main Content */
+        .main-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+        
+        /* Header */
+        header { height: 70px; background: var(--white); border-bottom: 1px solid var(--border); display: flex; align-items: center; padding: 0 30px; justify-content: space-between; flex-shrink:0; }
+        .header-title { font-weight: 700; font-size: 18px; color: #1e293b; }
+        .header-right { display: flex; align-items: center; gap: 20px; }
+        .profile-section { display: flex; align-items: center; gap: 12px; text-align: right; }
+        .profile-name { font-weight: 600; font-size: 14px; color: var(--text-main); line-height: 1.2; }
+        .profile-role { font-size: 11px; color: var(--text-light); }
+        .profile-avatar { width: 38px; height: 38px; border-radius: 50%; background: var(--primary); color: white; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 14px; }
+        
+        /* Filter Section */
+        .filter-card { background: var(--white); padding: 15px 25px; border-bottom: 1px solid var(--border); display: flex; gap: 20px; align-items: center; flex-shrink:0;}
+        .form-group { display: flex; align-items: center; gap: 10px; }
+        .form-group label { font-size: 13px; font-weight: 600; color: var(--text-light); }
+        .form-control { padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; outline: none; background: var(--bg);}
+        .btn-primary { background: var(--primary); color: white; border: none; padding: 9px 16px; border-radius: 6px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px;}
+        
+        /* Grids Area */
+        .grids-wrapper { flex: 1; padding: 20px 30px; overflow-y: auto; display: flex; flex-direction: column; gap: 25px; }
+        .date-display { font-size: 18px; font-weight: 800; color: var(--primary); display: flex; align-items: center; gap: 8px; margin-bottom: -5px;}
+        
+        .sem-container { background: var(--white); border-radius: 8px; border: 1px solid var(--border); box-shadow: var(--shadow); overflow: hidden; }
+        .sem-header { background: #f8fafc; padding: 10px 15px; font-weight: 700; font-size: 14px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; color: var(--text-main);}
+        
+        /* Room Input Styling */
+        .room-input { padding: 4px 8px; border: 1px solid #cbd5e1; border-radius: 4px; outline: none; font-size: 12px; width: 100px; font-weight: 600; color: var(--danger); transition: 0.3s;}
+        .room-input.saving { border-color: var(--warning); background-color: #fffbeb; }
+        .room-input.saved { border-color: var(--success); background-color: #ecfdf5; }
+
+        table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+        th { padding: 10px; background: white; font-size: 11px; text-transform: uppercase; color: var(--text-light); border-bottom: 1px solid var(--border); border-right: 1px solid var(--border); text-align: center;}
+        td { border-right: 1px solid var(--border); vertical-align: middle; height: 80px; padding: 6px;}
+        
+        /* Lunch Break Fix */
+        .lunch-break { background: #f1f5f9; writing-mode: vertical-rl; text-orientation: mixed; text-align: center; font-weight: 800; color: #94a3b8; letter-spacing: 2px; width: 35px !important; font-size: 11px; vertical-align: middle;}
+
+        /* Slots */
+        .slot { height: 100%; width: 100%; border-radius: 6px; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; gap: 3px; cursor: default; transition: 0.2s; position: relative;}
+        .slot.empty { border: 2px dashed #cbd5e1; background: #f8fafc; color: #94a3b8; cursor: pointer; }
+        .slot.empty.drag-over { background: #e0e7ff; border-color: var(--primary); color: var(--primary); }
+        .slot.filled { background: #eef2ff; border-left: 4px solid var(--primary); cursor: grab; }
+        .slot.filled:active { cursor: grabbing; transform: scale(0.95); }
+        .slot.filled:hover { background: #e0e7ff; }
+        
+        .slot .sub { font-weight: 800; font-size: 12px; color: var(--text-main); }
+        .slot .teach { font-size: 11px; color: var(--primary); font-weight: 600;}
+
+        /* DELETE BUTTON STYLING */
+        .delete-btn { position: absolute; top: 4px; right: 4px; font-size: 16px; color: #94a3b8; cursor: pointer; transition: 0.2s; border-radius: 50%; padding: 2px; }
+        .delete-btn:hover { background: #ef4444; color: white; }
+
+        /* Teacher Tray (Bottom) */
+        .teacher-tray { height: 150px; background: var(--white); border-top: 1px solid var(--border); padding: 15px 20px; flex-shrink: 0; display: flex; flex-direction: column; box-shadow: 0 -4px 10px rgba(0,0,0,0.03);}
+        .tray-header { font-size: 13px; font-weight: 700; color: var(--text-main); margin-bottom: 10px; display: flex; justify-content: space-between;}
+        .draggable-teachers { display: flex; gap: 15px; overflow-x: auto; padding-bottom: 5px; flex: 1; align-items: center;}
+        
+        .teacher-card { background: var(--bg); border: 1px solid #cbd5e1; padding: 10px 15px; border-radius: 8px; cursor: grab; min-width: 140px; text-align: center; user-select: none; transition: 0.2s;}
+        .teacher-card:active { cursor: grabbing; transform: scale(0.95); opacity: 0.8;}
+        .teacher-card b { display: block; font-size: 13px; color: var(--primary); }
+        .teacher-card span { font-size: 11px; color: var(--text-light); font-weight: 600; display: block; margin-top: 4px;}
+
+    </style>
+    <script src="js/auth-client.js"></script>
+</head>
+<body>
+
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <div class="logo-box"><i class='bx bxs-book-alt'></i></div>
+            <div>
+                <h4 style="font-size: 15px; font-weight: 700; color: white;">ZHI Academics</h4>
+                <p style="font-size: 10px; color: #94a3b8; font-weight: 600; margin-top: 2px;">HOD / CO-ORDINATOR</p>
+            </div>
+        </div>
+        <nav class="nav-menu">
+            <a href="academic_dashboard.html" class="nav-item"><i class='bx bxs-dashboard'></i> Dashboard Home</a>
+            
+            <div class="nav-category">MANAGEMENT</div>
+            <a href="HODtimetable_setup.html" class="nav-item active"><i class='bx bx-calendar-edit'></i> Timetable Setup</a>
+            <a href="leave_approvals.html" class="nav-item"><i class='bx bx-calendar-exclamation'></i> Leave Approvals</a>
+            <a href="substitute_mgmt.html" class="nav-item"><i class='bx bx-transfer'></i> Substitute Mgmt.</a>
+            
+            <div class="nav-category">ACADEMICS & TRACKING</div>
+            <a href="manage_syllabus.html" class="nav-item"><i class='bx bx-book-open'></i> Subjects & Syllabus</a>
+            <a href="attendance_overview.html" class="nav-item"><i class='bx bx-bar-chart-alt-2'></i> Monitor Attendance</a>
+            <a href="performance_reports.html" class="nav-item"><i class='bx bx-line-chart'></i> Student Performance</a>
+        </nav>
+    </aside>
+
+    <main class="main-content">
+        <header>
+            <h3 class="header-title">Academic Department</h3>
+            <div class="header-right">
+                <span id="liveClock" style="font-size: 13px; font-weight: 600; color: var(--text-light); border-right: 1px solid #e2e8f0; padding-right: 15px;"></span>
+                <div class="profile-section">
+                    <div>
+                        <div class="profile-name">Karan Mishara</div>
+                        <div class="profile-role">Head of Department</div>
+                    </div>
+                    <div class="profile-avatar">HO</div>
+                </div>
+            </div>
+        </header>
+
+        <div class="filter-card">
+            <div class="form-group">
+                <label>Date:</label>
+                <input type="date" class="form-control" id="ttDate" onchange="loadFullDayData()">
+            </div>
+            <div class="form-group">
+                <label>Course:</label>
+                <select class="form-control" id="ttCourse" onchange="loadFullDayData()">
+                    <option value="BCA">BCA</option>
+                    <option value="BBA">BBA</option>
+                    <option value="MCA">MCA</option>
+                </select>
+            </div>
+            <button class="btn-primary" onclick="loadFullDayData()" style="margin-left: 10px;">
+                <i class='bx bx-refresh'></i> Refresh Grid
+            </button>
+        </div>
+
+        <div class="grids-wrapper">
+            <div class="date-display" id="displayDateText"><i class='bx bx-calendar'></i> Loading Date...</div>
+            <div id="allSemestersContainer" style="display: flex; flex-direction: column; gap: 25px;">
+                </div>
+        </div>
+
+        <div class="teacher-tray">
+            <div class="tray-header">
+                <span><i class='bx bx-user-pin' style="color: var(--primary);"></i> Available Present Faculty</span>
+                <button onclick="fetchTeachers(true)" style="background:none; border:none; color:var(--primary); cursor:pointer; font-weight: 600; font-size: 12px;">Force Load All Faculty</button>
+            </div>
+            <div class="draggable-teachers" id="teacherPool">
+                <div style="color: #64748b; font-size: 13px;"><i class='bx bx-loader-alt bx-spin'></i> Loading teachers...</div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const API_BASE = '/api';
+        
+        let currentDayRoutines = []; 
+        let teacherList = []; // Array to store all staff members to fetch subjects
+
+        // Debounce timer for Auto-Save Room Number
+        let roomSaveTimeout;
+
+        const periods = [
+            { s: "09:00", e: "10:00" }, { s: "10:00", e: "11:00" }, { s: "11:00", e: "12:00" },
+            { break: true },
+            { s: "12:30", e: "01:30" }, { s: "01:30", e: "02:30" }, { s: "02:30", e: "03:30" }
+        ];
+
+        // --- 1. INITIALIZATION & LIVE CLOCK ---
+        window.addEventListener('DOMContentLoaded', () => {
+            const today = new Date();
+            const yyyy = today.getFullYear();
+            const mm = String(today.getMonth() + 1).padStart(2, '0');
+            const dd = String(today.getDate()).padStart(2, '0');
+            document.getElementById('ttDate').value = `${yyyy}-${mm}-${dd}`;
+            
+            buildEmptyGrids(); 
+            loadFullDayData(); 
+        });
+
+        setInterval(() => { 
+            document.getElementById('liveClock').innerText = new Date().toLocaleString('en-IN', { hour12: true }); 
+        }, 1000);
+
+        // --- 2. BUILD 6 GRIDS ---
+        function buildEmptyGrids() {
+            const container = document.getElementById('allSemestersContainer');
+            container.innerHTML = '';
+
+            for (let sem = 1; sem <= 6; sem++) {
+                let html = `
+                <div class="sem-container">
+                    <div class="sem-header">
+                        <span><i class='bx bxs-graduation'></i> Semester ${sem}</span>
+                        <div style="display:flex; align-items:center; gap:8px;">
+                            <label style="font-size:11px; color:var(--text-light);">ROOM NO:</label>
+                            <input type="text" class="room-input" id="room_sem_${sem}" placeholder="e.g. 101" onkeyup="handleRoomInput(${sem}, this.value)">
+                        </div>
+                    </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                ${periods.map(p => p.break ? `<th style="width:40px;">Break</th>` : `<th>${p.s} - ${p.e}</th>`).join('')}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                ${periods.map(p => {
+                                    if(p.break) return `<td class="lunch-break">LUNCH</td>`;
+                                    return `<td>
+                                        <div class="slot empty" 
+                                             id="slot_${sem}_${p.s}" 
+                                             data-sem="${sem}" data-start="${p.s}" data-end="${p.e}"
+                                             ondragover="allowDrop(event)" 
+                                             ondragleave="dragLeave(event)"
+                                             ondrop="dropSlot(event)">
+                                             <i class='bx bx-plus'></i>
+                                        </div>
+                                    </td>`;
+                                }).join('')}
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>`;
+                container.innerHTML += html;
+            }
+        }
+
+        // --- 3. FETCH DATA FOR SELECTED DATE ---
+        async function loadFullDayData() {
+            const dateVal = document.getElementById('ttDate').value;
+            const course = document.getElementById('ttCourse').value;
+            if(!dateVal) return;
+
+            const dateObj = new Date(dateVal);
+            const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+            const dayName = days[dateObj.getDay()];
+
+            document.getElementById('displayDateText').innerHTML = `<i class='bx bx-calendar'></i> ${dayName}, ${dateObj.toLocaleDateString('en-GB')}`;
+
+            await fetchTeachers(false, dateVal);
+
+            try {
+                const res = await fetch(`${API_BASE}/routines?course=${course}`);
+                const data = await res.json();
+                if(data.success) {
+                    currentDayRoutines = data.data.filter(r => r.date === dateVal || r.dayOfWeek === dayName);
+                } else {
+                    currentDayRoutines = [];
+                }
+                fillGridsWithData();
+            } catch (e) {
+                console.log("Routine fetch failed");
+            }
+        }
+
+        // --- 4. FILL GRIDS WITH CLASSES ---
+        function fillGridsWithData() {
+            document.querySelectorAll('.slot:not(.empty)').forEach(el => {
+                const p = el.parentElement;
+                const sem = el.dataset.sem; const s = el.dataset.start; const e = el.dataset.end;
+                p.innerHTML = `<div class="slot empty" id="slot_${sem}_${s}" data-sem="${sem}" data-start="${s}" data-end="${e}" ondragover="allowDrop(event)" ondragleave="dragLeave(event)" ondrop="dropSlot(event)"><i class='bx bx-plus'></i></div>`;
+            });
+
+            currentDayRoutines.forEach(routine => {
+                const slotId = `slot_${routine.semester}_${routine.startTime}`;
+                const emptySlot = document.getElementById(slotId);
+                
+                if(emptySlot) {
+                    const parent = emptySlot.parentElement;
+                    let roomHTML = routine.roomNumber ? `<div style="font-size: 10px; background: #fff; padding: 2px 5px; border-radius: 4px; margin-top: 3px; border: 1px solid var(--border); color: var(--danger); font-weight: 700;">Room: ${routine.roomNumber}</div>` : '';
+                    
+                    // 🔥 NEW: Class box is now draggable! We attach data-routineid to identify it when dragged
+                    parent.innerHTML = `
+                        <div class="slot filled" draggable="true" ondragstart="dragStart(event)" 
+                             data-id="${routine._id}" data-sem="${routine.semester}" data-start="${routine.startTime}" data-end="${routine.endTime}"
+                             data-tid="${routine.teacherId ? (routine.teacherId._id || routine.teacherId) : ''}" 
+                             data-tname="${routine.teacherName || (routine.teacherId ? routine.teacherId.name : 'Faculty')}" 
+                             data-tsub="${routine.subject}"
+                             data-routineid="${routine._id}">
+                             
+                            <i class='bx bx-x delete-btn' onclick="deleteSlot('${routine._id}', event)" title="Remove Class"></i>
+                            <div class="sub">${routine.subject}</div>
+                            <div class="teach">${routine.teacherName || (routine.teacherId ? routine.teacherId.name : 'Faculty')}</div>
+                            ${roomHTML}
+                        </div>
+                    `;
+                    if(routine.roomNumber) {
+                        document.getElementById(`room_sem_${routine.semester}`).value = routine.roomNumber;
+                    }
+                }
+            });
+        }
+
+        // --- 4.5. AUTO-SAVE ROOM NUMBER LOGIC ---
+        function handleRoomInput(sem, value) {
+            const inputField = document.getElementById(`room_sem_${sem}`);
+            inputField.classList.add('saving'); 
+            inputField.classList.remove('saved');
+
+            clearTimeout(roomSaveTimeout);
+
+            roomSaveTimeout = setTimeout(() => {
+                saveRoomToDatabase(sem, value, inputField);
+            }, 1500); 
+        }
+
+        async function saveRoomToDatabase(sem, newRoomNo, inputField) {
+            const dateVal = document.getElementById('ttDate').value;
+            const course = document.getElementById('ttCourse').value;
+
+            const routinesToUpdate = currentDayRoutines.filter(r => r.semester == sem && r.course === course);
+
+            if(routinesToUpdate.length === 0) {
+                inputField.classList.remove('saving');
+                inputField.classList.add('saved');
+                setTimeout(() => inputField.classList.remove('saved'), 1000);
+                return;
+            }
+
+            try {
+                for (let r of routinesToUpdate) {
+                    await fetch(`${API_BASE}/routines/${r._id}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ roomNumber: newRoomNo })
+                    });
+                }
+                
+                inputField.classList.remove('saving');
+                inputField.classList.add('saved');
+                setTimeout(() => inputField.classList.remove('saved'), 1000);
+                
+                loadFullDayData();
+
+            } catch (e) {
+                inputField.classList.remove('saving');
+                alert("Network error: Failed to auto-save room number!");
+            }
+        }
+
+        // --- 5. TEACHER TRAY FETCHING ---
+        async function fetchTeachers(forceAll = false, dateStr = "") {
+            const pool = document.getElementById('teacherPool');
+            pool.innerHTML = "<span style='color: #64748b;'><i class='bx bx-loader-alt bx-spin'></i> Loading teachers...</span>";
+            const selectedDate = dateStr || document.getElementById('ttDate').value;
+
+            try {
+                const staffRes = await fetch(`${API_BASE}/staff`);
+                const staffData = await staffRes.json();
+                let allStaff = [];
+                if(staffData.success) {
+                    allStaff = staffData.data.filter(s => s.category === 'teacher' || (s.role && s.role.toLowerCase().includes('teacher')));
+                }
+
+                let displayList = [];
+
+                if(!forceAll) {
+                    const attRes = await fetch(`${API_BASE}/teacher-attendance?dateStr=${selectedDate}`);
+                    const attData = await attRes.json();
+                    
+                    if(attData.success && attData.data.length > 0) {
+                        const presentIds = attData.data
+                            .filter(l => l.status === 'P' || l.status === 'Present' || l.punchIn)
+                            .map(l => {
+                                return typeof l.teacherId === 'object' && l.teacherId !== null ? l.teacherId._id.toString() : l.teacherId.toString();
+                            });
+                        
+                        displayList = allStaff.filter(staff => presentIds.includes(staff._id.toString()));
+                    }
+                } else {
+                    displayList = allStaff;
+                }
+
+                if(displayList.length === 0) {
+                    pool.innerHTML = "<span style='color:#ef4444; font-weight:600; font-size:13px;'>No faculty present today / Attendance not marked yet.</span>";
+                    return;
+                }
+
+                pool.innerHTML = displayList.map(t => {
+                    const subjectName = t.skills || t.subject || t.department || t.specialization || "General";
+                    return `
+                    <div class="teacher-card" draggable="true" ondragstart="dragStart(event)" 
+                         data-tid="${t._id}" data-tname="${t.name}" data-tsub="${subjectName}">
+                        <b>${t.name}</b>
+                        <span><i class='bx bx-book'></i> ${subjectName}</span>
+                    </div>
+                `}).join('');
+
+            } catch(e) {
+                pool.innerHTML = "<span style='color:red;'>Error loading faculty. Check API connection.</span>";
+            }
+        }
+
+        // --- 6. ADVANCED DRAG AND DROP LOGIC ---
+        function dragStart(ev) {
+            // Getting data from dragging item (Either Teacher from Tray OR Existing Class from Grid)
+            ev.dataTransfer.setData("tId", ev.target.dataset.tid);
+            ev.dataTransfer.setData("tName", ev.target.dataset.tname);
+            ev.dataTransfer.setData("tSub", ev.target.dataset.tsub);
+            
+            // 🔥 NEW: Check if dragging an already assigned class
+            if(ev.target.dataset.routineid) {
+                ev.dataTransfer.setData("sourceRoutineId", ev.target.dataset.routineid);
+            }
+        }
+
+        function allowDrop(ev) {
+            ev.preventDefault();
+            const slot = ev.target.closest('.slot.empty');
+            if(slot) slot.classList.add('drag-over');
+        }
+
+        function dragLeave(ev) {
+            const slot = ev.target.closest('.slot.empty');
+            if(slot) slot.classList.remove('drag-over');
+        }
+
+        async function dropSlot(ev) {
+            ev.preventDefault();
+            const slot = ev.target.closest('.slot.empty');
+            if(!slot) return;
+            slot.classList.remove('drag-over');
+
+            const tId = ev.dataTransfer.getData("tId");
+            const tName = ev.dataTransfer.getData("tName");
+            const tSub = ev.dataTransfer.getData("tSub"); 
+            const sourceRoutineId = ev.dataTransfer.getData("sourceRoutineId"); // Gets ID if dragged from grid
+            
+            if(!tId) return;
+
+            const sem = slot.dataset.sem;
+            const startTime = slot.dataset.start;
+            const endTime = slot.dataset.end;
+            const dateVal = document.getElementById('ttDate').value;
+            const course = document.getElementById('ttCourse').value;
+            const roomNo = document.getElementById(`room_sem_${sem}`).value || "";
+
+            const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+            const dayName = days[new Date(dateVal).getDay()];
+
+            // CLASH CHECK: Ignore checking itself if moving the same class
+            const isBusy = currentDayRoutines.find(r => 
+                r.startTime === startTime && 
+                (r.teacherId === tId || (r.teacherId && r.teacherId._id === tId)) &&
+                r._id !== sourceRoutineId // NEW: Ignore self clash while moving
+            );
+            
+            if(isBusy) {
+                alert(`⚠️ CLASH DETECTED!\n${tName} is already assigned to Semester ${isBusy.semester} at ${startTime}.`);
+                return;
+            }
+
+            // Visual Loading Spinner on target slot
+            let finalSub = tSub || "General";
+            slot.innerHTML = `<i class='bx bx-loader-alt bx-spin'></i>`;
+
+            const payload = {
+                course: course,
+                semester: sem,
+                section: "A", 
+                subject: finalSub,
+                teacherId: tId,
+                teacherName: tName,
+                date: dateVal,
+                dayOfWeek: dayName,
+                startTime: startTime,
+                endTime: endTime,
+                roomNumber: roomNo
+            };
+
+            try {
+                // 🔥 NEW: If this was dragged from another slot, delete the old one first!
+                if(sourceRoutineId) {
+                    await fetch(`${API_BASE}/routines/${sourceRoutineId}`, { method: 'DELETE' });
+                }
+
+                // POST new routine to DB
+                const res = await fetch(`${API_BASE}/routines`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                
+                const result = await res.json();
+                
+                if(result.success) {
+                    loadFullDayData(); 
+                } else {
+                    alert("Error saving: " + result.message);
+                    loadFullDayData();
+                }
+            } catch(e) {
+                alert("Server Failed");
+                loadFullDayData();
+            }
+        }
+
+        // --- 7. DELETE SLOT (By clicking on X icon only) ---
+        async function deleteSlot(routineId, event) {
+            if(event) event.stopPropagation(); 
+            
+            try {
+                const res = await fetch(`${API_BASE}/routines/${routineId}`, { method: 'DELETE' });
+                const result = await res.json();
+                if(result.success) {
+                    loadFullDayData();
+                }
+            } catch(e) {
+                alert("Delete Failed");
+            }
+        }
+    </script>
+    <script src="js/settings-client.js"></script>
+  <script src="js/role-ui.js"></script>
+</body>
+</html>

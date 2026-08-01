@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZHI Director Panel | Global Notice</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --sidebar-bg: #0f172a; 
+            --primary: #3b82f6; 
+            --success: #10b981; 
+            --warning: #f59e0b; 
+            --danger: #ef4444; 
+            --bg: #f8fafc;
+            --text-dark: #0f172a;
+            --text-light: #64748b;
+            --white: #ffffff;
+            --border: #e2e8f0;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        
+        /* Layout Structure */
+        body { background-color: var(--bg); display: flex; height: 100vh; overflow: hidden; color: var(--text-dark); }
+
+        /* OVERLAY FOR MOBILE SIDEBAR */
+        .sidebar-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.6); z-index: 1000;
+            display: none; opacity: 0; transition: opacity 0.3s ease;
+        }
+        .sidebar-overlay.active { display: block; opacity: 1; }
+
+        /* SIDEBAR */
+        .sidebar { width: 260px; background: var(--sidebar-bg); color: #fff; display: flex; flex-direction: column; z-index: 1001; transition: transform 0.3s ease; flex-shrink: 0; }
+        .sidebar-header { padding: 20px; border-bottom: 1px solid rgba(255,255,255,0.05); display: flex; align-items: center; justify-content: space-between; }
+        .logo-container { display: flex; align-items: center; gap: 12px; }
+        .logo-circle { width: 44px; height: 44px; background: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--text-dark); font-size: 22px; font-weight: bold; border: 2px solid #ef4444;}
+        .sidebar-header h2 { font-size: 20px; font-weight: 700;}
+        .sidebar-header p { font-size: 12px; color: var(--danger); font-weight: 700; letter-spacing: 0.5px; margin-top: 2px; text-transform: uppercase;}
+        
+        .sidebar-menu { list-style: none; padding: 10px 0; flex: 1; overflow-y: auto; }
+        .sidebar-menu li a { display: flex; align-items: center; gap: 15px; padding: 14px 20px; color: #cbd5e1; text-decoration: none; font-size: 15px; font-weight: 500; transition: 0.2s; }
+        .sidebar-menu li a i { font-size: 18px; width: 20px; text-align: center; color: #94a3b8; }
+        .sidebar-menu li.active a, .sidebar-menu li a:hover { background: rgba(255,255,255,0.05); color: #fff; border-left: 4px solid var(--primary); padding-left: 16px;}
+        .sidebar-menu li.active a i, .sidebar-menu li a:hover i { color: #fff; }
+
+        /* MAIN CONTENT & TOPBAR */
+        .main-wrapper { flex: 1; display: flex; flex-direction: column; width: 100%; height: 100vh; overflow-y: auto; overflow-x: hidden; position: relative;}
+        
+        .topbar { height: 70px; min-height: 70px; background: var(--white); border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; padding: 0 25px; position: sticky; top: 0; z-index: 999; }
+        .topbar h2 { font-size: 20px; }
+        .menu-btn { display: none; background: none; border: none; font-size: 24px; cursor: pointer; color: var(--text-dark); }
+        
+        /* CONTENT GRID FOR DESKTOP */
+        .content { 
+            padding: 20px; 
+            display: grid; 
+            grid-template-columns: 1fr 1.5fr; 
+            gap: 20px; 
+            height: calc(100vh - 70px); 
+        }
+
+        /* CARDS */
+        .card { 
+            background: var(--white); border-radius: 12px; border: 1px solid var(--border); box-shadow: 0 1px 3px rgba(0,0,0,0.05); padding: 22px; 
+            display: flex; flex-direction: column; height: 100%; min-height: 0; 
+        }
+        .card-header { font-size: 18px; font-weight: 600; border-bottom: 1px solid var(--border); padding-bottom: 14px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0;}
+
+        /* FORM ELEMENTS */
+        .form-container { flex: 1; overflow-y: auto; padding-right: 5px; min-height: 0;}
+        .form-container::-webkit-scrollbar { width: 5px; }
+        .form-container::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; font-size: 14px; font-weight: 600; margin-bottom: 6px; color: var(--text-dark); }
+        .form-control { width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 6px; font-size: 15px; outline: none; transition: 0.2s; }
+        .form-control:focus { border-color: var(--primary); }
+        textarea.form-control { resize: vertical; min-height: 120px; line-height: 1.5; }
+
+        .checkbox-group { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 5px; }
+        .checkbox-label { display: flex; align-items: center; gap: 6px; font-size: 14px; cursor: pointer; background: #f1f5f9; padding: 10px 12px; border-radius: 6px; border: 1px solid var(--border); transition: 0.2s; flex: 1; min-width: 100px; justify-content: center;}
+        .checkbox-label:hover { background: #e2e8f0; }
+        .checkbox-label input { cursor: pointer; transform: scale(1.1); }
+
+        .btn-primary { background: var(--primary); color: white; border: none; padding: 12px 20px; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 16px; transition: 0.2s; width: 100%; display: flex; justify-content: center; align-items: center; gap: 8px; margin-top: 15px;}
+        .btn-primary:hover { background: #2563eb; }
+        
+        .btn-cancel { background: #ef4444; color: white; border: none; padding: 12px 20px; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 16px; transition: 0.2s; width: 100%; display: none; margin-top: 10px;}
+        .btn-cancel:hover { background: #dc2626; }
+
+        /* NOTICE HISTORY LIST */
+        .notice-list { display: flex; flex-direction: column; gap: 15px; flex: 1; overflow-y: auto; padding-right: 5px; min-height: 0; }
+        .notice-list::-webkit-scrollbar { width: 6px; }
+        .notice-list::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+
+        .notice-item { border: 1px solid var(--border); border-radius: 8px; padding: 15px; transition: 0.2s; position: relative; flex-shrink: 0; display: flex; flex-direction: column; background: #fff;}
+        .notice-item:hover { box-shadow: 0 4px 6px rgba(0,0,0,0.05); border-color: #cbd5e1; }
+        
+        .notice-urgent { border-left: 5px solid var(--danger); }
+        .notice-info { border-left: 5px solid var(--primary); }
+
+        .notice-meta { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-size: 12px; color: var(--text-light); font-weight: 600; text-transform: uppercase; flex-wrap: wrap; gap: 5px;}
+        .notice-title { font-size: 16px; font-weight: 600; margin-bottom: 6px; color: var(--text-dark); }
+        .notice-desc { font-size: 14px; color: var(--text-light); line-height: 1.5; margin-bottom: 12px; white-space: pre-wrap;}
+        
+        .badge { padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; text-transform: uppercase; }
+        .badge-student { background: #e0f2fe; color: #0369a1; }
+        .badge-faculty { background: #ede9fe; color: #6d28d9; }
+        .badge-staff { background: #fef3c7; color: #b45309; }
+        .badge-urgent { background: #fee2e2; color: #b91c1c; padding: 3px 6px; border-radius: 4px; font-size: 10px; }
+        
+        .attachment-link { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--primary); text-decoration: none; font-weight: 600; background: #eff6ff; padding: 8px 14px; border-radius: 6px; border: 1px solid #bfdbfe; margin-bottom: 10px; transition: 0.2s; width: max-content;}
+        
+        .action-bar { border-top: 1px solid var(--border); margin-top: auto; padding-top: 12px; display: flex; gap: 15px; justify-content: flex-end;}
+        .action-btn { background: none; border: none; font-size: 13px; font-weight: 600; cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 5px;}
+        .edit-btn { color: var(--primary); }
+        .delete-btn { color: var(--danger); }
+
+        /* 📱 RESPONSIVE DESIGN FOR PHONE & TABLET (MAGIC HAPPENS HERE) */
+        @media (max-width: 992px) {
+            /* Change layout to single column and allow full scrolling */
+            .content { 
+                display: flex; 
+                flex-direction: column; 
+                height: auto; /* Let it grow */
+                padding: 15px;
+            }
+            
+            /* Remove fixed scrollings from inside cards */
+            .card { height: auto; padding: 16px; overflow: visible; }
+            .form-container, .notice-list { overflow-y: visible; height: auto; }
+        }
+
+        @media (max-width: 768px) {
+            .sidebar { position: fixed; left: -260px; height: 100vh; }
+            .sidebar.active { transform: translateX(260px); }
+            .menu-btn { display: block; }
+            .topbar { padding: 0 15px; }
+            
+            /* Better checkboxes on small phones */
+            .checkbox-label { flex: 1 1 45%; } 
+            
+            .notice-meta { flex-direction: column; align-items: flex-start; }
+            .badge-urgent { align-self: flex-start; }
+        }
+    </style>
+    <script src="js/auth-client.js"></script>
+</head>
+<body>
+
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="logo-container">
+                <div class="logo-circle">
+                    <i class="fa-solid fa-graduation-cap" style="font-size: 22px;"></i>
+                </div>
+                <div>
+                    <h2>ZHI College</h2>
+                    <p>DIRECTOR PANEL</p>
+                </div>
+            </div>
+        </div>
+        
+        <ul class="sidebar-menu">
+            <li><a href="admin_dashboard.html"><i class="fa-solid fa-table-cells-large"></i> Dashboard</a></li>
+            <li><a href="users_roles.html"><i class="fa-solid fa-user-group"></i> Users & Roles</a></li>
+            <li><a href="students.html"><i class="fa-regular fa-user"></i> Students</a></li>
+            <li><a href="Finance.html"><i class="fa-solid fa-dollar-sign"></i> Finance</a></li>
+            <li><a href="Reports&Analytics.html"><i class="fa-solid fa-chart-simple"></i> Reports & Analytics</a></li>
+            <li><a href="Exams&Results.html"><i class="fa-regular fa-file-lines"></i> Exams & Results</a></li>
+            <li class="active"><a href="#"><i class="fa-regular fa-message"></i> Global Notices</a></li>
+            <li><a href="SystemSettings.html"><i class="fa-solid fa-gear"></i> System Settings</a></li>
+            <li><a href="AuditLogs.html"><i class="fa-solid fa-arrows-rotate"></i> Audit Logs</a></li>
+        </ul>
+    </aside>
+
+    <div class="main-wrapper">
+        <header class="topbar">
+            <div style="display: flex; align-items: center; gap: 15px;">
+                <button class="menu-btn" onclick="toggleSidebar()"><i class="fa-solid fa-bars"></i></button>
+                <h2>Global Announcements</h2>
+            </div>
+        </header>
+
+        <main class="content">
+            <div class="card">
+                <div class="card-header">
+                    <span id="formCardTitle">✍️ Compose New Notice</span>
+                </div>
+                
+                <div class="form-container">
+                    <form id="noticeForm">
+                        <div class="form-group">
+                            <label>Notice Title</label>
+                            <input type="text" id="noticeTitle" class="form-control" placeholder="e.g., Holi Holidays Announcement" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Send To (Select Audience)</label>
+                            <div class="checkbox-group">
+                                <label class="checkbox-label"><input type="checkbox" id="sendStudents" checked> 👨‍🎓 Students</label>
+                                <label class="checkbox-label"><input type="checkbox" id="sendFaculty" checked> 👨‍🏫 Faculty</label>
+                                <label class="checkbox-label"><input type="checkbox" id="sendStaff"> 👨‍💼 Staff</label>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Priority Level</label>
+                            <select id="noticePriority" class="form-control">
+                                <option value="info">🔵 Normal / Information</option>
+                                <option value="urgent">🔴 High Priority / Urgent</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Message Content</label>
+                            <textarea id="noticeBody" class="form-control" placeholder="Write your official message here..." required></textarea>
+                        </div>
+
+                        <div class="form-group" style="margin-bottom: 0;" id="fileUploadContainer">
+                            <label>Attach File (Optional)</label>
+                            <input type="file" id="noticeFile" class="form-control" style="padding: 8px 12px;" accept=".pdf,.jpg,.jpeg,.png">
+                            <p style="font-size: 12px; color: var(--text-light); margin-top: 5px;">Accepted: PDF, JPG, PNG (Max: 5MB)</p>
+                        </div>
+
+                        <button type="button" id="btnSubmitNotice" class="btn-primary" onclick="sendNotice()">
+                            🚀 Broadcast Notice Now
+                        </button>
+
+                        <button type="button" id="btnCancelEdit" class="btn-cancel" onclick="cancelEdit()">
+                            ❌ Cancel Editing
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <span>📜 Previously Sent Notices</span>
+                </div>
+
+                <div class="notice-list" id="noticeListContainer">
+                    <p style="text-align:center; color: var(--text-light); padding: 20px; font-size: 15px;">Fetching latest notices...</p>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const BASE_URL = '/api'; // Backend connection
+        let allNotices = []; 
+        let editNoticeId = null; 
+
+        // 🔴 FIX: Sidebar Khulne aur Band hone ka logic overlay ke sath
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('active');
+            document.getElementById('sidebarOverlay').classList.toggle('active');
+        }
+
+        // LOAD ALL NOTICES
+        async function loadNotices() {
+            const container = document.getElementById('noticeListContainer');
+            try {
+                let res = await fetch(`${BASE_URL}/notices`);
+                let result = await res.json();
+                
+                if(result.success) {
+                    allNotices = result.data; 
+                    container.innerHTML = ''; 
+                    
+                    if(result.data.length === 0) {
+                        container.innerHTML = '<p style="text-align:center; color: var(--text-light); padding: 20px; font-size: 15px;">No notices broadcasted yet.</p>';
+                        return;
+                    }
+
+                    result.data.forEach(notice => {
+                        let priorityClass = notice.priority === 'urgent' ? 'notice-urgent' : 'notice-info';
+                        let priorityBadge = notice.priority === 'urgent' ? '<span class="badge-urgent">Urgent</span>' : '';
+                        
+                        let dateObj = new Date(notice.createdAt);
+                        let dateStr = dateObj.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) + ", " + dateObj.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
+
+                        let audienceHtml = notice.audience.map(aud => {
+                            if(aud === 'Students') return '<span class="badge badge-student">Students</span>';
+                            if(aud === 'Faculty') return '<span class="badge badge-faculty">Faculty</span>';
+                            if(aud === 'Staff') return '<span class="badge badge-staff">Staff</span>';
+                            return '';
+                        }).join('');
+
+                        let attachmentHtml = '';
+                        if (notice.fileUrl && notice.fileUrl.trim() !== "" && notice.fileUrl !== "undefined" && notice.fileUrl !== "null") {
+                            let isPdf = notice.fileUrl.toLowerCase().includes('.pdf');
+                            let icon = isPdf ? 'fa-file-pdf' : 'fa-image';
+                            let text = isPdf ? 'View PDF' : 'View Image';
+                            attachmentHtml = `
+                                <div style="margin-top: 10px; margin-bottom: 10px;">
+                                    <a href="${notice.fileUrl}" target="_blank" class="attachment-link">
+                                        <i class="fa-solid ${icon}"></i> ${text}
+                                    </a>
+                                </div>`;
+                        }
+
+                        let html = `
+                        <div class="notice-item ${priorityClass}">
+                            <div class="notice-meta">
+                                <span>📅 ${dateStr}</span>
+                                ${priorityBadge}
+                            </div>
+                            <h3 class="notice-title">${notice.title}</h3>
+                            <p class="notice-desc">${notice.message}</p>
+                            
+                            ${attachmentHtml}
+                            
+                            <div style="display: flex; gap: 8px; margin-top: 5px; flex-wrap: wrap;">
+                                ${audienceHtml}
+                            </div>
+
+                            <div class="action-bar">
+                                <button class="action-btn edit-btn" onclick="editNotice('${notice._id}')"><i class="fa-solid fa-pen"></i> Edit</button>
+                                <button class="action-btn delete-btn" onclick="deleteNotice('${notice._id}')"><i class="fa-solid fa-trash"></i> Delete</button>
+                            </div>
+                        </div>`;
+                        
+                        container.insertAdjacentHTML('beforeend', html);
+                    });
+                }
+            } catch (error) {
+                console.error(error);
+                container.innerHTML = '<p style="text-align:center; color: red; padding: 20px; font-size: 15px;">Failed to load notices.</p>';
+            }
+        }
+
+        // SEND OR UPDATE NOTICE 
+        async function sendNotice() {
+            const title = document.getElementById('noticeTitle').value;
+            const body = document.getElementById('noticeBody').value;
+            const priority = document.getElementById('noticePriority').value;
+            const fileInput = document.getElementById('noticeFile').files[0];
+            const btn = document.getElementById('btnSubmitNotice');
+
+            const toStudents = document.getElementById('sendStudents').checked;
+            const toFaculty = document.getElementById('sendFaculty').checked;
+            const toStaff = document.getElementById('sendStaff').checked;
+
+            if(!title || !body) {
+                alert("Please fill in the Notice Title and Message Content!");
+                return;
+            }
+
+            let audienceArray = [];
+            if(toStudents) audienceArray.push("Students");
+            if(toFaculty) audienceArray.push("Faculty");
+            if(toStaff) audienceArray.push("Staff");
+
+            if(audienceArray.length === 0) {
+                alert("Please select at least one audience group!");
+                return;
+            }
+
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Processing...';
+            btn.disabled = true;
+
+            let formData = new FormData();
+            formData.append('title', title);
+            formData.append('message', body);
+            formData.append('priority', priority);
+            formData.append('audience', JSON.stringify(audienceArray));
+            
+            if (fileInput) {
+                formData.append('attachment', fileInput);
+            }
+
+            try {
+                let url = editNoticeId ? `${BASE_URL}/notices/${editNoticeId}` : `${BASE_URL}/notices`;
+                let methodType = editNoticeId ? 'PUT' : 'POST';
+
+                let response = await fetch(url, {
+                    method: methodType,
+                    body: formData 
+                });
+
+                let result = await response.json();
+                
+                if(result.success) {
+                    alert(editNoticeId ? "✅ Notice Updated Successfully!" : "✅ Notice Broadcasted Successfully!");
+                    cancelEdit(); 
+                    loadNotices(); 
+                } else {
+                    alert("❌ Failed: " + result.message);
+                }
+            } catch (error) {
+                alert("❌ Server Error! Could not process notice.");
+            }
+
+            btn.innerHTML = '🚀 Broadcast Notice Now';
+            btn.disabled = false;
+        }
+
+        // DELETE NOTICE
+        async function deleteNotice(id) {
+            let confirmDelete = confirm("Are you sure you want to permanently delete this notice?");
+            if(!confirmDelete) return;
+
+            try {
+                let response = await fetch(`${BASE_URL}/notices/${id}`, {
+                    method: 'DELETE'
+                });
+                let result = await response.json();
+
+                if(result.success) {
+                    loadNotices(); 
+                } else {
+                    alert("❌ Failed to delete notice.");
+                }
+            } catch(error) {
+                alert("❌ Server Error! Could not delete.");
+            }
+        }
+
+        // PREPARE FORM FOR EDITING 
+        function editNotice(id) {
+            const notice = allNotices.find(n => n._id === id);
+            if(!notice) return;
+
+            editNoticeId = id; 
+            document.getElementById('noticeTitle').value = notice.title;
+            document.getElementById('noticeBody').value = notice.message;
+            document.getElementById('noticePriority').value = notice.priority || 'info';
+
+            document.getElementById('sendStudents').checked = notice.audience.includes('Students');
+            document.getElementById('sendFaculty').checked = notice.audience.includes('Faculty');
+            document.getElementById('sendStaff').checked = notice.audience.includes('Staff');
+
+            document.getElementById('formCardTitle').innerHTML = '✏️ Edit Notice';
+            document.getElementById('btnSubmitNotice').innerHTML = '🔄 Update Notice';
+            document.getElementById('btnSubmitNotice').style.backgroundColor = '#f59e0b'; 
+            document.getElementById('btnCancelEdit').style.display = 'block';
+            
+            // Auto-scroll to top on mobile so user sees the form
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // CANCEL EDITING & RESET FORM 
+        function cancelEdit() {
+            editNoticeId = null;
+            document.getElementById('noticeForm').reset();
+            
+            document.getElementById('sendStudents').checked = true;
+            document.getElementById('sendFaculty').checked = true;
+            document.getElementById('sendStaff').checked = false;
+
+            document.getElementById('formCardTitle').innerHTML = '✍️ Compose New Notice';
+            document.getElementById('btnSubmitNotice').innerHTML = '🚀 Broadcast Notice Now';
+            document.getElementById('btnSubmitNotice').style.backgroundColor = 'var(--primary)';
+            document.getElementById('btnCancelEdit').style.display = 'none';
+        }
+
+        window.onload = loadNotices;
+    </script>
+    <script src="js/settings-client.js"></script>
+  <script src="js/role-ui.js"></script>
+</body>
+</html>

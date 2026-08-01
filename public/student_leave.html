@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ZHI | Leave Request</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+<link rel="stylesheet" href="/css/student-portal.css">
+<script src="/js/auth-client.js"></script>
+</head>
+<body>
+<main class="main-wrapper" id="zsMain">
+  <div class="content">
+    <h1 class="page-title"><i class='bx bx-mail-send'></i>Leave Request</h1>
+
+    <div class="grid-2">
+      <div class="panel">
+        <div class="panel-header"><h3><i class='bx bx-plus-circle'></i> Apply for Leave</h3></div>
+        <div class="panel-body">
+          <form id="leaveForm" enctype="multipart/form-data">
+            <div class="form-row">
+              <div class="form-group">
+                <label>Leave Type</label>
+                <select id="leaveType" required>
+                  <option value="Medical">Medical</option>
+                  <option value="Personal">Personal</option>
+                  <option value="Family">Family Function</option>
+                  <option value="Emergency">Emergency</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Total Days</label>
+                <input id="totalDays" type="number" min="1" required readonly>
+              </div>
+              <div class="form-group">
+                <label>Start Date</label>
+                <input id="startDate" type="date" required>
+              </div>
+              <div class="form-group">
+                <label>End Date</label>
+                <input id="endDate" type="date" required>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Reason</label>
+              <textarea id="reason" rows="4" required placeholder="Explain the reason for your leave"></textarea>
+            </div>
+            <div class="form-group">
+              <label>Supporting Document (optional)</label>
+              <input id="document" type="file" accept="image/*,application/pdf">
+            </div>
+            <button type="submit" class="btn btn-primary"><i class='bx bx-paper-plane'></i> Submit Request</button>
+          </form>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-header"><h3><i class='bx bx-bar-chart-alt-2'></i> My Leaves at a Glance</h3></div>
+        <div class="panel-body">
+          <div class="stats-grid" style="grid-template-columns:1fr 1fr;gap:12px;margin:0;">
+            <div class="stat-card"><div class="stat-icon orange"><i class='bx bx-time'></i></div>
+              <div class="stat-info"><h4 id="pendCount">0</h4><p>Pending</p></div></div>
+            <div class="stat-card"><div class="stat-icon green"><i class='bx bx-check-shield'></i></div>
+              <div class="stat-info"><h4 id="apprCount">0</h4><p>Approved</p></div></div>
+            <div class="stat-card"><div class="stat-icon red"><i class='bx bx-x-circle'></i></div>
+              <div class="stat-info"><h4 id="rejCount">0</h4><p>Rejected</p></div></div>
+            <div class="stat-card"><div class="stat-icon purple"><i class='bx bx-calendar'></i></div>
+              <div class="stat-info"><h4 id="totalDaysAppr">0</h4><p>Total Days (Approved)</p></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel mt-3">
+      <div class="panel-header"><h3><i class='bx bx-history'></i> Leave History</h3></div>
+      <div style="overflow-x:auto;">
+        <table>
+          <thead><tr>
+            <th>Applied On</th><th>Type</th><th>From</th><th>To</th><th>Days</th><th>Reason</th><th>Remark</th><th>Status</th>
+          </tr></thead>
+          <tbody id="leaveBody"><tr><td colspan="8" class="empty-state">Loading…</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script src="/js/student-portal.js"></script>
+<script>
+(async () => {
+  await ZS.mount({ active: 'leave', pageTitle: 'Leave Request' });
+
+  const startEl = document.getElementById('startDate');
+  const endEl = document.getElementById('endDate');
+  const daysEl = document.getElementById('totalDays');
+  function computeDays() {
+    const s = startEl.value, e = endEl.value;
+    if (!s || !e) return;
+    const diff = Math.floor((new Date(e) - new Date(s)) / (1000 * 60 * 60 * 24)) + 1;
+    daysEl.value = diff > 0 ? diff : '';
+  }
+  startEl.addEventListener('change', computeDays);
+  endEl.addEventListener('change', computeDays);
+
+  async function refresh() {
+    try {
+      const r = await ZS.apiGet('/student/leaves');
+      const rows = r.data || [];
+
+      let pend = 0, appr = 0, rej = 0, apprDays = 0;
+      rows.forEach(l => {
+        if (l.status === 'Pending') pend++;
+        else if (l.status === 'Approved') { appr++; apprDays += (l.totalDays || 0); }
+        else if (l.status === 'Rejected') rej++;
+      });
+      document.getElementById('pendCount').textContent = pend;
+      document.getElementById('apprCount').textContent = appr;
+      document.getElementById('rejCount').textContent = rej;
+      document.getElementById('totalDaysAppr').textContent = apprDays;
+
+      const body = document.getElementById('leaveBody');
+      if (!rows.length) {
+        body.innerHTML = '<tr><td colspan="8" class="empty-state"><i class="bx bx-info-circle"></i><br>No leave requests yet.</td></tr>';
+      } else {
+        body.innerHTML = rows.map(l => `
+          <tr>
+            <td>${ZS.fmtDate(l.createdAt)}</td>
+            <td>${l.leaveType || '-'}</td>
+            <td>${l.startDate}</td>
+            <td>${l.endDate}</td>
+            <td>${l.totalDays}</td>
+            <td>${(l.reason || '').substring(0, 40)}${(l.reason || '').length > 40 ? '…' : ''}</td>
+            <td>${l.hodRemark || '-'}</td>
+            <td><span class="badge ${l.status === 'Approved' ? 'badge-success' : l.status === 'Rejected' ? 'badge-danger' : 'badge-warning'}">${l.status}</span></td>
+          </tr>
+        `).join('');
+      }
+    } catch (err) { ZS.toast(err.message, 'error'); }
+  }
+
+  document.getElementById('leaveForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const fd = new FormData();
+    fd.append('leaveType', document.getElementById('leaveType').value);
+    fd.append('startDate', startEl.value);
+    fd.append('endDate', endEl.value);
+    fd.append('totalDays', daysEl.value);
+    fd.append('reason', document.getElementById('reason').value);
+    const file = document.getElementById('document').files[0];
+    if (file) fd.append('document', file);
+    try {
+      await ZS.apiUpload('/student/leaves', fd);
+      ZS.toast('Leave request submitted', 'success');
+      e.target.reset();
+      refresh();
+    } catch (err) { ZS.toast(err.message, 'error'); }
+  });
+
+  refresh();
+})();
+</script>
+</body>
+</html>

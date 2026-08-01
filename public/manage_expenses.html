@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZHI | Manage Expenses</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    
+    <style>
+        /* CSS WAHI SAME HAI JO BAAKI SAB ME THI (Clean theme) */
+        :root { --sidebar-bg: #0f172a; --primary: #3b82f6; --warning: #f59e0b; --danger: #ef4444; --success: #10b981; --bg: #f8fafc; --text-dark: #1e293b; --text-light: #64748b; --white: #ffffff; --border: #e2e8f0; --card-curve: 12px; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        body { background-color: var(--bg); display: flex; height: 100vh; overflow: hidden; color: var(--text-dark); }
+
+        .sidebar { width: 260px; background: var(--sidebar-bg); color: #fff; display: flex; flex-direction: column; z-index: 1001; }
+        .sidebar-header { padding: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; gap: 12px; }
+        .sidebar-header h2 { font-size: 18px; color: #fff; font-weight: 700;}
+        .sidebar-header p { font-size: 11px; color: var(--success); font-weight: 700; letter-spacing: 1px;}
+        .logo-img { width: 42px; height: 42px; border-radius: 50%; background: #fff; display: flex; align-items: center; justify-content: center; color: var(--success); font-size: 26px;}
+        .sidebar-menu { list-style: none; padding: 15px 0; flex: 1; overflow-y: auto; }
+        .sidebar-menu li a { display: flex; align-items: center; gap: 12px; padding: 12px 20px; color: #cbd5e1; text-decoration: none; font-size: 14px; font-weight: 500; transition: 0.2s; border-left: 4px solid transparent;}
+        .sidebar-menu li a i { font-size: 20px; }
+        .sidebar-menu li a:hover, .sidebar-menu li.active a { background: rgba(255,255,255,0.05); color: #fff; border-left: 4px solid var(--primary); }
+
+        .main-wrapper { flex: 1; display: flex; flex-direction: column; overflow-y: auto; width: 100%; }
+        .topbar { height: 70px; background: var(--white); border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; padding: 0 25px; position: sticky; top: 0; z-index: 1000; box-shadow: 0 1px 2px rgba(0,0,0,0.02);}
+        .user-profile { display: flex; align-items: center; gap: 10px; padding: 5px; border-radius: 8px; }
+        .user-profile img { width: 35px; height: 35px; border-radius: 50%; border: 2px solid var(--success);}
+
+        .content { padding: 30px; flex: 1; }
+        .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
+        .page-title { font-size: 24px; font-weight: 700; color: var(--text-dark); }
+        
+        .grid-layout { display: grid; grid-template-columns: 350px 1fr; gap: 25px; align-items: start;}
+
+        /* Form Card */
+        .form-card { background: var(--white); border-radius: var(--card-curve); border: 1px solid var(--border); box-shadow: 0 2px 6px rgba(0,0,0,0.02); overflow: hidden; }
+        .form-header { padding: 18px 20px; background: var(--bg); border-bottom: 1px solid var(--border); font-size: 16px; font-weight: 600; display: flex; align-items: center; gap: 8px;}
+        .form-body { padding: 20px; display: flex; flex-direction: column; gap: 15px; }
+        .form-group { display: flex; flex-direction: column; gap: 6px; }
+        .form-group label { font-size: 13px; font-weight: 600; color: var(--text-light); }
+        .form-control { padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; outline: none; font-size: 14px; background: var(--bg); transition: 0.2s; width: 100%; }
+        .form-control:focus { border-color: var(--primary); background: #fff; }
+        .btn-submit { background: var(--danger); color: white; border: none; padding: 12px; border-radius: 6px; font-weight: 600; cursor: pointer; transition: 0.2s; display: flex; justify-content: center; gap: 8px;}
+        .btn-submit:hover { background: #dc2626; }
+
+        /* Table Card */
+        .table-card { background: var(--white); border-radius: var(--card-curve); border: 1px solid var(--border); box-shadow: 0 2px 6px rgba(0,0,0,0.02); overflow: hidden; }
+        table { width: 100%; border-collapse: collapse; text-align: left; }
+        th { padding: 15px 20px; background: #f8fafc; font-size: 12px; text-transform: uppercase; color: var(--text-light); border-bottom: 1px solid var(--border);}
+        td { padding: 15px 20px; border-bottom: 1px solid var(--border); font-size: 14px; }
+        
+        @media (max-width: 992px) { .grid-layout { grid-template-columns: 1fr; } }
+    </style>
+    <script src="js/auth-client.js"></script>
+</head>
+<body>
+
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <div class="logo-img"><i class='bx bx-wallet'></i></div>
+            <div><h2>ZHI Finance</h2><p>ACCOUNTANT PANEL</p></div>
+        </div>
+        <ul class="sidebar-menu">
+            <li><a href="accountant_dashboard.html"><i class='bx bx-home-alt'></i> Dashboard Home</a></li>
+            <li style="margin: 15px 0 5px 20px; font-size: 11px; color: #64748b; font-weight: 700; text-transform: uppercase;">Accounts & Ledger</li>
+            <li><a href="all_transactions.html"><i class='bx bx-transfer'></i> All Transactions</a></li>
+            <li class="active"><a href="manage_expenses.html"><i class='bx bx-trending-down'></i> Manage Expenses</a></li>
+            <li><a href="financial_reports.html"><i class='bx bx-pie-chart-alt-2'></i> Financial Reports</a></li>
+        </ul>
+    </aside>
+
+    <main class="main-wrapper">
+        <header class="topbar">
+            <div style="font-size: 18px; font-weight: 600;">Office Administration</div>
+            <div class="user-profile">
+                <div style="text-align: right;"><b id="adminName">Accountant</b><br><span style="font-size: 11px;">Finance Dept</span></div>
+                <img src="https://ui-avatars.com/api/?name=Accounts&background=10b981&color=fff">
+            </div>
+        </header>
+
+        <div class="content">
+            <div class="page-header"><div class="page-title">Manage Office Expenses</div></div>
+
+            <div class="grid-layout">
+                <div class="form-card">
+                    <div class="form-header"><i class='bx bx-plus-circle' style="color: var(--danger);"></i> Record New Expense</div>
+                    <form id="expenseForm" class="form-body" onsubmit="submitExpense(event)">
+                        <div class="form-group">
+                            <label>Date *</label>
+                            <input type="date" id="expDate" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Category *</label>
+                            <select id="expCategory" class="form-control" required>
+                                <option value="Office Supplies">Office Stationary / Supplies</option>
+                                <option value="Maintenance">Campus Maintenance / Repair</option>
+                                <option value="Utility Bills">Utility Bills (Electricity, Internet)</option>
+                                <option value="Refreshment">Refreshment / Hospitality</option>
+                                <option value="Other">Other / Miscellaneous</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Amount (₹) *</label>
+                            <input type="number" id="expAmount" class="form-control" placeholder="0" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Payment Mode *</label>
+                            <select id="expMode" class="form-control" required>
+                                <option value="Cash">Cash</option>
+                                <option value="UPI">UPI / Online</option>
+                                <option value="Bank Transfer">Bank Transfer / Cheque</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Description *</label>
+                            <textarea id="expDesc" class="form-control" rows="2" placeholder="Where was the money spent?" required></textarea>
+                        </div>
+                        <button type="submit" class="btn-submit" id="btnSubmit"><i class='bx bx-check-shield'></i> Save Expense</button>
+                    </form>
+                </div>
+
+                <div class="table-card">
+                    <div class="form-header" style="background: #fff;"><i class='bx bx-list-ul' style="color: var(--text-light);"></i> Recent Expense History</div>
+                    <div style="overflow-x: auto;">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Voucher No</th>
+                                    <th>Category & Detail</th>
+                                    <th>Mode</th>
+                                    <th>Amount</th>
+                                </tr>
+                            </thead>
+                            <tbody id="expenseTableBody">
+                                <tr><td colspan="5" style="text-align: center;"><i class='bx bx-loader-alt bx-spin'></i> Loading records...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const SERVER_URL = '';
+
+        window.onload = () => {
+            document.getElementById('expDate').valueAsDate = new Date();
+            const userName = localStorage.getItem('userName');
+            if(userName) document.getElementById('adminName').innerText = userName;
+            loadExpenses();
+        };
+
+        async function loadExpenses() {
+            try {
+                const res = await fetch(`${SERVER_URL}/api/finance/dashboard`);
+                const data = await res.json();
+                if(data.success) {
+                    const tbody = document.getElementById('expenseTableBody');
+                    tbody.innerHTML = '';
+                    
+                    const expenses = data.expenses.sort((a,b) => new Date(b.date || b.createdAt) - new Date(a.date || a.createdAt));
+
+                    if(expenses.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">No expenses found.</td></tr>';
+                        return;
+                    }
+
+                    expenses.forEach(e => {
+                        const dt = new Date(e.date || e.createdAt).toLocaleDateString('en-IN');
+                        tbody.innerHTML += `
+                            <tr>
+                                <td>${dt}</td>
+                                <td><b>${e.voucherNo || 'N/A'}</b></td>
+                                <td><b>${e.category}</b><br><small style="color: var(--text-light);">${e.description || ''}</small></td>
+                                <td>${e.mode}</td>
+                                <td><b style="color: var(--danger);">- ₹${e.amount.toLocaleString()}</b></td>
+                            </tr>
+                        `;
+                    });
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        async function submitExpense(e) {
+            e.preventDefault();
+            const btn = document.getElementById('btnSubmit');
+            btn.innerHTML = `<i class='bx bx-loader-alt bx-spin'></i> Saving...`;
+            btn.disabled = true;
+
+            const payload = {
+                date: document.getElementById('expDate').value,
+                category: document.getElementById('expCategory').value,
+                amount: document.getElementById('expAmount').value,
+                mode: document.getElementById('expMode').value,
+                description: document.getElementById('expDesc').value,
+                type: 'Expense'
+            };
+
+            try {
+                const res = await fetch(`${SERVER_URL}/api/finance/expense`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                if(res.ok) {
+                    alert("Expense Saved!");
+                    document.getElementById('expenseForm').reset();
+                    document.getElementById('expDate').valueAsDate = new Date();
+                    loadExpenses(); // Refresh list automatically
+                }
+            } catch(err) {
+                alert("Connection Error.");
+            } finally {
+                btn.innerHTML = `<i class='bx bx-check-shield'></i> Save Expense`;
+                btn.disabled = false;
+            }
+        }
+    </script>
+    <script src="js/settings-client.js"></script>
+  <script src="js/role-ui.js"></script>
+</body>
+</html>

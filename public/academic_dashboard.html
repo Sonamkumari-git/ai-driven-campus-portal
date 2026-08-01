@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZHI | Academic & HOD Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    
+    <style>
+        :root {
+            --sidebar-bg: #0f172a; 
+            --primary: #3b82f6; 
+            --success: #10b981; 
+            --warning: #f59e0b; 
+            --danger: #ef4444; 
+            --purple: #8b5cf6;
+            --bg: #f8fafc;
+            --text-dark: #1e293b;
+            --text-light: #64748b;
+            --white: #ffffff;
+            --border: #e2e8f0;
+        }
+
+        /* 🔴 FIXED HORIZONTAL SCROLL ISSUE 🔴 */
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        html, body { width: 100%; max-width: 100vw; overflow-x: hidden; background-color: var(--bg); color: var(--text-dark); -webkit-font-smoothing: antialiased; display: flex; height: 100vh; }
+
+        /* ------------------ SIDEBAR ------------------ */
+        .sidebar { 
+            width: 275px; 
+            min-width: 275px; 
+            flex-shrink: 0; 
+            background-color: var(--sidebar-bg); 
+            color: #fff; 
+            display: flex; flex-direction: column; 
+            z-index: 1001; transition: transform 0.3s ease; 
+        }
+        .sidebar-header { padding: 25px 20px; border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-between; align-items: center; }
+        .sidebar-header h2 { font-size: 18px; color: #fff; font-weight: 700;}
+        .sidebar-header p { font-size: 11px; color: var(--purple); font-weight: 700; letter-spacing: 1px; margin-top: 2px;}
+        .logo-img { width: 45px; height: 45px; border-radius: 50%; background: #fff; padding: 2px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;}
+
+        .sidebar-menu { list-style: none; padding: 15px 0; flex: 1; overflow-y: auto; }
+        .sidebar-menu li a { display: flex; align-items: center; gap: 15px; padding: 12px 20px; color: #cbd5e1; text-decoration: none; font-size: 14px; font-weight: 500; transition: 0.3s; border-left: 4px solid transparent;}
+        .sidebar-menu li a i { font-size: 20px; }
+        
+        /* Sidebar Hover Effect */
+        .sidebar-menu li a:hover { background: rgba(59, 130, 246, 0.1); color: #60a5fa; border-left: 4px solid var(--primary); padding-left: 25px;}
+        .sidebar-menu li.active a { background: rgba(255,255,255,0.05); color: #fff; border-left: 4px solid var(--primary); padding-left: 20px;}
+
+        /* ------------------ MAIN CONTENT & TOPBAR ------------------ */
+        .main-wrapper { flex: 1; display: flex; flex-direction: column; overflow-y: auto; overflow-x: hidden; width: 100%; max-width: 100vw; position: relative;}
+        .topbar { height: 70px; background: var(--white); border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; padding: 0 25px; position: sticky; top: 0; z-index: 1000; box-shadow: 0 1px 2px rgba(0,0,0,0.02); flex-shrink: 0;}
+        .menu-btn { display: none; background: none; border: none; font-size: 26px; cursor: pointer; color: var(--text-dark); }
+        
+        .user-profile { display: flex; align-items: center; gap: 10px; cursor: pointer;}
+        .user-profile img { width: 35px; height: 35px; border-radius: 50%; object-fit: cover; border: 2px solid var(--purple);}
+        .user-profile div { display: flex; flex-direction: column; text-align: right;}
+        .user-profile b { font-size: 13px; color: var(--text-dark); }
+        .user-profile span { font-size: 11px; color: var(--text-light); }
+
+        .content { padding: 25px 30px; flex: 1; width: 100%; max-width: 100vw; overflow-x: hidden; box-sizing: border-box;}
+        .page-title { font-size: 22px; font-weight: 700; color: var(--text-dark); margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 15px;}
+
+        .btn-primary { background: var(--primary); color: white; border: none; padding: 10px 16px; border-radius: 6px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 13px; transition: 0.2s; text-align: center; }
+        .btn-primary:hover { background: #2563eb; transform: translateY(-1px);}
+
+        /* ------------------ STATS CARDS ------------------ */
+        .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 25px; width: 100%;}
+        .stat-card { background: var(--white); border-radius: 12px; padding: 20px; border: 1px solid var(--border); display: flex; align-items: center; gap: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); transition: 0.3s; min-width: 0; cursor: pointer;}
+        .stat-card:hover { transform: translateY(-4px); box-shadow: 0 8px 15px rgba(0,0,0,0.05); border-color: #cbd5e1;}
+        .stat-icon { width: 45px; height: 45px; border-radius: 12px; display: flex; justify-content: center; align-items: center; font-size: 24px; flex-shrink: 0;}
+        .stat-info { overflow: hidden; }
+        .stat-info h4 { font-size: 20px; font-weight: 700; color: var(--text-dark); margin-bottom: 2px;}
+        .stat-info p { font-size: 12px; color: var(--text-light); font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;}
+
+        /* ------------------ QUICK ACTIONS ------------------ */
+        .quick-actions { display: grid; grid-template-columns: repeat(5, 1fr); gap: 15px; margin-bottom: 25px; width: 100%;}
+        .action-btn { background: var(--white); border: 1px solid var(--border); padding: 15px; border-radius: 10px; display: flex; flex-direction: column; align-items: center; gap: 10px; text-decoration: none; color: var(--text-dark); font-weight: 600; font-size: 12px; transition: 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.02); text-align: center; word-break: break-word;}
+        .action-btn i { font-size: 26px; color: var(--purple); }
+        .action-btn:hover { background: #faf5ff; border-color: #e9d5ff; color: var(--purple); transform: translateY(-2px);}
+
+        /* ------------------ PANELS & TABLES ------------------ */
+        .grid-2-col { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; width: 100%;}
+        
+        .panel { background: var(--white); border-radius: 12px; border: 1px solid var(--border); box-shadow: 0 1px 3px rgba(0,0,0,0.02); display: flex; flex-direction: column; overflow: hidden; max-width: 100%; transition: 0.3s;}
+        .panel:hover { box-shadow: 0 6px 15px rgba(0,0,0,0.04); }
+        .panel-header { padding: 15px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;}
+        .panel-header h3 { font-size: 15px; font-weight: 600; display: flex; align-items: center; gap: 8px;}
+        
+        /* 🔴 TABLE OVERFLOW FIX 🔴 */
+        .table-res { width: 100%; overflow-x: auto; display: block; -webkit-overflow-scrolling: touch; }
+        table { width: 100%; border-collapse: collapse; text-align: left; min-width: 600px;}
+        th { padding: 12px 15px; background: #f8fafc; font-size: 12px; text-transform: uppercase; color: var(--text-light); font-weight: 600; white-space: nowrap;}
+        td { padding: 15px; border-bottom: 1px solid var(--border); font-size: 13px; font-weight: 500;}
+        tr { transition: background 0.2s; }
+        tr:hover { background: #f1f5f9; }
+        
+        .badge { padding: 4px 10px; border-radius: 4px; font-size: 11px; font-weight: 600; white-space: nowrap;}
+        .bg-blue { background: #eff6ff; color: #1e40af; }
+        .bg-green { background: #dcfce7; color: #166534; }
+        .bg-yellow { background: #fef9c3; color: #854d0e; }
+        
+        /* Alert List */
+        .alert-list { display: flex; flex-direction: column; }
+        .alert-item { padding: 15px 20px; border-bottom: 1px solid var(--border); display: flex; gap: 12px; align-items: flex-start; transition: 0.2s; }
+        .alert-item:hover { background: #f8fafc; }
+        .alert-item:last-child { border-bottom: none; }
+        .alert-icon { width: 35px; height: 35px; border-radius: 8px; display: flex; justify-content: center; align-items: center; font-size: 18px; flex-shrink: 0;}
+        .alert-content h4 { font-size: 13px; color: var(--text-dark); margin-bottom: 3px; }
+        .alert-content p { font-size: 12px; color: var(--text-light); line-height: 1.4; }
+        .alert-action { margin-top: 8px; font-size: 11px; font-weight: 600; padding: 6px 12px; border-radius: 4px; cursor: pointer; border: none; background: #fee2e2; color: #991b1b; display: inline-block;}
+
+        /* 📱 100% FIXED MOBILE RESPONSIVENESS */
+        .sidebar-overlay { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.5); z-index: 999; }
+        
+        @media (max-width: 992px) {
+            .stats-grid, .quick-actions { grid-template-columns: repeat(2, 1fr); }
+            .grid-2-col { grid-template-columns: 1fr; }
+        }
+        
+        @media (max-width: 768px) {
+            .sidebar { position: fixed; left: -275px; height: 100vh; }
+            .sidebar.active { transform: translateX(275px); }
+            .menu-btn { display: block; }
+            .sidebar-overlay.active { display: block; }
+            .topbar { padding: 0 15px; }
+            
+            .user-profile b, .user-profile span { display: none; }
+            
+            .content { padding: 15px; }
+            .page-title { flex-direction: column; align-items: flex-start; gap: 15px; font-size: 18px;}
+            .page-title button { width: 100%; justify-content: center; }
+
+            .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+            .stat-card { padding: 15px; gap: 10px; }
+            .stat-icon { width: 38px; height: 38px; font-size: 18px; }
+            .stat-info h4 { font-size: 16px; }
+
+            .quick-actions { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+            .action-btn { padding: 12px 8px; font-size: 11px; }
+            .action-btn i { font-size: 22px; }
+
+            .panel-header { padding: 15px; flex-direction: column; align-items: flex-start; gap: 8px; }
+        }
+
+        @media (max-width: 480px) {
+            .stats-grid { grid-template-columns: 1fr 1fr; }
+            .quick-actions { grid-template-columns: repeat(2, 1fr); }
+        }
+    </style>
+    <script src="js/auth-client.js"></script>
+</head>
+<body>
+
+    <div class="sidebar-overlay" id="overlay" onclick="toggleSidebar()"></div>
+
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <div class="logo-img">
+                    <i class='bx bxs-book-bookmark' style="color:var(--purple); font-size: 26px;"></i>
+                </div>
+                <div>
+                    <h2>ZHI Academics</h2>
+                    <p>HOD / CO-ORDINATOR</p>
+                </div>
+            </div>
+            <button class="menu-btn close-btn" onclick="toggleSidebar()" style="color:white; display:none;"><i class='bx bx-x'></i></button>
+        </div>
+        
+        <ul class="sidebar-menu">
+            <li class="active"><a href="#"><i class='bx bx-grid-alt'></i> Dashboard Home</a></li>
+            
+            <li style="margin: 15px 0 5px 20px; font-size: 11px; color: #64748b; font-weight: 700; text-transform: uppercase;">Management</li>
+            <li><a href="HODtimetable_setup.html"><i class='bx bx-calendar'></i> Timetable Setup</a></li>
+            <li><a href="hodleave.html"><i class='bx bx-chalkboard'></i> Leave Approval</a></li>
+            <li><a href="substitute_mgmt.html"><i class='bx bx-transfer'></i> Substitute Mgmt.</a></li>
+            <li><a href="manage_notices.html"><i class='bx bx-message-square-detail'></i> Manage Notices</a></li>
+            
+            <li style="margin: 15px 0 5px 20px; font-size: 11px; color: #64748b; font-weight: 700; text-transform: uppercase;">Academics & Tracking</li>
+            <li><a href="manage_syllabus.html"><i class='bx bx-book-content'></i> Subjects & Syllabus</a></li>
+            <li><a href="attendance_overview.html"><i class='bx bx-bar-chart-square'></i> Monitor Attendance</a></li>
+            <li><a href="performance_reports.html"><i class='bx bx-line-chart'></i> Student Performance</a></li>
+        </ul>
+    </aside>
+
+    <div class="main-wrapper">
+        <header class="topbar">
+            <div style="display: flex; align-items: center; gap: 15px;">
+                <button class="menu-btn" onclick="toggleSidebar()"><i class='bx bx-menu'></i></button>
+                <div style="font-size: 18px; font-weight: 600; color: var(--text-dark);">Academic Department</div>
+            </div>
+            <div class="user-profile">
+                <div style="text-align: right;">
+                    <b id="adminName">Loading...</b>
+                    <span>Head of Department</span>
+                </div>
+                <img src="https://ui-avatars.com/api/?name=HOD&background=8b5cf6&color=fff" alt="Admin">
+            </div>
+        </header>
+
+        <main class="content">
+            <div class="page-title">
+                <div>👋 Welcome, <span id="welcomeName">HOD Sir</span>!</div>
+                <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                    <button id="aiTimetableOptimizeBtn" class="btn-primary" style="background:linear-gradient(135deg,#6366f1,#8b5cf6);"><i class='bx bx-brain'></i> AI Timetable Optimizer</button>
+                    <button class="btn-primary" style="background: var(--purple);" onclick="window.location.href='HODtimetable_setup.html'"><i class='bx bx-calendar-plus'></i> Generate Timetable</button>
+                </div>
+            </div>
+
+            <!-- ============ AI Timetable Optimiser Output ============ -->
+            <div class="panel" id="aiTimetableOutputPanel" style="margin-bottom:20px;">
+                <div class="panel-header">
+                    <h3><i class='bx bx-network-chart'></i> AI Timetable Optimizer</h3>
+                    <span style="font-size:11px;color:var(--text-light);">Solver: Graph Coloring + CSP</span>
+                </div>
+                <div id="aiTimetableOutput" style="padding:12px;font-size:13px;color:var(--text-light);">
+                    Click <b>AI Timetable Optimizer</b> above to detect conflicts and generate a chromatic-minimum schedule.
+                </div>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: #eff6ff; color: var(--primary);"><i class='bx bx-buildings'></i></div>
+                    <div class="stat-info">
+                        <h4 id="stat-classes">...</h4>
+                        <p>Classes Today</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: #f0fdf4; color: var(--success);"><i class='bx bx-user-check'></i></div>
+                    <div class="stat-info">
+                        <h4 id="stat-teachers">...</h4>
+                        <p>Teachers Present</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: #fffbeb; color: var(--warning);"><i class='bx bx-book-open'></i></div>
+                    <div class="stat-info">
+                        <h4 id="stat-syllabus">...</h4>
+                        <p>Avg. Syllabus Comp.</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: #fef2f2; color: var(--danger);"><i class='bx bx-user-x'></i></div>
+                    <div class="stat-info">
+                        <h4 id="stat-alerts">...</h4>
+                        <p>Critical Alerts</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="quick-actions">
+                <a href="HODtimetable_setup.html" class="action-btn">
+                    <i class='bx bx-calendar'></i>
+                    Manage Timetable
+                </a>
+                <a href="substitute_mgmt.html" class="action-btn">
+                    <i class='bx bx-transfer'></i>
+                    Assign Substitute
+                </a>
+                <a href="manage_notices.html" class="action-btn">
+                    <i class='bx bx-message-alt-add'></i>
+                    Post Notice
+                </a>
+                <a href="manage_syllabus.html" class="action-btn">
+                    <i class='bx bx-book-reader'></i>
+                    Track Syllabus
+                </a>
+                <a href="performance_reports.html" class="action-btn">
+                    <i class='bx bx-line-chart'></i>
+                    Weak Students
+                </a>
+            </div>
+
+            <div class="grid-2-col">
+                <div class="panel">
+                    <div class="panel-header">
+                        <h3><i class='bx bx-time-five'></i> Ongoing & Upcoming Classes</h3>
+                        <span class="badge bg-blue" id="todayBadge">Today's Routine</span>
+                    </div>
+                    <div class="table-res">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Time</th>
+                                    <th>Course</th>
+                                    <th>Subject</th>
+                                    <th>Teacher</th>
+                                    <th>Room</th>
+                                </tr>
+                            </thead>
+                            <tbody id="timetableBody">
+                                <tr>
+                                    <td colspan="5" style="text-align: center; padding: 20px; color: var(--text-light);">Loading live timetable...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <div class="panel-header">
+                        <h3><i class='bx bx-bell' style="color: var(--danger);"></i> Critical Alerts</h3>
+                    </div>
+                    <div class="alert-list" id="alertListContainer">
+                        <div style="padding: 20px; text-align: center; color: var(--text-light);">Checking for alerts...</div>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <script>
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('overlay');
+            sidebar.classList.toggle('active');
+            overlay.classList.toggle('active');
+        }
+
+        // Initialize Live Data on Load
+        window.onload = () => {
+            const userName = localStorage.getItem('userName') || 'HOD Sir';
+            document.getElementById('adminName').innerText = userName;
+            document.getElementById('welcomeName').innerText = userName.split(' ')[0]; // Show first name
+
+            // Get Current Day Name
+            const todayName = new Date().toLocaleDateString('en-US', { weekday: 'long' });
+            document.getElementById('todayBadge').innerText = `${todayName}'s Routine`;
+
+            fetchLiveHODData(todayName);
+        };
+
+        const BASE_URL = '';
+        
+        async function safeFetch(endpoint, fallbackData) {
+            try {
+                const res = await fetch(BASE_URL + endpoint);
+                const contentType = res.headers.get("content-type");
+                
+                if (res.ok && contentType && contentType.includes("application/json")) {
+                    return await res.json();
+                }
+                return fallbackData; 
+            } catch (error) {
+                console.warn(`API Not Found/Error at: ${endpoint}.`);
+                return fallbackData;
+            }
+        }
+
+        // Format time properly if needed
+        function formatToAMPM(timeStr) {
+            if(!timeStr) return "TBA";
+            let [hours, minutes] = timeStr.split(':');
+            let h = parseInt(hours, 10);
+            let ampm = h >= 12 ? 'PM' : 'AM';
+            h = h % 12;
+            h = h ? h : 12; 
+            let hStr = h < 10 ? '0' + h : h;
+            return `${hStr}:${minutes} ${ampm}`;
+        }
+
+        // 🔴 FUNCTION TO FETCH LIVE DATA USING CORRECT ROUTES 🔴
+        async function fetchLiveHODData(todayName) {
+            try {
+                // Fetching from your ACTUAL database routes
+                const staffData = await safeFetch('/api/staff', { success: true, data: [] });
+                // Note: Changing from /api/timetable/today to your actual /api/routines
+                const routinesData = await safeFetch('/api/routines', { success: true, data: [] });
+                
+                // Mocks for now until you create these APIs
+                const alertsData = await safeFetch('/api/alerts/hod', { success: true, data: [] });
+                const syllabusData = await safeFetch('/api/syllabus/progress', { success: true, average: 0 });
+
+                // 1. Process Staff (Teachers)
+                let teachers = staffData.data ? staffData.data.filter(s => (s.role && s.role.toLowerCase().includes('teacher')) || s.category === 'teacher') : [];
+                let totalTeachers = teachers.length;
+                let presentTeachers = teachers.filter(t => t.status !== 'On Leave').length;
+
+                // 2. Process Timetable (Filter ALL routines for TODAY)
+                let allRoutines = routinesData.data || [];
+                let classesToday = allRoutines.filter(r => r.dayOfWeek && r.dayOfWeek.toLowerCase() === todayName.toLowerCase());
+
+                // Sort classes by start time
+                classesToday.sort((a, b) => {
+                    if(!a.startTime || !b.startTime) return 0;
+                    return a.startTime.localeCompare(b.startTime);
+                });
+                
+                // 3. Process Alerts
+                let alerts = alertsData.data || [];
+
+                // UPDATE UI - STATS CARDS
+                document.getElementById('stat-classes').innerText = classesToday.length > 0 ? classesToday.length : '0';
+                document.getElementById('stat-teachers').innerText = totalTeachers > 0 ? `${presentTeachers} / ${totalTeachers}` : '0 / 0';
+                document.getElementById('stat-syllabus').innerText = syllabusData.average ? `${syllabusData.average}%` : '0%'; 
+                document.getElementById('stat-alerts').innerText = alerts.length > 0 ? alerts.length : '0';
+
+                // UPDATE UI - TIMETABLE TABLE
+                const tbody = document.getElementById('timetableBody');
+                if (classesToday.length > 0) {
+                    tbody.innerHTML = classesToday.map(c => {
+                        // Handle Teacher Name Extraction
+                        let tName = "Faculty";
+                        if (c.teacherId) {
+                            tName = c.teacherId.name || c.teacherId.teacherName || "Faculty";
+                        }
+                        
+                        let timeString = (c.startTime && c.endTime) ? `${formatToAMPM(c.startTime)} - ${formatToAMPM(c.endTime)}` : 'TBA';
+                        
+                        return `
+                            <tr>
+                                <td>${timeString}</td>
+                                <td>${c.course || 'N/A'} (Sem ${c.semester || '-'})</td>
+                                <td>${c.subject || 'N/A'}</td>
+                                <td><b style="color: var(--primary);">${tName}</b></td>
+                                <td><span class="badge bg-yellow">${c.roomNumber || 'TBA'}</span></td>
+                            </tr>
+                        `;
+                    }).join('');
+                } else {
+                    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding: 30px; color: var(--text-light);"><i class="bx bx-info-circle" style="font-size: 20px; vertical-align: middle; margin-right: 5px;"></i> No classes scheduled for today (${todayName}).</td></tr>`;
+                }
+
+                // UPDATE UI - CRITICAL ALERTS
+                const alertList = document.getElementById('alertListContainer');
+                if (alerts.length > 0) {
+                    alertList.innerHTML = alerts.map(a => `
+                        <div class="alert-item">
+                            <div class="alert-icon" style="background: ${a.bgColor || '#fef2f2'}; color: ${a.iconColor || 'var(--danger)'};">
+                                <i class='bx ${a.icon || 'bx-error-circle'}'></i>
+                            </div>
+                            <div class="alert-content">
+                                <h4>${a.title}</h4>
+                                <p>${a.message}</p>
+                                ${a.actionText ? `<button class="alert-action" onclick="window.location.href='${a.actionLink || '#'}'">${a.actionText}</button>` : ''}
+                            </div>
+                        </div>
+                    `).join('');
+                } else {
+                    alertList.innerHTML = '<div style="padding: 30px 20px; text-align: center; color: var(--text-light);"><i class="bx bx-check-shield" style="font-size: 30px; color: var(--success); margin-bottom: 10px; display: block;"></i>All clear! No critical alerts at the moment.</div>';
+                }
+
+            } catch(error) {
+                console.error("Critical Error updating HOD dashboard UI:", error);
+                document.getElementById('stat-classes').innerText = 'Err';
+                document.getElementById('stat-teachers').innerText = 'Err';
+                document.getElementById('timetableBody').innerHTML = '<tr><td colspan="5" style="text-align:center; padding: 20px; color: var(--danger);">Dashboard initialization failed.</td></tr>';
+            }
+        }
+    </script>
+    <script src="js/settings-client.js"></script>
+  <script src="js/role-ui.js"></script>
+  <script src="js/ai-widgets.js"></script>
+</body>
+</html>

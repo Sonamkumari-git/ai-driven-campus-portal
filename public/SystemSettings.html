@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ZHI Director Panel | System Settings</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+  <style>
+    :root { --sidebar-bg:#0b1325; --primary:#2563eb; --success:#10b981; --danger:#ef4444; --bg:#f8fafc; --text:#0f172a; --muted:#64748b; --white:#fff; --border:#e2e8f0; }
+    *{box-sizing:border-box;margin:0;padding:0;font-family:Inter,sans-serif} body{background:var(--bg);display:flex;min-height:100vh;color:var(--text)}
+    .sidebar{width:260px;background:var(--sidebar-bg);color:#fff;flex-shrink:0}.sidebar-header{padding:20px;border-bottom:1px solid rgba(255,255,255,.08);display:flex;gap:12px;align-items:center}.brand-logo{width:44px;height:44px;border-radius:50%;background:#fff;padding:5px;object-fit:contain}.sidebar-header h2{font-size:18px}.sidebar-header p{font-size:11px;color:#f87171;font-weight:700}.sidebar-menu{list-style:none;padding:15px 0}.sidebar-menu a{display:flex;gap:12px;align-items:center;padding:12px 25px;color:#94a3b8;text-decoration:none;font-size:14px}.sidebar-menu a:hover,.sidebar-menu .active a{background:#1e293b;color:#fff;border-left:3px solid #60a5fa;padding-left:22px}.sidebar-menu i{font-size:20px;width:24px;text-align:center}
+    .main{flex:1;min-width:0}.topbar{height:65px;background:#fff;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 25px;position:sticky;top:0}.content{padding:25px;max-width:1200px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:22px}.panel{background:#fff;border:1px solid var(--border);border-radius:14px;box-shadow:0 1px 3px rgba(15,23,42,.05);overflow:hidden;margin-bottom:22px}.panel-header{padding:16px 20px;background:#f8fafc;border-bottom:1px solid var(--border)}.panel-header h3{font-size:16px;display:flex;gap:8px;align-items:center}.panel-body{padding:22px}.form-group{margin-bottom:16px}label{display:block;font-size:13px;font-weight:700;margin-bottom:7px}.form-control{width:100%;padding:11px 12px;border:1px solid var(--border);border-radius:8px;font-size:14px}.form-control:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px rgba(37,99,235,.12)}.help{font-size:12px;color:var(--muted);margin-top:5px}.preview-row{display:flex;gap:18px;align-items:center}.preview{width:96px;height:96px;border:1px dashed var(--border);border-radius:12px;background:#f8fafc;display:flex;align-items:center;justify-content:center;overflow:hidden}.preview img{width:100%;height:100%;object-fit:contain}.preview.bg img{object-fit:cover}.btn{border:0;border-radius:8px;padding:11px 16px;font-weight:700;cursor:pointer;display:inline-flex;gap:8px;align-items:center}.btn-primary{background:var(--primary);color:#fff}.btn-outline{background:#fff;border:1px solid var(--border);color:var(--text)}.btn-danger{background:var(--danger);color:#fff}.actions{display:flex;gap:10px;flex-wrap:wrap}.alert{padding:12px 14px;border-radius:10px;margin-bottom:18px;display:none}.alert.ok{background:#ecfdf5;color:#047857}.alert.err{background:#fef2f2;color:#b91c1c}.switch{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px;border:1px solid var(--border);border-radius:10px}.switch input{width:22px;height:22px}@media(max-width:900px){body{display:block}.sidebar{width:100%}.grid{grid-template-columns:1fr}.content{padding:16px}}
+  </style>
+    <script src="js/auth-client.js"></script>
+</head>
+<body>
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <img class="brand-logo" src="zhi_logo.png" data-setting="logo" alt="ZHI Logo">
+      <div><h2 data-setting="collegeShortName">ZHI College</h2><p>DIRECTOR PANEL</p></div>
+    </div>
+    <ul class="sidebar-menu">
+      <li><a href="admin_dashboard.html"><i class='bx bx-grid-alt'></i> Dashboard</a></li>
+      <li><a href="users_roles.html"><i class='bx bx-group'></i> Users & Roles</a></li>
+      <li><a href="students.html"><i class='bx bx-user'></i> Students</a></li>
+      <li><a href="Finance.html"><i class='bx bx-dollar'></i> Finance</a></li>
+      <li><a href="Reports&Analytics.html"><i class='bx bx-bar-chart-alt-2'></i> Reports & Analytics</a></li>
+      <li><a href="Exams&Results.html"><i class='bx bx-file'></i> Exams & Results</a></li>
+      <li><a href="GlobalNotice.html"><i class='bx bx-message-rounded'></i> Global Notices</a></li>
+      <li class="active"><a href="SystemSettings.html"><i class='bx bx-cog'></i> System Settings</a></li>
+      <li><a href="AuditLogs.html"><i class='bx bx-revision'></i> Audit Logs</a></li>
+    </ul>
+  </aside>
+
+  <main class="main">
+    <header class="topbar"><h2>System Settings</h2><span id="saveState" class="help">Connected to backend settings</span></header>
+    <section class="content">
+      <div id="message" class="alert"></div>
+
+      <form id="settingsForm">
+        <div class="grid">
+          <div class="panel">
+            <div class="panel-header"><h3><i class='bx bx-building-house'></i> College Information</h3></div>
+            <div class="panel-body">
+              <div class="form-group"><label>College Name</label><input id="collegeName" name="collegeName" class="form-control" required></div>
+              <div class="form-group"><label>Short Name</label><input id="collegeShortName" name="collegeShortName" class="form-control" required></div>
+              <div class="form-group"><label>Portal Subtitle</label><input id="portalSubtitle" name="portalSubtitle" class="form-control"></div>
+              <div class="form-group"><label>Active Academic Session</label><input id="activeSession" name="activeSession" class="form-control" placeholder="2025 - 2026"></div>
+              <div class="form-group"><label>Contact Email</label><input id="contactEmail" name="contactEmail" type="email" class="form-control"></div>
+              <div class="form-group"><label>Support Email</label><input id="supportEmail" name="supportEmail" type="email" class="form-control"></div>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-header"><h3><i class='bx bx-image'></i> Logo & Login Photo Control</h3></div>
+            <div class="panel-body">
+              <div class="form-group">
+                <label>College Logo</label>
+                <div class="preview-row">
+                  <div class="preview"><img id="logoPreview" src="zhi_logo.png" data-setting="logo" alt="ZHI Logo"></div>
+                  <div><input id="logo" name="logo" type="file" accept="image/*" class="form-control"><div class="help">Admin se logo change karne par login aur sidebar pages update honge.</div></div>
+                </div>
+              </div>
+              <div class="form-group">
+                <label>Login Background Photo</label>
+                <div class="preview-row">
+                  <div class="preview bg"><img id="bgPreview" alt="Login background"></div>
+                  <div><input id="loginBackground" name="loginBackground" type="file" accept="image/*" class="form-control"><div class="help">Login page ki background photo yahan se control hogi.</div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-header"><h3><i class='bx bx-slider-alt'></i> System Config</h3></div>
+            <div class="panel-body">
+              <div class="form-group"><label>Timezone</label><input id="timezone" name="timezone" class="form-control" placeholder="Asia/Kolkata"></div>
+              <div class="form-group"><label>Currency Symbol</label><input id="currencySymbol" name="currencySymbol" class="form-control" placeholder="₹"></div>
+              <div class="form-group"><label>Date Format</label><input id="dateFormat" name="dateFormat" class="form-control" placeholder="DD-MM-YYYY"></div>
+              <div class="switch"><div><b>Maintenance Mode</b><div class="help">On hone par Director ke alawa login block hoga.</div></div><input id="maintenanceMode" name="maintenanceMode" type="checkbox"></div>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-header"><h3><i class='bx bx-lock-alt'></i> Director Password</h3></div>
+            <div class="panel-body">
+              <div class="form-group"><label>Director Email</label><input id="adminEmail" type="email" class="form-control" value="admin@zhi.edu.in"></div>
+              <div class="form-group"><label>Current Password</label><input id="currentPassword" type="password" class="form-control"></div>
+              <div class="form-group"><label>New Password</label><input id="newPassword" type="password" class="form-control"></div>
+              <button type="button" class="btn btn-outline" onclick="updatePassword()"><i class='bx bx-key'></i> Update Password</button>
+            </div>
+          </div>
+        </div>
+        <div class="actions"><button type="submit" class="btn btn-primary"><i class='bx bx-save'></i> Save All Settings</button><button type="button" class="btn btn-outline" onclick="loadSettings()"><i class='bx bx-refresh'></i> Reload</button></div>
+      </form>
+    </section>
+  </main>
+
+  <script>
+    function showMessage(text, ok = true) { const box = document.getElementById('message'); box.textContent = text; box.className = 'alert ' + (ok ? 'ok' : 'err'); box.style.display = 'block'; }
+    function val(id, value) { const el = document.getElementById(id); if (el) el.value = value || ''; }
+    function setPreview(id, url) { const img = document.getElementById(id); if (img && url) img.src = url; }
+
+    async function loadSettings() {
+      const res = await fetch('/api/settings');
+      const json = await res.json();
+      if (!json.success) throw new Error(json.message || 'Settings load failed');
+      const s = json.data;
+      ['collegeName','collegeShortName','portalSubtitle','activeSession','contactEmail','supportEmail','timezone','currencySymbol','dateFormat'].forEach(k => val(k, s[k]));
+      document.getElementById('maintenanceMode').checked = !!s.maintenanceMode;
+      setPreview('logoPreview', s.logoUrl || 'zhi_logo.png');
+      setPreview('bgPreview', s.loginBackgroundUrl || '');
+      document.getElementById('saveState').textContent = 'Last loaded: ' + new Date().toLocaleString();
+    }
+
+    document.getElementById('logo').addEventListener('change', e => { if (e.target.files[0]) document.getElementById('logoPreview').src = URL.createObjectURL(e.target.files[0]); });
+    document.getElementById('loginBackground').addEventListener('change', e => { if (e.target.files[0]) document.getElementById('bgPreview').src = URL.createObjectURL(e.target.files[0]); });
+
+    document.getElementById('settingsForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const fd = new FormData(e.currentTarget);
+      fd.set('maintenanceMode', document.getElementById('maintenanceMode').checked ? 'true' : 'false');
+      const res = await fetch('/api/settings', { method: 'PUT', body: fd });
+      const json = await res.json();
+      showMessage(json.message || (json.success ? 'Settings saved.' : 'Save failed.'), json.success);
+      if (json.success) loadSettings();
+    });
+
+    async function updatePassword() {
+      const payload = { email: adminEmail.value, currentPassword: currentPassword.value, newPassword: newPassword.value };
+      if (!payload.email || !payload.currentPassword || !payload.newPassword) return showMessage('Password update ke liye sab fields required hain.', false);
+      const res = await fetch('/api/settings/password', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+      const json = await res.json();
+      showMessage(json.message || 'Password updated.', json.success);
+      if (json.success) { currentPassword.value = ''; newPassword.value = ''; }
+    }
+
+    loadSettings().catch(err => showMessage(err.message, false));
+  </script>
+  <script src="js/settings-client.js"></script>
+  <script src="js/role-ui.js"></script>
+</body>
+</html>

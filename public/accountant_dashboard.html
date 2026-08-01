@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZHI | Accountant Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    
+    <style>
+        :root {
+            --sidebar-bg: #0f172a; 
+            --primary: #3b82f6; 
+            --success: #10b981; 
+            --warning: #f59e0b; 
+            --danger: #ef4444; 
+            --purple: #8b5cf6;
+            --bg: #f8fafc;
+            --text-dark: #1e293b;
+            --text-light: #64748b;
+            --white: #ffffff;
+            --border: #e2e8f0;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        body { background-color: var(--bg); display: flex; height: 100vh; overflow: hidden; color: var(--text-dark); -webkit-font-smoothing: antialiased; }
+
+        /* ------------------ SIDEBAR ------------------ */
+        .sidebar { width: 260px; background: var(--sidebar-bg); color: #fff; display: flex; flex-direction: column; flex-shrink: 0; z-index: 1001; transition: transform 0.3s ease; }
+        .sidebar-header { padding: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-between; align-items: center; }
+        .sidebar-header h2 { font-size: 18px; color: #fff; font-weight: 700;}
+        .sidebar-header p { font-size: 11px; color: var(--success); font-weight: 700; letter-spacing: 1px; margin-top: 2px;}
+        .logo-img { width: 42px; height: 42px; border-radius: 50%; background: #fff; padding: 2px; display: flex; align-items: center; justify-content: center; }
+
+        .sidebar-menu { list-style: none; padding: 15px 0; flex: 1; overflow-y: auto; }
+        .sidebar-menu li a { display: flex; align-items: center; gap: 12px; padding: 12px 20px; color: #cbd5e1; text-decoration: none; font-size: 14px; font-weight: 500; transition: 0.2s; }
+        .sidebar-menu li a i { font-size: 20px; }
+        .sidebar-menu li.active a, .sidebar-menu li a:hover { background: rgba(255,255,255,0.05); color: #fff; border-left: 4px solid var(--primary); }
+
+        /* ------------------ MAIN CONTENT & TOPBAR ------------------ */
+        .main-wrapper { flex: 1; display: flex; flex-direction: column; overflow-y: auto; width: 100%; position: relative;}
+        .topbar { height: 70px; background: var(--white); border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; padding: 0 25px; position: sticky; top: 0; z-index: 1000; box-shadow: 0 1px 2px rgba(0,0,0,0.02);}
+        .menu-btn { display: none; background: none; border: none; font-size: 26px; cursor: pointer; color: var(--text-dark); }
+        
+        .user-profile { display: flex; align-items: center; gap: 10px; }
+        .user-profile img { width: 35px; height: 35px; border-radius: 50%; object-fit: cover; border: 2px solid var(--success);}
+        .user-profile div { display: flex; flex-direction: column; }
+        .user-profile b { font-size: 13px; color: var(--text-dark); }
+        .user-profile span { font-size: 11px; color: var(--text-light); }
+
+        .content { padding: 25px; flex: 1; }
+        .page-title { font-size: 22px; font-weight: 700; color: var(--text-dark); margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between;}
+
+        .btn-primary { background: var(--primary); color: white; border: none; padding: 9px 16px; border-radius: 6px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px; font-size: 13px; transition: 0.2s; }
+        .btn-primary:hover { background: #2563eb; }
+        .btn-danger { background: var(--danger); color: white; border: none; padding: 9px 16px; border-radius: 6px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px; font-size: 13px; transition: 0.2s; }
+        .btn-danger:hover { background: #dc2626; }
+
+        /* ------------------ STATS CARDS ------------------ */
+        .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 25px; }
+        .stat-card { background: var(--white); border-radius: 12px; padding: 20px; border: 1px solid var(--border); display: flex; align-items: center; gap: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); transition: 0.3s;}
+        .stat-card:hover { transform: translateY(-3px); box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
+        .stat-icon { width: 50px; height: 50px; border-radius: 12px; display: flex; justify-content: center; align-items: center; font-size: 24px; }
+        .stat-info h4 { font-size: 22px; font-weight: 700; color: var(--text-dark); margin-bottom: 2px;}
+        .stat-info p { font-size: 13px; color: var(--text-light); font-weight: 500;}
+
+        /* ------------------ QUICK ACTIONS ------------------ */
+        .quick-actions { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 25px; }
+        .action-btn { background: var(--white); border: 1px solid var(--border); padding: 15px; border-radius: 10px; display: flex; flex-direction: column; align-items: center; gap: 10px; text-decoration: none; color: var(--text-dark); font-weight: 600; font-size: 13px; transition: 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.02); }
+        .action-btn i { font-size: 28px; color: var(--success); }
+        .action-btn:hover { background: #f0fdf4; border-color: #bbf7d0; color: var(--success); }
+        .action-btn.expense i { color: var(--danger); }
+        .action-btn.expense:hover { background: #fef2f2; border-color: #fecaca; color: var(--danger); }
+
+        /* ------------------ TRANSACTIONS PANEL ------------------ */
+        .panel { background: var(--white); border-radius: 12px; border: 1px solid var(--border); box-shadow: 0 1px 3px rgba(0,0,0,0.02); }
+        .panel-header { padding: 18px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;}
+        .panel-header h3 { font-size: 16px; font-weight: 600; display: flex; align-items: center; gap: 8px;}
+        
+        .table-res { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; text-align: left; min-width: 800px; }
+        th { padding: 12px 20px; background: #f8fafc; font-size: 12px; text-transform: uppercase; color: var(--text-light); font-weight: 600;}
+        td { padding: 15px 20px; border-bottom: 1px solid var(--border); font-size: 14px; }
+        
+        .badge-income { background: #dcfce7; color: #166534; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; }
+        .badge-expense { background: #fee2e2; color: #991b1b; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; }
+
+        /* Mobile Adjustments */
+        .sidebar-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 999; }
+        @media (max-width: 992px) {
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+            .quick-actions { grid-template-columns: repeat(2, 1fr); }
+        }
+        @media (max-width: 768px) {
+            .sidebar { position: fixed; left: -260px; height: 100vh; }
+            .sidebar.active { transform: translateX(260px); }
+            .menu-btn { display: block; }
+            .sidebar-overlay.active { display: block; }
+            .content { padding: 15px; }
+            .page-title { flex-direction: column; align-items: flex-start; gap: 10px; }
+            .stats-grid { grid-template-columns: 1fr; }
+            .quick-actions { grid-template-columns: repeat(2, 1fr); }
+        }
+
+        /* MODAL CSS (For Add Expense) */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.7); z-index: 2000; justify-content: center; align-items: center; padding: 20px; backdrop-filter: blur(4px); }
+        .modal-box { background: var(--bg); width: 100%; max-width: 500px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); display: flex; flex-direction: column; animation: slideIn 0.3s ease; }
+        @keyframes slideIn { from { transform: translateY(-20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        .modal-header { padding: 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; background: var(--white); border-radius: 12px 12px 0 0; }
+        .modal-header h3 { font-size: 18px; color: var(--text-dark); }
+        .modal-body { padding: 20px; background: var(--white); }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; font-size: 13px; font-weight: 600; color: var(--text-dark); margin-bottom: 5px; }
+        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 6px; outline: none; font-size: 14px; transition: 0.2s; }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: var(--primary); }
+        .modal-footer { padding: 15px 20px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 10px; background: var(--white); border-radius: 0 0 12px 12px; }
+    </style>
+    <script src="js/auth-client.js"></script>
+</head>
+<body>
+
+    <div class="sidebar-overlay" id="overlay" onclick="toggleSidebar()"></div>
+
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <div class="logo-img">
+                    <i class='bx bx-wallet' style="color:var(--success); font-size: 26px;"></i>
+                </div>
+                <div>
+                    <h2>ZHI Finance</h2>
+                    <p>ACCOUNTANT PANEL</p>
+                </div>
+            </div>
+            <button class="menu-btn close-btn" onclick="toggleSidebar()" style="color:white; display:none;"><i class='bx bx-x'></i></button>
+        </div>
+        
+        <ul class="sidebar-menu">
+            <li class="active"><a href="#"><i class='bx bx-home-alt'></i> Dashboard Home</a></li>
+            
+            <li style="margin: 15px 0 5px 20px; font-size: 11px; color: #64748b; font-weight: 700; text-transform: uppercase;">Students & Fees</li>
+            <li><a href="fee_collection.html"><i class='bx bx-rupee'></i> Fee Collection</a></li>
+            <li><a href="#"><i class='bx bx-list-ol'></i> Fee Structure setup</a></li>
+            <li><a href="#"><i class='bx bx-user-x'></i> Pending Dues List</a></li>
+            
+            <li style="margin: 15px 0 5px 20px; font-size: 11px; color: #64748b; font-weight: 700; text-transform: uppercase;">Staff & Payroll</li>
+            <li><a href="salary_management.html"><i class='bx bx-credit-card-front'></i> Salary Management</a></li>
+            <li><a href="generate_payslips.html"><i class='bx bx-file-blank'></i> Generate Payslips</a></li>
+            
+            <li style="margin: 15px 0 5px 20px; font-size: 11px; color: #64748b; font-weight: 700; text-transform: uppercase;">Accounts & Ledger</li>
+            <li><a href="all_transactions.html"><i class='bx bx-transfer'></i> All Transactions</a></li>
+            <li><a href="manage_expenses.html"><i class='bx bx-trending-down'></i> Manage Expenses</a></li>
+            <li><a href="financial_reports.html"><i class='bx bx-pie-chart-alt-2'></i> Financial Reports</a></li>
+        </ul>
+    </aside>
+
+    <div class="main-wrapper">
+        <header class="topbar">
+            <div style="display: flex; align-items: center; gap: 15px;">
+                <button class="menu-btn" onclick="toggleSidebar()"><i class='bx bx-menu'></i></button>
+                <div style="font-size: 18px; font-weight: 600; color: var(--text-dark);">Accounts & Finance</div>
+            </div>
+            <div class="user-profile">
+                <div style="text-align: right;">
+                    <b id="adminName">Accountant</b>
+                    <span>Finance Dept</span>
+                </div>
+                <img src="https://ui-avatars.com/api/?name=Accounts&background=10b981&color=fff" alt="Admin">
+            </div>
+        </header>
+
+        <main class="content">
+            <div class="page-title">
+                <div>👋 Welcome back, Accounts Team!</div>
+                <div style="display: flex; gap: 10px;">
+                    <button class="btn-danger" onclick="openExpenseModal()"><i class='bx bx-minus-circle'></i> Record Expense</button>
+                    <button class="btn-primary" style="background: var(--success);"><i class='bx bx-plus-circle'></i> Collect Fee</button>
+                </div>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: #dcfce7; color: var(--success);"><i class='bx bx-rupee'></i></div>
+                    <div class="stat-info">
+                        <h4>₹<span id="todayCollection">0</span></h4>
+                        <p>Today's Collection</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: #fef2f2; color: var(--danger);"><i class='bx bx-trending-down'></i></div>
+                    <div class="stat-info">
+                        <h4>₹<span id="todayExpense">0</span></h4>
+                        <p>Today's Expenses</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: #fffbeb; color: var(--warning);"><i class='bx bx-time-five'></i></div>
+                    <div class="stat-info">
+                        <h4>₹<span id="totalPending">0</span></h4>
+                        <p>Total Pending Dues</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: #eff6ff; color: var(--primary);"><i class='bx bxs-bank'></i></div>
+                    <div class="stat-info">
+                        <h4>₹<span id="netBalance">0</span></h4>
+                        <p>Net Balance (Today)</p>
+                    </div>
+                </div>
+            </div>
+
+            <h3 style="font-size: 16px; margin-bottom: 12px; color: var(--text-dark);">⚡ Financial Quick Actions</h3>
+            <div class="quick-actions">
+                <a href="#" class="action-btn">
+                    <i class='bx bx-money'></i>
+                    Student Fee Collection
+                </a>
+                <a href="#" class="action-btn expense" onclick="openExpenseModal()">
+                    <i class='bx bx-receipt'></i>
+                    Add Office Expense
+                </a>
+                <a href="#" class="action-btn">
+                    <i class='bx bx-wallet'></i>
+                    Process Staff Salary
+                </a>
+                <a href="#" class="action-btn">
+                    <i class='bx bx-printer'></i>
+                    Print Daily Report Book
+                </a>
+            </div>
+
+            <!-- ============ AI FEE DEFAULT MATRIX (Accountant) ============ -->
+            <div class="panel" style="margin-bottom:20px;">
+                <div class="panel-header">
+                    <h3><i class='bx bx-brain'></i> AI Fee Default Risk Matrix</h3>
+                    <span style="font-size:11px;color:var(--text-light);">Trained on attendance × marks × payment-delay features</span>
+                </div>
+                <div class="table-res">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Roll No</th><th>Student</th><th>Course</th>
+                                <th>Fee Delay (days)</th><th>Attendance</th>
+                                <th>P(default)</th><th>Risk Band</th>
+                            </tr>
+                        </thead>
+                        <tbody id="aiFeeDefaultMatrixBody">
+                            <tr><td colspan="7" style="text-align:center;padding:15px;">Loading AI risk matrix…</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="panel">
+                <div class="panel-header">
+                    <h3><i class='bx bx-transfer-alt'></i> Recent Cash Flow (Income & Expenses)</h3>
+                    <a href="#" style="font-size: 13px; color: var(--primary); font-weight: 600; text-decoration: none;">View All Ledger →</a>
+                </div>
+                <div class="table-res">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Date & Time</th>
+                                <th>Voucher/Receipt No</th>
+                                <th>Description / Particulars</th>
+                                <th>Mode</th>
+                                <th>Amount</th>
+                                <th>Type</th>
+                            </tr>
+                        </thead>
+                        <tbody id="transactionTableBody">
+                            </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <div class="modal-overlay" id="expenseModal">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3><i class='bx bx-trending-down' style="color: var(--danger);"></i> Record New Expense</h3>
+                <button onclick="closeExpenseModal()" style="background:none; border:none; font-size: 24px; cursor: pointer; color: var(--text-light);"><i class='bx bx-x'></i></button>
+            </div>
+            <form id="expenseForm" onsubmit="saveExpense(event)">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label>Expense Date</label>
+                        <input type="date" id="expDate" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Expense Category</label>
+                        <select id="expCategory" required>
+                            <option value="Office Supplies">Office Stationary / Supplies</option>
+                            <option value="Maintenance">Campus Maintenance / Repair</option>
+                            <option value="Utility Bills">Utility Bills (Electricity, Internet)</option>
+                            <option value="Refreshment">Refreshment / Hospitality</option>
+                            <option value="Other">Other / Miscellaneous</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Amount (₹) *</label>
+                        <input type="number" id="expAmount" placeholder="Enter amount spent" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Payment Mode</label>
+                        <select id="expMode" required>
+                            <option value="Cash">Cash</option>
+                            <option value="UPI">UPI / Online Transfer</option>
+                            <option value="Bank/Cheque">Bank Account / Cheque</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Brief Description / Details *</label>
+                        <textarea id="expDesc" rows="2" placeholder="Where was the money spent?" required></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" onclick="closeExpenseModal()" style="padding: 10px 18px; border: 1px solid var(--border); background: white; border-radius: 6px; cursor: pointer; font-weight: 600;">Cancel</button>
+                    <button type="submit" id="saveExpBtn" class="btn-danger"><i class='bx bx-save'></i> Save Expense</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Server URL (Aapki file se liya gaya hai)
+        const SERVER_URL = '';
+
+        // 1. Sidebar Toggle Logic
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('overlay');
+            sidebar.classList.toggle('active');
+            overlay.classList.toggle('active');
+        }
+
+        // 2. Initial Setup on Page Load
+        window.onload = () => {
+            // Set Today's Date in Modal
+            document.getElementById('expDate').valueAsDate = new Date();
+            
+            // Fetch User Name
+            const userName = localStorage.getItem('userName');
+            if(userName) {
+                document.getElementById('adminName').innerText = userName;
+            }
+
+            // Fetch Live Finance Data from Server
+            fetchDashboardData();
+        };
+
+        // 3. Modals Logic
+        function openExpenseModal() { document.getElementById('expenseModal').style.display = 'flex'; }
+        function closeExpenseModal() { document.getElementById('expenseModal').style.display = 'none'; }
+
+        // 4. GET Data from Server (Stats & Transactions)
+        async function fetchDashboardData() {
+            try {
+                // Yahan server ke endpoint call honge (Maine standard API route use kiye hain)
+                // Agar aapke server ka route alag hai, toh bas '/api/finance/stats' ko change kar dena.
+                
+                // Fetch Stats
+                const statsResponse = await fetch(`${SERVER_URL}/api/finance/stats`);
+                if(statsResponse.ok) {
+                    const stats = await statsResponse.json();
+                    document.getElementById('todayCollection').innerText = stats.todayCollection || "0";
+                    document.getElementById('todayExpense').innerText = stats.todayExpense || "0";
+                    document.getElementById('totalPending').innerText = stats.totalPending || "0";
+                    document.getElementById('netBalance').innerText = stats.netBalance || "0";
+                }
+
+                // Fetch Recent Transactions
+                const transResponse = await fetch(`${SERVER_URL}/api/finance/transactions`);
+                if(transResponse.ok) {
+                    const data = await transResponse.json();
+                    renderTransactionsTable(data.transactions || []);
+                }
+            } catch (error) {
+                console.log("Fetching live data... Make sure API endpoints exist on server.", error);
+            }
+        }
+
+        // 5. Render Data in Table dynamically
+        function renderTransactionsTable(transactions) {
+            const tableBody = document.getElementById('transactionTableBody');
+            tableBody.innerHTML = ""; // Clear pehle ka data
+            
+            if (transactions.length === 0) {
+                tableBody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-light);">No transactions found</td></tr>`;
+                return;
+            }
+
+            transactions.forEach(t => {
+                const isIncome = t.type === 'Income';
+                const sign = isIncome ? '+' : '-';
+                const color = isIncome ? 'var(--success)' : 'var(--danger)';
+                const badge = isIncome ? 'badge-income' : 'badge-expense';
+
+                const row = `
+                    <tr>
+                        <td>${new Date(t.date).toLocaleString()}</td>
+                        <td><b>${t.receiptNo || 'N/A'}</b></td>
+                        <td>${t.description}</td>
+                        <td>${t.mode}</td>
+                        <td><b style="color: ${color};">${sign} ₹${t.amount}</b></td>
+                        <td><span class="${badge}">${t.type}</span></td>
+                    </tr>
+                `;
+                tableBody.innerHTML += row;
+            });
+        }
+
+        // 6. POST Expense to Server
+        async function saveExpense(event) {
+            event.preventDefault();
+            const btn = document.getElementById('saveExpBtn');
+            btn.innerHTML = `<i class='bx bx-loader-alt bx-spin'></i> Saving...`;
+            btn.disabled = true;
+
+            const expenseData = {
+                date: document.getElementById('expDate').value,
+                category: document.getElementById('expCategory').value,
+                amount: document.getElementById('expAmount').value,
+                mode: document.getElementById('expMode').value,
+                description: document.getElementById('expDesc').value,
+                type: 'Expense' // Type is expense
+            };
+
+            try {
+                // POST request (API path apne hisab se verify kar lena)
+                const response = await fetch(`${SERVER_URL}/api/expenses`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(expenseData)
+                });
+
+                const result = await response.json();
+                
+                if(response.ok) {
+                    alert("Expense Saved Successfully!");
+                    document.getElementById('expenseForm').reset();
+                    document.getElementById('expDate').valueAsDate = new Date();
+                    closeExpenseModal();
+                    fetchDashboardData(); // Refresh UI instantly
+                } else {
+                    alert(result.message || "Failed to save expense.");
+                }
+            } catch (error) {
+                console.error("Error:", error);
+                alert("Server Error! Check connection.");
+            } finally {
+                btn.innerHTML = `<i class='bx bx-save'></i> Save Expense`;
+                btn.disabled = false;
+            }
+        }
+    </script>
+    <script src="js/settings-client.js"></script>
+  <script src="js/role-ui.js"></script>
+  <script src="js/ai-widgets.js"></script>
+</body>
+</html>

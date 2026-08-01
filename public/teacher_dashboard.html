@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZHI | Teacher Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    
+    <style>
+        :root {
+            --sidebar-bg: #0f172a; 
+            --primary: #14b8a6; /* Teal color for Teacher Panel */
+            --primary-light: #ccfbf1;
+            --success: #10b981; 
+            --warning: #f59e0b; 
+            --danger: #ef4444; 
+            --purple: #8b5cf6;
+            --bg: #f8fafc;
+            --text-dark: #1e293b;
+            --text-light: #64748b;
+            --white: #ffffff;
+            --border: #e2e8f0;
+        }
+
+        /* 🔴 FIXED HORIZONTAL SCROLL ISSUE 🔴 */
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        html, body { width: 100%; max-width: 100vw; overflow-x: hidden; background-color: var(--bg); color: var(--text-dark); -webkit-font-smoothing: antialiased; display: flex; height: 100vh; }
+
+        /* ------------------ SIDEBAR ------------------ */
+        .sidebar { width: 260px; background: var(--sidebar-bg); color: #fff; display: flex; flex-direction: column; flex-shrink: 0; z-index: 1001; transition: transform 0.3s ease; }
+        .sidebar-header { padding: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-between; align-items: center; }
+        .sidebar-header h2 { font-size: 18px; color: #fff; font-weight: 700;}
+        .sidebar-header p { font-size: 11px; color: var(--primary); font-weight: 700; letter-spacing: 1px; margin-top: 2px;}
+        .logo-img { width: 42px; height: 42px; border-radius: 50%; background: #fff; padding: 2px; display: flex; align-items: center; justify-content: center; }
+
+        .sidebar-menu { list-style: none; padding: 15px 0; flex: 1; overflow-y: auto; }
+        .sidebar-menu li a { display: flex; align-items: center; gap: 12px; padding: 12px 20px; color: #cbd5e1; text-decoration: none; font-size: 14px; font-weight: 500; transition: 0.2s; }
+        .sidebar-menu li a i { font-size: 20px; }
+        .sidebar-menu li.active a, .sidebar-menu li a:hover { background: rgba(255,255,255,0.05); color: #fff; border-left: 4px solid var(--primary); }
+
+        /* ------------------ MAIN CONTENT & TOPBAR ------------------ */
+        .main-wrapper { flex: 1; display: flex; flex-direction: column; overflow-y: auto; overflow-x: hidden; width: 100%; max-width: 100vw; position: relative;}
+        .topbar { height: 70px; background: var(--white); border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; padding: 0 25px; position: sticky; top: 0; z-index: 1000; box-shadow: 0 1px 2px rgba(0,0,0,0.02);}
+        .menu-btn { display: none; background: none; border: none; font-size: 26px; cursor: pointer; color: var(--text-dark); }
+        
+        .user-profile { display: flex; align-items: center; gap: 10px; }
+        .user-profile img { width: 35px; height: 35px; border-radius: 50%; object-fit: cover; border: 2px solid var(--primary);}
+        .user-profile div { display: flex; flex-direction: column; }
+        .user-profile b { font-size: 13px; color: var(--text-dark); }
+        .user-profile span { font-size: 11px; color: var(--text-light); }
+
+        .content { padding: 25px; flex: 1; width: 100%; max-width: 100vw;}
+        .page-title { font-size: 22px; font-weight: 700; color: var(--text-dark); margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 15px;}
+        .page-title-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+        
+        .btn-primary { background: var(--primary); color: white; border: none; padding: 10px 16px; border-radius: 6px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px; font-size: 13px; transition: 0.2s; justify-content: center; text-align: center;}
+        .btn-primary:hover { background: #0d9488; }
+        .btn-outline { background: var(--white); color: var(--text-dark); border: 1px solid var(--border); padding: 10px 16px; border-radius: 6px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px; font-size: 13px; transition: 0.2s; justify-content: center; text-align: center;}
+        .btn-outline:hover { background: #f1f5f9; }
+
+        /* ------------------ STATS CARDS ------------------ */
+        .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 25px; width: 100%; }
+        .stat-card { background: var(--white); border-radius: 12px; padding: 20px; border: 1px solid var(--border); display: flex; align-items: center; gap: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); transition: 0.3s; min-width: 0;}
+        .stat-icon { width: 45px; height: 45px; border-radius: 12px; display: flex; justify-content: center; align-items: center; font-size: 24px; flex-shrink: 0;}
+        .stat-info { overflow: hidden; }
+        .stat-info h4 { font-size: 20px; font-weight: 700; color: var(--text-dark); margin-bottom: 2px;}
+        .stat-info p { font-size: 12px; color: var(--text-light); font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;}
+
+        /* ------------------ QUICK ACTIONS ------------------ */
+        .quick-actions { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 25px; width: 100%;}
+        .action-btn { background: var(--white); border: 1px solid var(--border); padding: 15px; border-radius: 10px; display: flex; flex-direction: column; align-items: center; gap: 10px; text-decoration: none; color: var(--text-dark); font-weight: 600; font-size: 12px; transition: 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.02); text-align: center; word-break: break-word;}
+        .action-btn i { font-size: 26px; color: var(--primary); }
+        .action-btn:hover { background: var(--primary-light); border-color: #99f6e4; color: #0f766e; }
+
+        /* ------------------ PANELS & TABLES ------------------ */
+        .grid-2-col { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; width: 100%;}
+        
+        .panel { background: var(--white); border-radius: 12px; border: 1px solid var(--border); box-shadow: 0 1px 3px rgba(0,0,0,0.02); display: flex; flex-direction: column; overflow: hidden; max-width: 100%;}
+        .panel-header { padding: 15px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;}
+        .panel-header h3 { font-size: 15px; font-weight: 600; display: flex; align-items: center; gap: 8px;}
+        
+        .table-res { width: 100%; overflow-x: auto; display: block; -webkit-overflow-scrolling: touch; }
+        table { width: 100%; border-collapse: collapse; text-align: left; min-width: 600px; }
+        th { padding: 12px 15px; background: #f8fafc; font-size: 12px; text-transform: uppercase; color: var(--text-light); font-weight: 600; white-space: nowrap;}
+        td { padding: 15px; border-bottom: 1px solid var(--border); font-size: 13px; font-weight: 500;}
+        
+        .badge { padding: 4px 10px; border-radius: 4px; font-size: 11px; font-weight: 600; white-space: nowrap;}
+        .bg-teal { background: var(--primary-light); color: #0f766e; }
+        
+        /* Notice List */
+        .notice-list { display: flex; flex-direction: column; padding: 10px 0; flex: 1; overflow-y: auto; max-height: 350px;}
+        .notice-item { padding: 12px 20px; border-bottom: 1px solid var(--border); display: flex; flex-direction: column; gap: 4px; cursor: pointer; transition: 0.2s;}
+        .notice-item:hover { background: #f8fafc; }
+        .notice-item:last-child { border-bottom: none; }
+        .notice-date { font-size: 11px; color: var(--primary); font-weight: 600;}
+        .notice-title { font-size: 13px; color: var(--text-dark); font-weight: 600;}
+        .notice-desc { font-size: 12px; color: var(--text-light); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;}
+
+        /* MODAL CSS */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(15, 23, 42, 0.7); z-index: 2000; justify-content: center; align-items: center; padding: 15px; backdrop-filter: blur(4px); overflow-y: auto;}
+        .modal-box { background: var(--bg); width: 100%; max-width: 500px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); display: flex; flex-direction: column; animation: slideIn 0.3s ease; margin: auto;}
+        @keyframes slideIn { from { transform: translateY(-20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        .modal-header { padding: 18px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; background: var(--white); border-radius: 12px 12px 0 0; position: sticky; top: 0; z-index: 10;}
+        .modal-header h3 { font-size: 16px; color: var(--text-dark); }
+        .modal-body { padding: 20px; background: var(--white); }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; font-size: 13px; font-weight: 600; color: var(--text-dark); margin-bottom: 5px; }
+        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 6px; outline: none; font-size: 14px; transition: 0.2s; font-family: inherit;}
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.1); }
+        .modal-footer { padding: 15px 20px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 10px; background: var(--white); border-radius: 0 0 12px 12px; position: sticky; bottom: 0;}
+
+        /* Mobile Responsiveness */
+        .sidebar-overlay { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.5); z-index: 999; }
+        @media (max-width: 992px) { .stats-grid { grid-template-columns: repeat(2, 1fr); } .grid-2-col { grid-template-columns: 1fr; } }
+        @media (max-width: 768px) {
+            .sidebar { position: fixed; left: -260px; height: 100vh; }
+            .sidebar.active { transform: translateX(260px); }
+            .menu-btn { display: block; }
+            .sidebar-overlay.active { display: block; }
+            .topbar { padding: 0 15px; }
+            .user-profile b, .user-profile span { display: none; }
+            .content { padding: 15px; }
+            .page-title { flex-direction: column; align-items: flex-start; gap: 15px; font-size: 18px;}
+            .page-title-actions { width: 100%; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+            .page-title-actions button { width: 100%; } 
+            .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+            .stat-card { padding: 15px; gap: 10px; }
+            .stat-icon { width: 38px; height: 38px; font-size: 18px; }
+            .stat-info h4 { font-size: 16px; }
+            .quick-actions { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+            .action-btn { padding: 12px 8px; font-size: 11px; }
+            .action-btn i { font-size: 22px; }
+            .panel-header { padding: 15px; flex-direction: column; align-items: flex-start; gap: 8px; }
+            .modal-overlay { padding: 0; align-items: flex-end; }
+            .modal-box { margin: 0; border-radius: 15px 15px 0 0; max-height: 90vh; width: 100%; }
+        }
+    </style>
+    <script src="js/auth-client.js"></script>
+</head>
+<body>
+
+    <div class="sidebar-overlay" id="overlay" onclick="toggleSidebar()"></div>
+
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <div class="logo-img">
+                    <i class='bx bx-book-reader' style="color:var(--primary); font-size: 24px;"></i>
+                </div>
+                <div>
+                    <h2>ZHI Faculty</h2>
+                    <p>TEACHER PANEL</p>
+                </div>
+            </div>
+            <button class="menu-btn close-btn" onclick="toggleSidebar()" style="color:white; display:none;"><i class='bx bx-x'></i></button>
+        </div>
+        
+        <ul class="sidebar-menu">
+            <li class="active"><a href="teacher_dashboard.html"><i class='bx bx-grid-alt'></i> Dashboard Home</a></li>
+            <li><a href="teacher_self_attendance.html"><i class='bx bx-fingerprint'></i> My Attendance</a></li>
+            
+            <li style="margin: 15px 0 5px 20px; font-size: 11px; color: #64748b; font-weight: 700; text-transform: uppercase;">My Classes</li>
+            <li><a href="teacher_timetable.html"><i class='bx bx-calendar'></i> My Timetable</a></li>
+            <li><a href="mark_attendance.html"><i class='bx bx-user-check'></i> Mark Student Attendance</a></li>
+            
+            <li style="margin: 15px 0 5px 20px; font-size: 11px; color: #64748b; font-weight: 700; text-transform: uppercase;">Academics</li>
+            <li><a href="upload_notes.html"><i class='bx bx-book-content'></i> Upload Notes</a></li>
+            <li><a href="manage_assignments.html"><i class='bx bx-task'></i> Assignments</a></li>
+            <li><a href="upload_marks.html"><i class='bx bx-edit'></i> Enter Marks</a></li>
+            
+            <li style="margin: 15px 0 5px 20px; font-size: 11px; color: #64748b; font-weight: 700; text-transform: uppercase;">Personal</li>
+            <li><a href="apply_leave.html" onclick="openLeaveModal(); checkMobileClose();"><i class='bx bx-calendar-minus'></i> Apply Leave</a></li>
+            <li><a href="teacher_profile.html"><i class='bx bx-user-circle'></i> My Profile</a></li>
+        </ul>
+    </aside>
+
+    <div class="main-wrapper">
+        <header class="topbar">
+            <div style="display: flex; align-items: center; gap: 15px;">
+                <button class="menu-btn" onclick="toggleSidebar()"><i class='bx bx-menu'></i></button>
+                <div style="font-size: 18px; font-weight: 600; color: var(--text-dark);">Faculty Portal</div>
+            </div>
+            <div class="user-profile">
+                <div style="text-align: right;">
+                    <b id="adminName">Loading...</b>
+                    <span id="adminDept">Faculty Member</span>
+                </div>
+                <img id="profileImage" src="https://ui-avatars.com/api/?name=Teacher&background=14b8a6&color=fff" alt="Admin">
+            </div>
+        </header>
+
+        <main class="content">
+            <div class="page-title">
+                <div>👋 Good Morning, <span id="welcomeName">Teacher</span>!</div>
+                <div class="page-title-actions">
+                    <button class="btn-outline" onclick="openLeaveModal()"><i class='bx bx-calendar-minus'></i> Apply Leave</button>
+                    <button class="btn-primary" onclick="window.location.href='mark_attendance.html'"><i class='bx bx-user-check'></i> Take Attendance</button>
+                </div>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: var(--primary-light); color: var(--primary);"><i class='bx bx-buildings'></i></div>
+                    <div class="stat-info">
+                        <h4 id="todayClassesCount">...</h4>
+                        <p>Classes Today</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: #fdf4ff; color: var(--purple);"><i class='bx bx-book-open'></i></div>
+                    <div class="stat-info">
+                        <h4 id="notesUploadedCount">...</h4>
+                        <p>Notes Uploaded</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: #fffbeb; color: var(--warning);"><i class='bx bx-task'></i></div>
+                    <div class="stat-info">
+                        <h4>0</h4>
+                        <p>Pending Copies</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: #f0fdf4; color: var(--success);"><i class='bx bx-check-shield'></i></div>
+                    <div class="stat-info">
+                        <h4>95%</h4>
+                        <p>My Attendance</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============ AI FACE VERIFICATION TOGGLE (Teacher) ============ -->
+            <div class="panel" style="margin-bottom:20px;">
+                <div class="panel-header">
+                    <h3><i class='bx bx-face'></i> AI Face Verification</h3>
+                    <span style="font-size:11px;color:var(--text-light);">Enable to auto-verify students during attendance</span>
+                </div>
+                <div style="padding:15px;display:flex;align-items:center;gap:15px;flex-wrap:wrap;">
+                    <label style="position:relative;display:inline-block;width:52px;height:28px;">
+                        <input type="checkbox" id="aiFaceToggle" style="opacity:0;width:0;height:0;">
+                        <span style="position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background:#cbd5e1;border-radius:34px;transition:.3s;"></span>
+                    </label>
+                    <span id="aiFaceStatus" style="color:var(--text-light);">Face Verification Off — using manual mode</span>
+                </div>
+                <style>
+                    #aiFaceToggle:checked + span { background: var(--success) !important; }
+                    #aiFaceToggle:checked + span::before { transform: translateX(24px) !important; }
+                    #aiFaceToggle + span::before { position: absolute; content: ""; height: 22px; width: 22px; left: 3px; bottom: 3px; background-color: white; border-radius: 50%; transition: .3s; }
+                </style>
+            </div>
+
+            <div class="quick-actions">
+                <a href="mark_attendance.html" class="action-btn">
+                    <i class='bx bx-user-check'></i> Mark Class Attendance
+                </a>
+                <a href="upload_notes.html" class="action-btn">
+                    <i class='bx bx-upload'></i> Upload Notes/Syllabus
+                </a>
+                <a href="upload_marks.html" class="action-btn">
+                    <i class='bx bx-edit-alt'></i> Add Test Marks
+                </a>
+                <a href="#" class="action-btn" onclick="openLeaveModal()">
+                    <i class='bx bx-calendar-minus'></i> Request Leave
+                </a>
+            </div>
+
+            <div class="grid-2-col">
+                <div class="panel">
+                    <div class="panel-header">
+                        <h3><i class='bx bx-calendar-event'></i> My Schedule for Today</h3>
+                        <span class="badge bg-teal" id="pendingClassesBadge">Loading...</span>
+                    </div>
+                    <div class="table-res">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Time</th>
+                                    <th>Course & Sem</th>
+                                    <th>Subject</th>
+                                    <th>Room</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="scheduleTableBody">
+                                <tr>
+                                    <td colspan="5" style="text-align: center;">Fetching today's schedule...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <div class="panel-header">
+                        <h3><i class='bx bx-bell' style="color: var(--warning);"></i> Notice Board</h3>
+                    </div>
+                    <div class="notice-list" id="noticeBoardList">
+                        <div style="text-align:center; padding: 20px; color:var(--text-light);">Loading notices...</div>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <div class="modal-overlay" id="leaveModal">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3><i class='bx bx-calendar-minus' style="color: var(--primary);"></i> Apply for Leave</h3>
+                <button onclick="closeLeaveModal()" style="background:none; border:none; font-size: 24px; cursor: pointer; color: var(--text-light);"><i class='bx bx-x'></i></button>
+            </div>
+            <form onsubmit="submitLeave(event)">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label>Leave Type *</label>
+                        <select required>
+                            <option value="Casual Leave">Casual Leave (CL)</option>
+                            <option value="Sick Leave">Sick Leave (Medical)</option>
+                            <option value="Urgent Work">Urgent Personal Work</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                        <div class="form-group">
+                            <label>From Date *</label>
+                            <input type="date" required>
+                        </div>
+                        <div class="form-group">
+                            <label>To Date *</label>
+                            <input type="date" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Reason for Leave *</label>
+                        <textarea rows="3" placeholder="Please mention the exact reason..." required></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" onclick="closeLeaveModal()" class="btn-outline">Cancel</button>
+                    <button type="submit" class="btn-primary"><i class='bx bx-send'></i> Submit</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = "";
+        let currentStaffId = localStorage.getItem('staffId'); // Tumhare login system ke hisaab se id
+
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('overlay');
+            sidebar.classList.toggle('active');
+            overlay.classList.toggle('active');
+        }
+
+        function checkMobileClose() {
+            if (window.innerWidth <= 768) {
+                toggleSidebar();
+            }
+        }
+
+        window.onload = () => {
+            // Set User Profile from Local Storage
+            const userName = localStorage.getItem('staffName') || localStorage.getItem('userName') || "Teacher";
+            if(userName) {
+                document.getElementById('adminName').innerText = userName;
+                document.getElementById('welcomeName').innerText = userName.split(" ")[0]; 
+                document.getElementById('profileImage').src = `https://ui-avatars.com/api/?name=${userName}&background=14b8a6&color=fff`;
+            }
+
+            // Fetch Live Data
+            fetchTodaySchedule();
+            fetchNotices();
+            fetchNotesCount();
+        };
+
+        // 1. Fetch Live Schedule for Teacher
+        async function fetchTodaySchedule() {
+            const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+            const todayName = days[new Date().getDay()]; // e.g. "Monday"
+            
+            try {
+                // Tumhare backend route ke hisaab se: /api/routines?teacherId=XYZ&dayOfWeek=Monday
+                const url = currentStaffId ? 
+                    `${API_BASE_URL}/api/routines?teacherId=${currentStaffId}&dayOfWeek=${todayName}` : 
+                    `${API_BASE_URL}/api/routines?dayOfWeek=${todayName}`; // Agar ID na ho to sab le aao testing k liye
+                
+                const response = await fetch(url);
+                const json = await response.json();
+                
+                const tbody = document.getElementById('scheduleTableBody');
+                tbody.innerHTML = "";
+
+                if (json.success && json.data.length > 0) {
+                    document.getElementById('todayClassesCount').innerText = json.data.length;
+                    document.getElementById('pendingClassesBadge').innerText = `${json.data.length} Classes Today`;
+
+                    json.data.forEach(routine => {
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td>${routine.startTime} - ${routine.endTime}</td>
+                            <td>${routine.course} (${routine.semester})</td>
+                            <td>${routine.subject}</td>
+                            <td>${routine.roomNumber || 'TBA'}</td>
+                            <td><button class="btn-primary" style="padding: 6px 12px; font-size: 11px;" onclick="window.location.href='mark_attendance.html'">Attendance</button></td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+                } else {
+                    document.getElementById('todayClassesCount').innerText = "0";
+                    document.getElementById('pendingClassesBadge').innerText = "Free Day";
+                    tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-light);">No classes scheduled for you today (${todayName}). Chill out! ☕</td></tr>`;
+                }
+            } catch (error) {
+                console.error("Error fetching schedule:", error);
+                document.getElementById('scheduleTableBody').innerHTML = `<tr><td colspan="5" style="text-align: center; color: red;">Failed to load schedule. Server asleep?</td></tr>`;
+            }
+        }
+
+        // 2. Fetch Live Notices (Targeting Teachers or All)
+        async function fetchNotices() {
+            try {
+                // Tumhara API notices laane ke liye (filter for Teacher or All)
+                const response = await fetch(`${API_BASE_URL}/api/notices`);
+                const json = await response.json();
+                
+                const list = document.getElementById('noticeBoardList');
+                list.innerHTML = "";
+
+                if (json.success && json.data.length > 0) {
+                    json.data.slice(0, 5).forEach(notice => { // Sirf top 5 notices
+                        
+                        // Date format karna (Agar MongoDB T format me de raha ho)
+                        let dateText = "New";
+                        try {
+                            const d = new Date(notice.createdAt);
+                            dateText = d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+                        } catch(e) {}
+
+                        const div = document.createElement('div');
+                        div.className = "notice-item";
+                        div.innerHTML = `
+                            <span class="notice-date">${dateText}</span>
+                            <span class="notice-title">${notice.title}</span>
+                            <span class="notice-desc">${notice.message}</span>
+                        `;
+                        
+                        // Click karne pe view karne k liye
+                        if(notice.fileUrl && notice.fileUrl.length > 5) {
+                            div.onclick = () => window.open(notice.fileUrl, '_blank');
+                            div.title = "Click to view attachment";
+                        }
+                        
+                        list.appendChild(div);
+                    });
+                } else {
+                    list.innerHTML = `<div style="text-align:center; padding: 20px; color:var(--text-light);">No new notices</div>`;
+                }
+            } catch (error) {
+                console.error("Error fetching notices:", error);
+                document.getElementById('noticeBoardList').innerHTML = `<div style="text-align:center; padding: 20px; color:red;">Connection Error</div>`;
+            }
+        }
+
+        // 3. Fetch Total Uploaded Notes
+        async function fetchNotesCount() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/notes`);
+                const json = await response.json();
+                if(json.success) {
+                    document.getElementById('notesUploadedCount').innerText = json.data.length;
+                } else {
+                    document.getElementById('notesUploadedCount').innerText = "0";
+                }
+            } catch (error) {
+                document.getElementById('notesUploadedCount').innerText = "Err";
+            }
+        }
+
+        // Leave Modal
+        function openLeaveModal() { document.getElementById('leaveModal').style.display = 'flex'; }
+        function closeLeaveModal() { document.getElementById('leaveModal').style.display = 'none'; }
+        
+        function submitLeave(event) {
+            event.preventDefault();
+            alert("Leave Application Submitted successfully!");
+            closeLeaveModal();
+        }
+    </script>
+    <script src="js/settings-client.js"></script>
+  <script src="js/role-ui.js"></script>
+  <script src="js/ai-widgets.js"></script>
+</body>
+</html>

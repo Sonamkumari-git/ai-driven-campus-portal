@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZHI Director Panel | Students Directory</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        /* CSS 100% SAME HAI */
+        :root {
+            --sidebar-bg: #0b1320; 
+            --primary: #3b82f6; 
+            --success: #10b981; 
+            --warning: #f59e0b; 
+            --danger: #ef4444; 
+            --bg: #f8fafc;
+            --text-dark: #0f172a;
+            --text-light: #64748b;
+            --white: #ffffff;
+            --border: #e2e8f0;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        body { background-color: var(--bg); display: flex; height: 100vh; overflow: hidden; color: var(--text-dark); -webkit-font-smoothing: antialiased;}
+        .sidebar { width: 260px; background: var(--sidebar-bg); color: #fff; display: flex; flex-direction: column; z-index: 1001; transition: 0.3s; flex-shrink: 0;}
+        .sidebar-header { display: flex; align-items: center; gap: 15px; padding: 20px; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .logo-circle { width: 40px; height: 40px; background: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: bold; color: #0b1320; border: 2px solid #ef4444;}
+        .sidebar-header h2 { font-size: 18px; margin: 0; color: white;}
+        .sidebar-header p { font-size: 11px; color: var(--danger); font-weight: 700; margin: 0; margin-top: 3px; letter-spacing: 0.5px;}
+        .sidebar-menu { list-style: none; padding: 15px 0; overflow-y: auto; flex: 1; }
+        .sidebar-menu li a { display: flex; align-items: center; gap: 15px; padding: 14px 25px; color: #cbd5e1; text-decoration: none; font-size: 14px; font-weight: 500; transition: 0.2s; }
+        .sidebar-menu li a span { font-size: 16px; opacity: 0.8; }
+        .sidebar-menu li.active a, .sidebar-menu li a:hover { background: rgba(255,255,255,0.05); color: #fff; border-left: 4px solid var(--primary); }
+        .sidebar-menu li.active a span { opacity: 1; color: var(--primary); }
+        .main-wrapper { flex: 1; display: flex; flex-direction: column; overflow-y: auto; width: 100%; }
+        .topbar { height: 65px; background: var(--white); border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; padding: 0 25px; position: sticky; top: 0; z-index: 1000; }
+        .menu-btn, .close-sidebar-btn { display: none; background: none; border: none; font-size: 24px; cursor: pointer; color: var(--text-dark); }
+        .search-bar { display: flex; align-items: center; background: #f1f5f9; padding: 8px 15px; border-radius: 8px; width: 300px; border: 1px solid transparent; transition: 0.3s;}
+        .search-bar:focus-within { border-color: var(--primary); background: white;}
+        .search-bar input { background: none; border: none; outline: none; width: 100%; font-size: 13px; margin-left: 8px;}
+        .btn-primary { background: var(--primary); color: white; border: none; padding: 9px 16px; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 13px; transition: 0.2s; text-decoration: none; display: inline-block;}
+        .btn-primary:hover { background: #2563eb; }
+        .btn-secondary { background: #e2e8f0; color: #475569; padding: 9px 16px; border-radius: 6px; font-weight: 600; cursor: pointer; border: none; }
+        .btn-secondary:hover { background: #cbd5e1; }
+        .content { padding: 25px; }
+        .filters-container { display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap; }
+        .filter-select { padding: 9px 15px; border: 1px solid var(--border); border-radius: 6px; font-size: 13px; background: white; outline: none; min-width: 150px; font-weight: 500;}
+        .panel { background: var(--white); border-radius: 12px; border: 1px solid var(--border); box-shadow: 0 1px 3px rgba(0,0,0,0.05); padding: 10px; }
+        table { width: 100%; border-collapse: collapse; }
+        th { text-align: left; padding: 12px 20px; background: #f8fafc; font-size: 12px; text-transform: uppercase; color: var(--text-light); font-weight: 600;}
+        td { padding: 12px 20px; border-bottom: 1px solid var(--border); font-size: 14px; vertical-align: middle;}
+        .student-row { cursor: pointer; transition: background 0.2s; }
+        .student-row:hover { background: #f8fafc; }
+        .student-info { display: flex; align-items: center; gap: 12px; }
+        .student-info img { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; }
+        .badge { padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; background: #f1f5f9; color: var(--text-light); }
+        .status-active { color: var(--success); font-weight: 600; font-size: 12px;}
+        .action-btns button { background: none; border: none; padding: 6px; cursor: pointer; font-size: 16px; border-radius: 4px; transition: 0.2s;}
+        .action-btns button:hover { background: #e2e8f0; }
+        .view-btn { color: var(--primary); }
+        .edit-btn { color: var(--warning); }
+        .del-btn { color: var(--danger); }
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.7); z-index: 2000; justify-content: center; align-items: center; padding: 20px; backdrop-filter: blur(3px); }
+        .profile-modal { background: white; width: 100%; max-width: 850px; border-radius: 12px; height: 85vh; display: flex; flex-direction: column; overflow: hidden; animation: popIn 0.3s ease; }
+        @keyframes popIn { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        .profile-header { padding: 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: flex-start; background: #f8fafc;}
+        .profile-header-left { display: flex; gap: 15px; align-items: center;}
+        .profile-header-left img { width: 60px; height: 60px; border-radius: 8px; border: 2px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.1);}
+        .tabs { display: flex; border-bottom: 1px solid var(--border); background: white; overflow-x: auto;}
+        .tab-btn { padding: 15px 20px; border: none; background: none; cursor: pointer; font-weight: 600; font-size: 13px; color: var(--text-light); border-bottom: 3px solid transparent; white-space: nowrap;}
+        .tab-btn.active { color: var(--primary); border-bottom-color: var(--primary); }
+        .profile-body { padding: 20px; flex: 1; overflow-y: auto; background: white;}
+        .tab-content { display: none; }
+        .tab-content.active { display: block; animation: fadeIn 0.3s ease;}
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .info-item label { display: block; font-size: 11px; text-transform: uppercase; color: var(--text-light); font-weight: 600; margin-bottom: 4px;}
+        .info-item p { font-size: 14px; font-weight: 500; color: var(--text-dark);}
+        .mini-table { width: 100%; border-collapse: collapse; }
+        .mini-table th, .mini-table td { padding: 10px; border-bottom: 1px solid var(--border); font-size: 13px; text-align: left;}
+        
+        /* Edit Form layout for full structure */
+        .form-section { margin-bottom: 25px; }
+        .form-section-header { display: flex; align-items: center; gap: 10px; margin-bottom: 15px; padding-bottom: 8px; border-bottom: 1px solid #eee; }
+        .section-icon { width: 26px; height: 26px; background: rgba(37, 99, 235, 0.1); color: var(--primary); border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 14px;}
+        .form-section h3 { font-size: 14px; font-weight: 600; color: #475569; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px; }
+        .form-row.triple { grid-template-columns: 1fr 1fr 1fr; }
+        .form-group label { display: block; font-size: 12px; font-weight: 600; color: var(--text-dark); margin-bottom: 5px; }
+        
+        #editStudentForm .form-control {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 13px;
+            outline: none;
+            transition: 0.2s;
+            color: var(--text-dark);
+            background: white; 
+            font-family: 'Inter', sans-serif;
+        }
+        #editStudentForm .form-control:focus {
+            border-color: var(--primary);
+            background: #fff;
+        }
+        textarea.form-control { resize: vertical; }
+        
+        @media (max-width: 768px) {
+            .sidebar { position: fixed; left: -260px; height: 100vh; }
+            .sidebar.active { transform: translateX(260px); }
+            .menu-btn { display: block; }
+            .topbar { padding: 0 15px; flex-wrap: wrap; height: auto; padding-top: 15px; padding-bottom: 15px;}
+            .search-bar { width: 100%; margin-top: 15px; order: 3;} 
+            .btn-primary { order: 2; }
+            .content { padding: 15px; }
+            .info-grid { grid-template-columns: 1fr; }
+            .profile-modal { height: 95vh; width: 95%;}
+            .filters-container { flex-direction: column; gap: 10px; }
+            table, thead, tbody, th, td, tr { display: block; }
+            thead tr { display: none; }
+            .student-row { border: 1px solid var(--border); border-radius: 8px; margin-bottom: 15px; padding: 15px; background: #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+            td { border: none; padding: 8px 0; display: flex; justify-content: space-between; align-items: center; text-align: right; }
+            td::before { content: attr(data-label); font-weight: 600; color: var(--text-light); text-transform: uppercase; font-size: 11px; text-align: left; }
+            .student-info { text-align: left; }
+            .action-btns { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; width: 100%; }
+            .form-row { grid-template-columns: 1fr !important; }
+        }
+    </style>
+    <script src="js/auth-client.js"></script>
+</head>
+<body>
+
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="logo-circle">Z</div>
+            <div>
+                <h2>ZHI College</h2>
+                <p>DIRECTOR PANEL</p>
+            </div>
+        </div>
+        <ul class="sidebar-menu">
+            <li><a href="admin_dashboard.html"><span>⊞</span> Dashboard</a></li>
+            <li><a href="users_roles.html"><span>👥</span> Users & Roles</a></li>
+            <li class="active"><a href="students.html"><span>👤</span> Students</a></li>
+            <li><a href="Finance.html"><span>💲</span> Finance</a></li>
+            <li><a href="Reports&Analytics.html"><span>📊</span> Reports & Analytics</a></li>
+            <li><a href="Exams&Results.html"><span>📄</span> Exams & Results</a></li>
+            <li><a href="GlobalNotice.html"><span>💬</span> Global Notices</a></li>
+            <li><a href="SystemSettings.html"><span>⚙️</span> System Settings</a></li>
+            <li><a href="AuditLogs.html"><span>🔄</span> Audit Logs</a></li>
+        </ul>
+    </aside>
+
+    <div class="main-wrapper">
+        <header class="topbar">
+            <div style="display: flex; align-items: center; gap: 15px;">
+                <button class="menu-btn" onclick="toggleSidebar()">☰</button>
+                <h2>Students Directory</h2>
+            </div>
+            <div class="search-bar">
+                🔍 <input type="text" id="searchInput" placeholder="Search by name, roll no, or phone...">
+            </div>
+            <a href="admissionform.html" class="btn-primary">+ Add New Student</a>
+        </header>
+
+        <main class="content">
+            <div class="filters-container">
+                <select class="filter-select" id="filterCourse">
+                    <option value="all">All Courses</option>
+                    <option value="BCA">BCA</option>
+                    <option value="MCA">MCA</option>
+                    <option value="BBA">BBA</option>
+                </select>
+                <select class="filter-select" id="filterSem">
+                    <option value="all">All Semesters</option>
+                    <option value="1">Semester 1</option>
+                    <option value="2">Semester 2</option>
+                    <option value="3">Semester 3</option>
+                    <option value="6">Semester 6</option>
+                </select>
+            </div>
+
+            <div class="panel">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Student Details</th>
+                            <th>Roll No</th>
+                            <th>Course & Sem</th>
+                            <th>Contact</th>
+                            <th>Status</th>
+                            <th>AI Risk</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="studentTableBody">
+                        <tr><td colspan="7" style="text-align: center; padding: 20px;">Loading Students Data...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </main>
+    </div>
+
+    <div class="modal-overlay" id="profileModal">
+        <div class="profile-modal">
+            <div class="profile-header">
+                <div class="profile-header-left">
+                    <img id="modalImg" src="" alt="Profile">
+                    <div>
+                        <h2 id="modalName" style="font-size: 18px;">Name Here</h2>
+                        <p id="modalCourseInfo" style="font-size: 13px; color: var(--text-light); margin-top: 4px;"></p>
+                    </div>
+                </div>
+                <button onclick="closeProfileModal()" style="background:none; border:none; font-size: 24px; cursor: pointer; color: var(--text-light);">×</button>
+            </div>
+
+            <div class="tabs">
+                <button class="tab-btn active" onclick="switchTab(event, 'tab-personal')">Personal Info</button>
+                <button class="tab-btn" onclick="switchTab(event, 'tab-academic')">Academic</button>
+                <button class="tab-btn" onclick="switchTab(event, 'tab-finance')">Fees History</button>
+                <button class="tab-btn" onclick="switchTab(event, 'tab-attendance')">Attendance</button>
+                <button class="tab-btn" onclick="switchTab(event, 'tab-documents')">Documents</button>
+            </div>
+
+            <div class="profile-body">
+                <div id="tab-personal" class="tab-content active">
+                    <h3 style="font-size: 15px; margin-bottom: 15px;">Basic Information</h3>
+                    <div class="info-grid">
+                        <div class="info-item"><label>Date of Birth</label><p id="modalDob">Data not found</p></div>
+                        <div class="info-item"><label>Gender</label><p id="modalGender">Data not found</p></div>
+                        <div class="info-item"><label>Father's Name</label><p id="modalFather">Data not found</p></div>
+                        <div class="info-item"><label>Mother's Name</label><p id="modalMother">Data not found</p></div>
+                        <div class="info-item"><label>Phone Number</label><p id="modalPhone">Data not found</p></div>
+                        <div class="info-item"><label>Parent's Phone</label><p id="modalParentPhone">Data not found</p></div>
+                        <div class="info-item" style="grid-column: 1 / -1;"><label>Permanent Address</label><p id="modalAddress">Data not found</p></div>
+                    </div>
+                </div>
+
+                <div id="tab-academic" class="tab-content">
+                    <h3 style="font-size: 15px; margin-bottom: 15px;">Registration Details</h3>
+                    <div class="info-grid">
+                        <div class="info-item"><label>Aadhar Number</label><p id="modalAadhar">Data not found</p></div>
+                        <div class="info-item"><label>Category</label><p id="modalCategory">Data not found</p></div>
+                        <div class="info-item"><label>Batch / Session</label><p id="modalBatch">Data not found</p></div>
+                        <div class="info-item"><label>Registration Date</label><p id="modalRegDate">Data not found</p></div>
+                    </div>
+                </div>
+
+                <div id="tab-finance" class="tab-content">
+                    <h3 style="font-size: 15px; margin-bottom: 15px;">Fee Details Uploaded</h3>
+                    <table class="mini-table">
+                        <tr><th>Amount Paid</th><th>Payment Mode</th><th>Transaction ID</th></tr>
+                        <tr>
+                            <td id="modalFeeAmt">Data not found</td>
+                            <td id="modalFeeMode">Data not found</td>
+                            <td id="modalFeeTxn">Data not found</td>
+                        </tr>
+                    </table>
+                </div>
+
+                <div id="tab-attendance" class="tab-content">
+                    <h3 style="font-size: 15px; margin-bottom: 15px;">Attendance Record</h3>
+                    <div class="info-grid">
+                        <div class="info-item"><label>Total Classes Conducted</label><p id="modalTotalClasses">Data not found</p></div>
+                        <div class="info-item"><label>Classes Attended</label><p id="modalAttendedClasses">Data not found</p></div>
+                        <div class="info-item"><label>Attendance Percentage</label><p id="modalAttendancePercent">Data not found</p></div>
+                    </div>
+                </div>
+
+                <div id="tab-documents" class="tab-content">
+                    <h3 style="font-size: 15px; margin-bottom: 15px;">Uploaded Documents Status</h3>
+                    <div class="info-grid">
+                        <div class="info-item"><label>Student Photograph</label><p id="modalDocPhoto">Data not found</p></div>
+                        <div class="info-item"><label>Aadhar Card Copy</label><p id="modalDocAadhar">Data not found</p></div>
+                        <div class="info-item"><label>Previous Marksheets</label><p id="modalDocMarksheets">Data not found</p></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="editModal">
+        <div class="profile-modal" style="max-width: 750px; height: 90vh;">
+            <div class="profile-header" style="position: sticky; top: 0; z-index: 10;">
+                <h2>Edit Full Details</h2>
+                <button onclick="closeEditModal()" style="background:none; border:none; font-size: 24px; cursor: pointer; color: var(--text-light);">×</button>
+            </div>
+            <div class="profile-body" style="overflow-y: auto; padding: 25px;">
+                <form id="editStudentForm">
+                    <input type="hidden" id="editStudentId">
+
+                    <div class="form-section">
+                        <div class="form-section-header">
+                            <div class="section-icon">🎓</div>
+                            <h3>Academic & Registration Details</h3>
+                        </div>
+                        <div class="form-row triple">
+                            <div class="form-group">
+                                <label>Course</label>
+                                <select id="editCourse" name="course" class="form-control">
+                                    <option value="BCA">BCA</option>
+                                    <option value="MCA">MCA</option>
+                                    <option value="BBA">BBA</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Semester</label>
+                                <select id="editSem" name="semester" class="form-control">
+                                    <option value="1">1st Sem</option>
+                                    <option value="2">2nd Sem</option>
+                                    <option value="3">3rd Sem</option>
+                                    <option value="4">4th Sem</option>
+                                    <option value="5">5th Sem</option>
+                                    <option value="6">6th Sem</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Batch / Session</label>
+                                <input type="text" id="editBatch" name="sessionBatch" class="form-control" placeholder="e.g., 2023-26">
+                            </div>
+                        </div>
+                        <div class="form-row triple">
+                            <div class="form-group">
+                                <label>Registration Date</label>
+                                <input type="date" id="editRegDate" name="registrationDate" class="form-control">
+                            </div>
+                            <div class="form-group">
+                                <label>College Reg No (Pending tak khali rakho)</label>
+                                <input type="text" id="editRegNo" name="collegeRegNo" class="form-control">
+                            </div>
+                            <div class="form-group">
+                                <label>University Reg No (Khali rakho)</label>
+                                <input type="text" id="editUnivRegNo" name="univRegNo" class="form-control">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <div class="form-section-header">
+                            <div class="section-icon">👤</div>
+                            <h3>Personal Information</h3>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group" style="grid-column: 1 / -1;">
+                                <label>Full Name</label>
+                                <input type="text" id="editName" name="studentName" class="form-control" required>
+                            </div>
+                        </div>
+                        <div class="form-row triple">
+                            <div class="form-group">
+                                <label>Date of Birth</label>
+                                <input type="date" id="editDob" name="dob" class="form-control">
+                            </div>
+                            <div class="form-group">
+                                <label>Gender</label>
+                                <select id="editGender" name="gender" class="form-control">
+                                    <option value="Male">Male</option>
+                                    <option value="Female">Female</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Blood Group</label>
+                                <select id="editBloodGroup" name="bloodGroup" class="form-control">
+                                    <option value="">Select</option>
+                                    <option value="A+">A+</option>
+                                    <option value="A-">A-</option>
+                                    <option value="B+">B+</option>
+                                    <option value="B-">B-</option>
+                                    <option value="O+">O+</option>
+                                    <option value="O-">O-</option>
+                                    <option value="AB+">AB+</option>
+                                    <option value="AB-">AB-</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Nationality</label>
+                                <input type="text" id="editNationality" name="nationality" class="form-control" value="Indian">
+                            </div>
+                            <div class="form-group">
+                                <label>Mother Tongue</label>
+                                <input type="text" id="editMotherTongue" name="motherTongue" class="form-control" placeholder="e.g., Hindi/English">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <div class="form-section-header">
+                            <div class="section-icon">📞</div>
+                            <h3>Contact & Identity</h3>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Student Mobile Number</label>
+                                <input type="tel" id="editMobile" name="studentMobile" class="form-control" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Official Email ID</label>
+                                <input type="email" id="editEmail" name="email" class="form-control" required>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Aadhar Number</label>
+                                <input type="text" id="editAadhar" name="aadharNumber" class="form-control" placeholder="12 Digit No">
+                            </div>
+                            <div class="form-group">
+                                <label>Category</label>
+                                <select id="editCategory" name="category" class="form-control">
+                                    <option value="General">General</option>
+                                    <option value="OBC">OBC</option>
+                                    <option value="SC">SC</option>
+                                    <option value="ST">ST</option>
+                                    <option value="EWS">EWS</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Religion</label>
+                            <input type="text" id="editReligion" name="religion" class="form-control" placeholder="e.g., Hindu">
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <div class="form-section-header">
+                            <div class="section-icon">📍</div>
+                            <h3>Permanent Address</h3>
+                        </div>
+                        <div class="form-group">
+                            <label>Address Line</label>
+                            <textarea id="editAddress" name="permanentAddress" class="form-control" rows="2"></textarea>
+                        </div>
+                        <div class="form-row triple">
+                            <div class="form-group">
+                                <label>City</label>
+                                <input type="text" id="editCity" name="city" class="form-control">
+                            </div>
+                            <div class="form-group">
+                                <label>State</label>
+                                <input type="text" id="editState" name="state" class="form-control">
+                            </div>
+                            <div class="form-group">
+                                <label>Pincode</label>
+                                <input type="text" id="editPincode" name="pincode" class="form-control">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <div class="form-section-header">
+                            <div class="section-icon">👨‍👩‍👦</div>
+                            <h3>Family / Guardian Details</h3>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Father's Name</label>
+                                <input type="text" id="editFather" name="fatherName" class="form-control">
+                            </div>
+                            <div class="form-group">
+                                <label>Father's Mobile</label>
+                                <input type="tel" id="editFatherMobile" name="fatherMobile" class="form-control">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Mother's Name</label>
+                                <input type="text" id="editMother" name="motherName" class="form-control">
+                            </div>
+                            <div class="form-group">
+                                <label>Mother's Mobile</label>
+                                <input type="tel" id="editMotherMobile" name="motherMobile" class="form-control">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <div class="form-section-header">
+                            <div class="section-icon">💰</div>
+                            <h3>Admission Fees Deposit</h3>
+                        </div>
+                        <div class="form-row triple">
+                            <div class="form-group">
+                                <label>Amount Collected (₹)</label>
+                                <input type="number" id="editAmount" name="amountCollected" class="form-control">
+                            </div>
+                            <div class="form-group">
+                                <label>Payment Mode</label>
+                                <select id="editFeeMode" name="paymentMode" class="form-control">
+                                    <option value="Cash">Cash</option>
+                                    <option value="Online">Online/UPI</option>
+                                    <option value="Bank">Bank Transfer</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Transaction ID (if Online)</label>
+                                <input type="text" id="editFeeTxn" name="transactionId" class="form-control">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <div class="form-section-header">
+                            <div class="section-icon">🔐</div>
+                            <h3>Student Login Password</h3>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group" style="grid-column: 1 / -1;">
+                                <label>Account Password</label>
+                                <input type="text" id="editPassword" name="password" class="form-control" required>
+                                <small style="color: var(--text-light); font-size: 11px; margin-top: 4px; display: block;">
+                                    * Update this if the student forgets their password. It defaults to their mobile number initially.
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 25px; padding-top: 15px; border-top: 1px solid var(--border);">
+                        <button type="button" onclick="closeEditModal()" class="btn-secondary">Cancel</button>
+                        <button type="submit" class="btn-primary">💾 Save Changes</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function toggleSidebar() { document.getElementById('sidebar').classList.toggle('active'); }
+        function openProfileModal() { document.getElementById('profileModal').style.display = 'flex'; }
+        function closeProfileModal() { document.getElementById('profileModal').style.display = 'none'; }
+        function openEditModal() { document.getElementById('editModal').style.display = 'flex'; }
+        function closeEditModal() { document.getElementById('editModal').style.display = 'none'; }
+        
+        function switchTab(evt, tabId) {
+            const tabContents = document.getElementsByClassName("tab-content");
+            for (let i = 0; i < tabContents.length; i++) tabContents[i].classList.remove("active");
+            const tabBtns = document.getElementsByClassName("tab-btn");
+            for (let i = 0; i < tabBtns.length; i++) tabBtns[i].classList.remove("active");
+            document.getElementById(tabId).classList.add("active");
+            evt.currentTarget.classList.add("active");
+        }
+
+        let allStudentsData = []; 
+        const NOT_FOUND = "Data not found"; 
+
+        document.addEventListener("DOMContentLoaded", fetchAndDisplayStudents);
+
+        async function fetchAndDisplayStudents() {
+            try {
+                const response = await fetch('/api/students');
+                const result = await response.json();
+
+                const tbody = document.getElementById('studentTableBody');
+                tbody.innerHTML = ''; 
+
+                if (result.success && result.data.length > 0) {
+                    allStudentsData = result.data; 
+                    
+                    allStudentsData.forEach((student, index) => {
+                        const rollNo = student.collegeRegNo || NOT_FOUND;
+                        const avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(student.studentName)}&background=e0f2fe&color=0369a1`;
+
+                        const tr = document.createElement('tr');
+                        tr.className = 'student-row';
+                        tr.setAttribute('data-course', student.course || 'N/A');
+                        tr.setAttribute('data-sem', student.semester || 'N/A');
+                        tr.setAttribute('data-reg-no', student.collegeRegNo || '');
+                        tr.setAttribute('data-student-id', student._id || '');
+                        
+                        tr.onclick = () => viewStudentProfile(index);
+
+                        tr.innerHTML = `
+                            <td data-label="Student Details">
+                                <div class="student-info">
+                                    <img src="${avatarUrl}" alt="${student.studentName}">
+                                    <div>
+                                        <b class="student-name">${student.studentName}</b><br>
+                                        <span style="font-size: 12px; color: var(--text-light);">${student.email}</span>
+                                    </div>
+                                </div>
+                            </td>
+                            <td data-label="Roll No" class="student-roll"><b>${rollNo}</b></td>
+                            <td data-label="Course & Sem"><span class="badge">${student.course || NOT_FOUND}</span> Sem-${student.semester || NOT_FOUND}</td>
+                            <td data-label="Contact" class="student-phone">${student.studentMobile || NOT_FOUND}</td>
+                            <td data-label="Status"><span class="status-active">● Active</span></td>
+                            <td data-label="AI Risk" data-ai-risk-cell><span style="font-size:10px;color:#94a3b8;">scoring…</span></td>
+                            <td data-label="Actions" class="action-btns">
+                                <button class="view-btn" onclick="viewStudentProfile(${index}); event.stopPropagation();" title="View Profile">👁️</button>
+                                <button class="edit-btn" onclick="openEditStudentModal(${index}); event.stopPropagation();" title="Edit Full Details">✏️</button>
+                                <button class="del-btn" onclick="deleteStudent(${index}); event.stopPropagation();" title="Delete">🗑️</button>
+                            </td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+                    // Trigger AI risk badge paint once students are in the DOM
+                    if (window.ZHI_AI && typeof window.ZHI_AI.predictRisk === 'function') {
+                        window.ZHI_AI.predictRisk().then(data => {
+                            const map = {};
+                            (data.rows||[]).forEach(r => { map[r.collegeRegNo] = r; map[String(r.studentId)] = r; });
+                            document.querySelectorAll('#studentTableBody tr[data-reg-no]').forEach(row => {
+                                const key = row.getAttribute('data-reg-no') || row.getAttribute('data-student-id');
+                                const info = map[key];
+                                const cell = row.querySelector('[data-ai-risk-cell]');
+                                if (info && cell && window.ZHI_AI_BADGE) cell.innerHTML = window.ZHI_AI_BADGE(info.riskBand);
+                            });
+                        }).catch(()=>{});
+                    }
+                } else {
+                    tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 20px;">No students found in Database!</td></tr>';
+                }
+            } catch (error) {
+                console.error("Error loading students:", error);
+                document.getElementById('studentTableBody').innerHTML = '<tr><td colspan="7" style="text-align: center; color: red;">Failed to load data. Is backend running?</td></tr>';
+            }
+        }
+
+        // VIEW PROFILE LOGIC
+        function viewStudentProfile(index) {
+            const student = allStudentsData[index];
+
+            document.getElementById('modalImg').src = `https://ui-avatars.com/api/?name=${encodeURIComponent(student.studentName)}&background=e0f2fe&color=0369a1`;
+            document.getElementById('modalName').textContent = student.studentName;
+            document.getElementById('modalCourseInfo').innerHTML = `Roll No: <b>${student.collegeRegNo || NOT_FOUND}</b> | Course: <b>${student.course || NOT_FOUND} (Sem-${student.semester || NOT_FOUND})</b>`;
+
+            document.getElementById('modalDob').textContent = student.dob || NOT_FOUND;
+            document.getElementById('modalGender').textContent = student.gender || NOT_FOUND;
+            document.getElementById('modalFather').textContent = student.fatherName || NOT_FOUND;
+            document.getElementById('modalMother').textContent = student.motherName || NOT_FOUND;
+            document.getElementById('modalPhone').textContent = student.studentMobile || NOT_FOUND;
+            document.getElementById('modalParentPhone').textContent = student.fatherMobile || student.motherMobile || NOT_FOUND;
+            
+            const fullAddress = student.permanentAddress ? `${student.permanentAddress}, ${student.city || ''}, ${student.state || ''} - ${student.pincode || ''}` : NOT_FOUND;
+            document.getElementById('modalAddress').textContent = fullAddress;
+
+            document.getElementById('modalAadhar').textContent = student.aadharNumber || NOT_FOUND;
+            document.getElementById('modalCategory').textContent = student.category || NOT_FOUND;
+            document.getElementById('modalBatch').textContent = student.sessionBatch || NOT_FOUND;
+            document.getElementById('modalRegDate').textContent = student.registrationDate || NOT_FOUND;
+
+            document.getElementById('modalFeeAmt').textContent = student.amountCollected ? `₹${student.amountCollected}` : NOT_FOUND;
+            document.getElementById('modalFeeMode').textContent = student.paymentMode || NOT_FOUND;
+            document.getElementById('modalFeeTxn').textContent = student.transactionId || NOT_FOUND;
+
+            document.getElementById('modalTotalClasses').textContent = student.totalClasses || NOT_FOUND;
+            document.getElementById('modalAttendedClasses').textContent = student.attendedClasses || NOT_FOUND;
+            document.getElementById('modalAttendancePercent').textContent = student.attendancePercentage ? `${student.attendancePercentage}%` : NOT_FOUND;
+
+            document.getElementById('modalDocPhoto').textContent = student.photoUploaded ? 'Uploaded ✅' : NOT_FOUND;
+            document.getElementById('modalDocAadhar').textContent = student.aadharUploaded ? 'Uploaded ✅' : NOT_FOUND;
+            document.getElementById('modalDocMarksheets').textContent = student.marksheetUploaded ? 'Uploaded ✅' : NOT_FOUND;
+
+            openProfileModal();
+        }
+
+        // 🔥 OPEN EDIT MODAL & FILL FULL DATA 🔥
+        function openEditStudentModal(index) {
+            const student = allStudentsData[index];
+            
+            document.getElementById('editStudentId').value = student._id; 
+
+            const formatDateForInput = (isoString) => {
+                if (!isoString) return '';
+                return isoString.split('T')[0];
+            };
+
+            // Academic details
+            document.getElementById('editCourse').value = student.course || 'BCA';
+            document.getElementById('editSem').value = student.semester || '1';
+            document.getElementById('editBatch').value = student.sessionBatch || '';
+            document.getElementById('editRegDate').value = formatDateForInput(student.registrationDate);
+            document.getElementById('editRegNo').value = student.collegeRegNo || '';
+            document.getElementById('editUnivRegNo').value = student.univRegNo || '';
+
+            // Personal Information
+            document.getElementById('editName').value = student.studentName || '';
+            document.getElementById('editDob').value = formatDateForInput(student.dob);
+            document.getElementById('editGender').value = student.gender || 'Male';
+            document.getElementById('editBloodGroup').value = student.bloodGroup || '';
+            document.getElementById('editNationality').value = student.nationality || 'Indian';
+            document.getElementById('editMotherTongue').value = student.motherTongue || '';
+
+            // Contact & Identity
+            document.getElementById('editMobile').value = student.studentMobile || '';
+            document.getElementById('editEmail').value = student.email || '';
+            document.getElementById('editAadhar').value = student.aadharNumber || '';
+            document.getElementById('editCategory').value = student.category || 'General';
+            document.getElementById('editReligion').value = student.religion || '';
+
+            // Address
+            document.getElementById('editAddress').value = student.permanentAddress || '';
+            document.getElementById('editCity').value = student.city || '';
+            document.getElementById('editState').value = student.state || '';
+            document.getElementById('editPincode').value = student.pincode || '';
+
+            // Family details
+            document.getElementById('editFather').value = student.fatherName || '';
+            document.getElementById('editFatherMobile').value = student.fatherMobile || '';
+            document.getElementById('editMother').value = student.motherName || '';
+            document.getElementById('editMotherMobile').value = student.motherMobile || '';
+
+            // Fees Deposit
+            document.getElementById('editAmount').value = student.amountCollected || '';
+            document.getElementById('editFeeMode').value = student.paymentMode || 'Cash';
+            document.getElementById('editFeeTxn').value = student.transactionId || '';
+            
+            // Password Field
+            document.getElementById('editPassword').value = student.password || student.studentMobile || '';
+            
+            openEditModal();
+        }
+
+        // 🔥 SUBMIT EDIT FORM TO BACKEND (SAVE CHANGES) 🔥
+        document.getElementById('editStudentForm').onsubmit = async (e) => {
+            e.preventDefault();
+            const studentId = document.getElementById('editStudentId').value;
+            const formData = new FormData(e.target);
+            const updateData = Object.fromEntries(formData.entries());
+
+            try {
+                const response = await fetch(`/api/students/${studentId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(updateData)
+                });
+                const result = await response.json();
+                
+                if (result.success) {
+                    alert('✅ Student details & Password updated successfully!');
+                    closeEditModal();
+                    fetchAndDisplayStudents(); 
+                } else {
+                    alert('❌ Update failed: ' + result.message);
+                }
+            } catch (error) {
+                console.error(error);
+                alert('⚠️ Error connecting to server!');
+            }
+        };
+
+        // 🔥 DELETE STUDENT LOGIC 🔥
+        async function deleteStudent(index) {
+            const student = allStudentsData[index];
+            const confirmDelete = confirm(`Are you sure you want to permanently delete data of ${student.studentName}?`);
+            
+            if(confirmDelete) {
+                try {
+                    const response = await fetch(`/api/students/${student._id}`, {
+                        method: 'DELETE'
+                    });
+                    const result = await response.json();
+                    
+                    if(result.success) {
+                        alert('✅ Student deleted permanently!');
+                        fetchAndDisplayStudents(); 
+                    } else {
+                        alert('❌ Delete failed!');
+                    }
+                } catch(error) {
+                    console.error(error);
+                    alert('⚠️ Error connecting to server!');
+                }
+            }
+        }
+
+        // Search Filter Logic
+        function filterTable() {
+            const searchValue = document.getElementById('searchInput').value.toLowerCase();
+            const courseValue = document.getElementById('filterCourse').value;
+            const semValue = document.getElementById('filterSem').value;
+            const rows = document.querySelectorAll('.student-row');
+
+            rows.forEach(row => {
+                const rowText = row.textContent.toLowerCase();
+                const rowCourse = row.getAttribute('data-course');
+                const rowSem = row.getAttribute('data-sem');
+
+                const matchesSearch = rowText.includes(searchValue);
+                const matchesCourse = courseValue === 'all' || rowCourse === courseValue;
+                const matchesSem = semValue === 'all' || rowSem === semValue;
+
+                if (matchesSearch && matchesCourse && matchesSem) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        }
+
+        document.getElementById('searchInput').addEventListener('input', filterTable);
+        document.getElementById('filterCourse').addEventListener('change', filterTable);
+        document.getElementById('filterSem').addEventListener('change', filterTable);
+
+        window.onclick = function(event) {
+            const profileModal = document.getElementById('profileModal');
+            const editModal = document.getElementById('editModal');
+            if (event.target == profileModal) closeProfileModal();
+            if (event.target == editModal) closeEditModal();
+        }
+    </script>
+    <script src="js/settings-client.js"></script>
+  <script src="js/role-ui.js"></script>
+  <script src="js/ai-widgets.js"></script>
+</body>
+</html>

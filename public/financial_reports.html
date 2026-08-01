@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZHI | Financial Reports</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <style>
+        :root { --sidebar-bg: #0f172a; --primary: #3b82f6; --warning: #f59e0b; --danger: #ef4444; --success: #10b981; --bg: #f8fafc; --text-dark: #1e293b; --text-light: #64748b; --white: #ffffff; --border: #e2e8f0; --card-curve: 12px; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        body { background-color: var(--bg); display: flex; height: 100vh; overflow: hidden; color: var(--text-dark); }
+
+        /* SIDEBAR */
+        .sidebar { width: 260px; background: var(--sidebar-bg); color: #fff; display: flex; flex-direction: column; z-index: 1001; }
+        .sidebar-header { padding: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; gap: 12px; }
+        .sidebar-header h2 { font-size: 18px; color: #fff; font-weight: 700;}
+        .sidebar-header p { font-size: 11px; color: var(--success); font-weight: 700; letter-spacing: 1px;}
+        .logo-img { width: 42px; height: 42px; border-radius: 50%; background: #fff; display: flex; align-items: center; justify-content: center; color: var(--success); font-size: 26px;}
+        .sidebar-menu { list-style: none; padding: 15px 0; flex: 1; overflow-y: auto; }
+        .sidebar-menu li a { display: flex; align-items: center; gap: 12px; padding: 12px 20px; color: #cbd5e1; text-decoration: none; font-size: 14px; font-weight: 500; transition: 0.2s; border-left: 4px solid transparent;}
+        .sidebar-menu li a i { font-size: 20px; }
+        .sidebar-menu li a:hover, .sidebar-menu li.active a { background: rgba(255,255,255,0.05); color: #fff; border-left: 4px solid var(--primary); }
+
+        /* MAIN CONTENT */
+        .main-wrapper { flex: 1; display: flex; flex-direction: column; overflow-y: auto; width: 100%; }
+        .topbar { height: 70px; background: var(--white); border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; padding: 0 25px; position: sticky; top: 0; z-index: 1000; box-shadow: 0 1px 2px rgba(0,0,0,0.02);}
+        .user-profile { display: flex; align-items: center; gap: 10px; padding: 5px; border-radius: 8px; }
+        .user-profile img { width: 35px; height: 35px; border-radius: 50%; border: 2px solid var(--success);}
+
+        .content { padding: 30px; flex: 1; }
+        .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
+        .page-title { font-size: 24px; font-weight: 700; color: var(--text-dark); }
+        .btn-export { background: #f1f5f9; color: var(--text-dark); border: 1px solid var(--border); padding: 8px 14px; border-radius: 6px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px; font-size: 13px; transition: 0.2s; }
+        .btn-export:hover { background: #e2e8f0; }
+
+        /* STATS */
+        .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 25px; }
+        .stat-card { background: var(--white); padding: 20px; border-radius: var(--card-curve); border: 1px solid var(--border); display: flex; align-items: center; gap: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+        .stat-icon { width: 50px; height: 50px; border-radius: 12px; display: flex; justify-content: center; align-items: center; font-size: 24px; }
+        .stat-info h4 { font-size: 12px; color: var(--text-light); text-transform: uppercase; margin-bottom: 4px; font-weight: 600;}
+        .stat-info h2 { font-size: 22px; font-weight: 700; color: var(--text-dark);}
+
+        /* CHARTS */
+        .charts-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; margin-bottom: 25px;}
+        .chart-card { background: var(--white); padding: 20px; border-radius: var(--card-curve); border: 1px solid var(--border); box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+        .chart-header { font-size: 16px; font-weight: 600; color: var(--text-dark); margin-bottom: 15px; display: flex; align-items: center; gap: 8px;}
+        .chart-container { position: relative; height: 300px; width: 100%; }
+
+        @media (max-width: 1024px) { .charts-grid { grid-template-columns: 1fr; } .stats-grid { grid-template-columns: repeat(2, 1fr); } }
+    </style>
+    <script src="js/auth-client.js"></script>
+</head>
+<body>
+
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <div class="logo-img"><i class='bx bx-wallet'></i></div>
+            <div><h2>ZHI Finance</h2><p>ACCOUNTANT PANEL</p></div>
+        </div>
+        <ul class="sidebar-menu">
+            <li><a href="accountant_dashboard.html"><i class='bx bx-home-alt'></i> Dashboard Home</a></li>
+            <li style="margin: 15px 0 5px 20px; font-size: 11px; color: #64748b; font-weight: 700; text-transform: uppercase;">Accounts & Ledger</li>
+            <li><a href="all_transactions.html"><i class='bx bx-transfer'></i> All Transactions</a></li>
+            <li><a href="manage_expenses.html"><i class='bx bx-trending-down'></i> Manage Expenses</a></li>
+            <li class="active"><a href="financial_reports.html"><i class='bx bx-pie-chart-alt-2'></i> Financial Reports</a></li>
+        </ul>
+    </aside>
+
+    <main class="main-wrapper">
+        <header class="topbar">
+            <div style="font-size: 18px; font-weight: 600; color: var(--text-dark);">Office Administration</div>
+            <div class="user-profile">
+                <div style="text-align: right;"><b id="adminName">Accountant</b><br><span style="font-size: 11px; color: var(--text-light);">Finance Dept</span></div>
+                <img src="https://ui-avatars.com/api/?name=Accounts&background=10b981&color=fff">
+            </div>
+        </header>
+
+        <div class="content">
+            <div class="page-header">
+                <div class="page-title">P&L Analytics & Reports</div>
+                <button class="btn-export" onclick="window.print()"><i class='bx bx-printer'></i> Print Report</button>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: #dcfce7; color: var(--success);"><i class='bx bx-trending-up'></i></div>
+                    <div class="stat-info"><h4>Total Income</h4><h2 style="color: var(--success);">₹<span id="totInc">0</span></h2></div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: #fee2e2; color: var(--danger);"><i class='bx bx-trending-down'></i></div>
+                    <div class="stat-info"><h4>Total Expenses</h4><h2 style="color: var(--danger);">₹<span id="totExp">0</span></h2></div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: #eff6ff; color: var(--primary);"><i class='bx bxs-bank'></i></div>
+                    <div class="stat-info"><h4>Net Profit</h4><h2 style="color: var(--primary);">₹<span id="netProf">0</span></h2></div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: #fffbeb; color: var(--warning);"><i class='bx bx-time-five'></i></div>
+                    <div class="stat-info"><h4>Pending Dues</h4><h2>₹<span id="pendDue">0</span></h2></div>
+                </div>
+            </div>
+
+            <div class="charts-grid">
+                <div class="chart-card">
+                    <div class="chart-header"><i class='bx bx-bar-chart-square' style="color: var(--primary);"></i> Monthly Income vs Expense</div>
+                    <div class="chart-container"><canvas id="trendChart"></canvas></div>
+                </div>
+                <div class="chart-card">
+                    <div class="chart-header"><i class='bx bx-doughnut-chart' style="color: var(--warning);"></i> Expense Breakdown</div>
+                    <div class="chart-container" style="height: 250px; margin-top: 20px;"><canvas id="expensePie"></canvas></div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const SERVER_URL = '';
+        let trendChartObj, pieChartObj;
+
+        window.onload = () => {
+            const userName = localStorage.getItem('userName');
+            if(userName) document.getElementById('adminName').innerText = userName;
+            fetchReportData();
+        };
+
+        async function fetchReportData() {
+            try {
+                const res = await fetch(`${SERVER_URL}/api/finance/dashboard`);
+                const data = await res.json();
+                if (data.success) {
+                    // Update Top Stats
+                    document.getElementById('totInc').innerText = data.stats.income.toLocaleString('en-IN');
+                    document.getElementById('totExp').innerText = data.stats.expense.toLocaleString('en-IN');
+                    document.getElementById('netProf').innerText = data.stats.balance.toLocaleString('en-IN');
+                    document.getElementById('pendDue').innerText = data.stats.due.toLocaleString('en-IN');
+
+                    processChartData(data.transactions || [], data.expenses || []);
+                }
+            } catch (error) {
+                console.error("Fetch Error:", error);
+            }
+        }
+
+        function processChartData(transactions, expenses) {
+            // 1. Monthly Trends (Income vs Expense)
+            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            let monthlyIncome = new Array(12).fill(0);
+            let monthlyExpense = new Array(12).fill(0);
+
+            transactions.forEach(t => {
+                let m = new Date(t.date).getMonth();
+                monthlyIncome[m] += Number(t.amount || 0);
+            });
+
+            expenses.forEach(e => {
+                let m = new Date(e.date || e.createdAt).getMonth();
+                monthlyExpense[m] += Number(e.amount || 0);
+            });
+
+            // 2. Expense Category Breakdown
+            let expCategories = {};
+            expenses.forEach(e => {
+                let cat = e.category || 'Other';
+                expCategories[cat] = (expCategories[cat] || 0) + Number(e.amount || 0);
+            });
+
+            drawTrendChart(months, monthlyIncome, monthlyExpense);
+            drawPieChart(Object.keys(expCategories), Object.values(expCategories));
+        }
+
+        function drawTrendChart(labels, incomeData, expenseData) {
+            const ctx = document.getElementById('trendChart').getContext('2d');
+            trendChartObj = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        { label: 'Income (₹)', data: incomeData, backgroundColor: '#10b981', borderRadius: 4 },
+                        { label: 'Expense (₹)', data: expenseData, backgroundColor: '#ef4444', borderRadius: 4 }
+                    ]
+                },
+                options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } } }
+            });
+        }
+
+        function drawPieChart(labels, data) {
+            const ctx = document.getElementById('expensePie').getContext('2d');
+            pieChartObj = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: labels,
+                    datasets: [{ data: data, backgroundColor: ['#3b82f6', '#f59e0b', '#8b5cf6', '#ec4899', '#64748b'], borderWidth: 0 }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
+            });
+        }
+    </script>
+    <script src="js/settings-client.js"></script>
+  <script src="js/role-ui.js"></script>
+</body>
+</html>

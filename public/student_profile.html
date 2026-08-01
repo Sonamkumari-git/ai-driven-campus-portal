@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ZHI | My Profile</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+<link rel="stylesheet" href="/css/student-portal.css">
+<script src="/js/auth-client.js"></script>
+</head>
+<body>
+<main class="main-wrapper" id="zsMain">
+  <div class="content">
+    <h1 class="page-title"><i class='bx bxs-user'></i>My Profile</h1>
+
+    <div class="grid-2">
+      <!-- Left: identity card -->
+      <div class="panel">
+        <div class="panel-body" style="text-align:center;">
+          <img id="pfPic" src="" alt="me"
+               style="width:130px;height:130px;border-radius:50%;object-fit:cover;border:4px solid var(--primary);margin-bottom:14px;">
+          <h3 id="pfName" style="margin-bottom:4px;">—</h3>
+          <p style="color:var(--text-muted);font-size:13px;" id="pfCourse">—</p>
+          <div style="margin-top:15px;display:flex;justify-content:center;gap:8px;">
+            <label class="btn btn-primary" style="cursor:pointer;">
+              <i class='bx bx-image-add'></i> Change Photo
+              <input type="file" id="photoInput" accept="image/*" hidden>
+            </label>
+          </div>
+          <hr style="margin:20px 0;border:none;border-top:1px solid var(--border);">
+          <div style="text-align:left;font-size:13px;line-height:2;">
+            <div><i class='bx bx-envelope' style="color:var(--primary);"></i> <span id="pfEmail">—</span></div>
+            <div><i class='bx bx-phone' style="color:var(--primary);"></i> <span id="pfMobile">—</span></div>
+            <div><i class='bx bx-id-card' style="color:var(--primary);"></i> Reg No: <span id="pfReg">—</span></div>
+            <div><i class='bx bx-calendar' style="color:var(--primary);"></i> DOB: <span id="pfDob">—</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: editable + academic info -->
+      <div>
+        <div class="panel">
+          <div class="panel-header"><h3><i class='bx bx-info-circle'></i> Academic Details</h3></div>
+          <div class="panel-body">
+            <div class="form-row">
+              <div class="form-group"><label>Course</label><input id="fldCourse" disabled></div>
+              <div class="form-group"><label>Semester</label><input id="fldSem" disabled></div>
+              <div class="form-group"><label>Session Batch</label><input id="fldBatch" disabled></div>
+              <div class="form-group"><label>University Reg No</label><input id="fldUniv" disabled></div>
+              <div class="form-group"><label>Category</label><input id="fldCat" disabled></div>
+              <div class="form-group"><label>Blood Group</label><input id="fldBlood" disabled></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-header"><h3><i class='bx bx-edit'></i> Contact &amp; Address (Editable)</h3></div>
+          <div class="panel-body">
+            <form id="profileForm">
+              <div class="form-row">
+                <div class="form-group"><label>Mobile</label><input id="studentMobile" required></div>
+                <div class="form-group"><label>Guardian Mobile</label><input id="guardianMobile"></div>
+                <div class="form-group"><label>City</label><input id="city"></div>
+                <div class="form-group"><label>State</label><input id="state"></div>
+                <div class="form-group"><label>Pincode</label><input id="pincode"></div>
+                <div class="form-group"><label>District</label><input id="district"></div>
+              </div>
+              <div class="form-group">
+                <label>Temporary Address</label>
+                <textarea id="tempAddress" rows="2"></textarea>
+              </div>
+              <button type="submit" class="btn btn-primary"><i class='bx bx-save'></i> Save Changes</button>
+            </form>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-header"><h3><i class='bx bx-lock'></i> Change Password</h3></div>
+          <div class="panel-body">
+            <form id="pwdForm">
+              <div class="form-row">
+                <div class="form-group"><label>Old Password</label><input type="password" id="oldPassword" required></div>
+                <div class="form-group"><label>New Password</label><input type="password" id="newPassword" minlength="6" required></div>
+              </div>
+              <button type="submit" class="btn btn-primary"><i class='bx bx-key'></i> Update Password</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script src="/js/student-portal.js"></script>
+<script>
+(async () => {
+  await ZS.mount({ active: 'profile', pageTitle: 'My Profile' });
+
+  function fill(s) {
+    document.getElementById('pfPic').src = s.profilePicUrl
+      || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(s.studentName || 'S') + '&background=3b82f6&color=fff&size=200';
+    document.getElementById('pfName').textContent = s.studentName || '—';
+    document.getElementById('pfCourse').textContent = `${s.course || '—'} • Sem ${s.semester || '—'}`;
+    document.getElementById('pfEmail').textContent = s.email || '—';
+    document.getElementById('pfMobile').textContent = s.studentMobile || '—';
+    document.getElementById('pfReg').textContent = s.collegeRegNo || '—';
+    document.getElementById('pfDob').textContent = s.dob || '—';
+
+    document.getElementById('fldCourse').value = s.course || '';
+    document.getElementById('fldSem').value = s.semester || '';
+    document.getElementById('fldBatch').value = s.sessionBatch || '';
+    document.getElementById('fldUniv').value = s.univRegNo || '';
+    document.getElementById('fldCat').value = s.category || '';
+    document.getElementById('fldBlood').value = s.bloodGroup || '';
+
+    ['studentMobile','guardianMobile','city','state','pincode','district','tempAddress'].forEach(k => {
+      document.getElementById(k).value = s[k] || '';
+    });
+  }
+
+  try { fill((await ZS.apiGet('/student/me')).data); }
+  catch (err) { ZS.toast(err.message, 'error'); }
+
+  document.getElementById('profileForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const payload = {};
+    ['studentMobile','guardianMobile','city','state','pincode','district','tempAddress'].forEach(k => {
+      payload[k] = document.getElementById(k).value;
+    });
+    try {
+      const r = await ZS.apiPut('/student/me', payload);
+      ZS.toast('Profile updated', 'success');
+      fill(r.data);
+    } catch (err) { ZS.toast(err.message, 'error'); }
+  });
+
+  document.getElementById('pwdForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const oldPassword = document.getElementById('oldPassword').value;
+    const newPassword = document.getElementById('newPassword').value;
+    try {
+      await ZS.apiPost('/student/change-password', { oldPassword, newPassword });
+      ZS.toast('Password updated', 'success');
+      document.getElementById('pwdForm').reset();
+    } catch (err) { ZS.toast(err.message, 'error'); }
+  });
+
+  document.getElementById('photoInput').addEventListener('change', async (e) => {
+    if (!e.target.files.length) return;
+    const fd = new FormData();
+    fd.append('profileImage', e.target.files[0]);
+    try {
+      const r = await ZS.apiUpload('/student/upload-photo', fd);
+      document.getElementById('pfPic').src = r.profilePicUrl;
+      ZS.toast('Photo updated', 'success');
+    } catch (err) { ZS.toast(err.message, 'error'); }
+  });
+})();
+</script>
+</body>
+</html>

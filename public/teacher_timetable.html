@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZHI | My Timetable (Teacher)</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    
+    <style>
+        :root {
+            --sidebar-bg: #0f172a; 
+            --primary: #10b981; 
+            --warning: #f59e0b; 
+            --danger: #ef4444; 
+            --success: #10b981; 
+            --bg: #f8fafc; 
+            --text-dark: #1e293b; 
+            --text-light: #64748b; 
+            --white: #ffffff; 
+            --border: #e2e8f0; 
+            --card-curve: 12px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        body { background-color: var(--bg); display: flex; height: 100vh; overflow: hidden; color: var(--text-dark); }
+
+        /* SIDEBAR & TOPBAR */
+        .sidebar { width: 260px; background: var(--sidebar-bg); color: #fff; display: flex; flex-direction: column; flex-shrink: 0; z-index: 1001; transition: transform 0.3s ease; }
+        .sidebar-header { padding: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; gap: 12px; }
+        .sidebar-header h2 { font-size: 18px; color: #fff; font-weight: 700;}
+        .sidebar-header p { font-size: 11px; color: var(--success); font-weight: 700; letter-spacing: 1px;}
+        .logo-img { width: 42px; height: 42px; border-radius: 50%; background: #fff; display: flex; align-items: center; justify-content: center; color: var(--primary); font-size: 26px;}
+
+        .sidebar-menu { list-style: none; padding: 15px 0; flex: 1; overflow-y: auto; }
+        .sidebar-menu li a { display: flex; align-items: center; gap: 12px; padding: 12px 20px; color: #cbd5e1; text-decoration: none; font-size: 14px; font-weight: 500; transition: 0.2s; border-left: 4px solid transparent;}
+        
+        .sidebar-menu li a:hover { background: rgba(255,255,255,0.05); color: #fff; border-left: 4px solid var(--primary); padding-left: 25px;}
+        .sidebar-menu li.active a { background: rgba(255,255,255,0.05); color: #fff; border-left: 4px solid var(--primary); }
+        .logout-btn a { color: var(--danger) !important; }
+        .logout-btn a:hover { border-left-color: var(--danger) !important; background: rgba(239, 68, 68, 0.1) !important; }
+
+        .main-wrapper { flex: 1; display: flex; flex-direction: column; overflow-y: auto; width: 100%; position: relative;}
+        .topbar { height: 70px; background: var(--white); border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; padding: 0 25px; position: sticky; top: 0; z-index: 1000;}
+        .menu-btn { display: none; background: none; border: none; font-size: 26px; cursor: pointer; color: var(--text-dark); }
+        .user-profile { display: flex; align-items: center; gap: 10px; cursor: pointer; padding: 5px; border-radius: 8px; }
+        .user-profile img { width: 35px; height: 35px; border-radius: 50%; object-fit: cover; border: 2px solid var(--success);}
+        .user-profile div { display: flex; flex-direction: column; text-align: right;}
+
+        .content { padding: 30px; flex: 1; }
+        .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
+        .page-title { font-size: 24px; font-weight: 700; color: var(--text-dark); }
+
+        /* TIMETABLE CARD */
+        .card { background: var(--white); border-radius: var(--card-curve); border: 1px solid var(--border); box-shadow: 0 2px 6px rgba(0,0,0,0.02); overflow: hidden; margin-bottom: 25px;}
+        .card-header { padding: 18px 20px; background: #f8fafc; border-bottom: 1px solid var(--border); font-size: 16px; font-weight: 600; display: flex; align-items: center; justify-content: space-between; color: var(--text-dark);}
+        
+        .table-res { overflow-x: auto; padding: 20px;}
+        table { width: 100%; border-collapse: collapse; text-align: center; min-width: 800px;}
+        th { padding: 15px; background: var(--primary); color: white; font-weight: 600; border: 1px solid #059669;} 
+        td { padding: 15px; border: 1px solid var(--border); vertical-align: middle; height: 80px;}
+        
+        /* Class Blocks */
+        .class-block { background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 6px; padding: 8px; display: inline-block; width: 100%; margin-bottom: 5px;}
+        .class-block b { display: block; font-size: 13px; color: var(--text-dark); margin-bottom: 4px;}
+        .class-block span { font-size: 11px; color: var(--text-light); background: #fff; padding: 2px 6px; border-radius: 4px; border: 1px solid #e2e8f0; display: block; margin-top: 3px;}
+        .room-badge { display: inline-block; margin-top: 5px; font-size: 10px; color: var(--primary); font-weight: bold; }
+
+        @media (max-width: 768px) { .sidebar { position: fixed; left: -260px; height: 100vh; } .sidebar.active { transform: translateX(260px); } .menu-btn { display: block; } }
+    </style>
+    <script src="js/auth-client.js"></script>
+</head>
+<body>
+
+    <script>
+        const staffId = localStorage.getItem("staffId");
+        if (!staffId) {
+            alert("Security Alert: Please login first!");
+            window.location.href = "login.html"; 
+        }
+    </script>
+
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="logo-img"><i class='bx bx-book-reader'></i></div>
+            <div><h2>ZHI Academics</h2><p>TEACHER PANEL</p></div>
+        </div>
+        
+        <ul class="sidebar-menu">
+            <li><a href="teacher_dashboard.html"><i class='bx bx-grid-alt'></i> Dashboard Home</a></li>
+            
+            <li style="margin: 15px 0 5px 20px; font-size: 11px; color: #64748b; font-weight: 700; text-transform: uppercase;">Academics</li>
+            <li class="active"><a href="teacher_timetable.html"><i class='bx bx-calendar'></i> My Timetable</a></li>
+            <li><a href="upload_notes.html"><i class='bx bx-folder-plus'></i> Upload Notes</a></li>
+            <li><a href="manage_assignments.html"><i class='bx bx-task'></i> Assignments</a></li>
+            
+            <li style="margin: 15px 0 5px 20px; font-size: 11px; color: #64748b; font-weight: 700; text-transform: uppercase;">Classroom</li>
+            <li><a href="mark_attendance.html"><i class='bx bx-check-shield'></i> Mark Attendance</a></li>
+            <li><a href="upload_marks.html"><i class='bx bx-bar-chart-alt-2'></i> Upload Marks</a></li>
+            <li><a href="apply_leave.html"><i class='bx bx-envelope'></i> Apply Leave</a></li>
+            
+            <li style="margin: 15px 0 5px 20px; font-size: 11px; color: #64748b; font-weight: 700; text-transform: uppercase;">Personal</li>
+            <li><a href="teacher_profile.html"><i class='bx bx-user'></i> My Profile</a></li>
+
+            <li class="logout-btn" style="margin-top: 20px;">
+                <a href="#" onclick="logoutTeacher()"><i class='bx bx-log-out'></i> Logout Securely</a>
+            </li>
+        </ul>
+    </aside>
+
+    <main class="main-wrapper">
+        <header class="topbar">
+            <div style="display: flex; align-items: center; gap: 15px;">
+                <button class="menu-btn" onclick="toggleSidebar()"><i class='bx bx-menu'></i></button>
+                <div style="font-size: 18px; font-weight: 600; color: var(--text-dark);">Academics Portal</div>
+            </div>
+            <div class="user-profile">
+                <div>
+                    <b id="teacherNameTxt" style="font-size: 13px; color: var(--text-dark);">Loading...</b>
+                    <span style="font-size: 11px; color: var(--text-light);">Faculty</span>
+                </div>
+                <img id="teacherImg" src="https://ui-avatars.com/api/?name=Teacher&background=10b981&color=fff" alt="Teacher">
+            </div>
+        </header>
+
+        <div class="content">
+            <div class="page-header">
+                <div class="page-title">Timetable : <span id="headerTeacherName" style="color: var(--primary);">Loading...</span></div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <span><i class='bx bx-calendar-week' style="color: var(--primary);"></i> Current Week's Schedule</span>
+                    <button style="background: var(--bg); border: 1px solid var(--border); color: var(--text-dark); padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: 600;" onclick="window.print()">
+                        <i class='bx bx-printer'></i> Print
+                    </button>
+                </div>
+                <div class="table-res">
+                    <table>
+                        <thead>
+                            <tr id="ttHeadRow">
+                                <th>Date & Day</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ttBody">
+                            <tr><td colspan="6" style="padding: 30px; text-align: center;"><b>Connecting to Server... Loading your routine ⏳</b></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        function toggleSidebar() { document.getElementById('sidebar').classList.toggle('active'); }
+
+        function logoutTeacher() {
+            if(confirm("Are you sure you want to logout?")) {
+                localStorage.clear();
+                window.location.href = "login.html"; 
+            }
+        }
+
+        function formatToAMPM(timeStr) {
+            if(!timeStr) return "";
+            let [hours, minutes] = timeStr.split(':');
+            let h = parseInt(hours, 10);
+            let ampm = h >= 12 ? 'PM' : 'AM';
+            h = h % 12;
+            h = h ? h : 12; 
+            let hStr = h < 10 ? '0' + h : h;
+            return `${hStr}:${minutes} ${ampm}`;
+        }
+
+        // Function to get current week's dates (Monday to Saturday)
+        function getCurrentWeekDates() {
+            let curr = new Date(); 
+            let day = curr.getDay() || 7; // Convert Sunday (0) to 7
+            if (day !== 1) {
+                curr.setHours(-24 * (day - 1)); // Backtrack to Monday
+            }
+            
+            let weekDates = [];
+            for (let i = 0; i < 6; i++) { // Generate Mon to Sat
+                let nextDay = new Date(curr.getTime());
+                nextDay.setDate(curr.getDate() + i);
+                weekDates.push(nextDay);
+            }
+            return weekDates;
+        }
+
+        document.addEventListener("DOMContentLoaded", async () => {
+            
+            // 1. Get logged in teacher's ID & Name
+            const staffName = localStorage.getItem("staffName") || "Faculty";
+
+            // Update Name in UI
+            document.getElementById("teacherNameTxt").innerText = staffName;
+            document.getElementById("headerTeacherName").innerText = staffName;
+            document.getElementById("teacherImg").src = `https://ui-avatars.com/api/?name=${staffName.replace(" ", "+")}&background=10b981&color=fff`;
+
+            if (!staffId) {
+                document.getElementById("ttBody").innerHTML = `<tr><td style="color: red; padding: 20px;">Please login to view timetable.</td></tr>`;
+                return;
+            }
+
+            try {
+                // FETCH 1: Get ALL college routines to build standard dynamic periods (columns)
+                const allRoutinesRes = await fetch(`/api/routines`);
+                const allRoutinesResult = await allRoutinesRes.json();
+
+                // FETCH 2: Get only this Teacher's classes
+                const teacherRoutinesRes = await fetch(`/api/routines?teacherId=${staffId}`);
+                const teacherRoutinesResult = await teacherRoutinesRes.json();
+
+                if (allRoutinesResult.success && teacherRoutinesResult.success) {
+                    
+                    // Filter: Make sure the ID strictly matches this teacher
+                    const strictTeacherRoutines = teacherRoutinesResult.data.filter(r => {
+                        if (!r.teacherId) return false;
+                        const idFromDB = r.teacherId._id ? r.teacherId._id.toString() : r.teacherId.toString();
+                        return idFromDB === staffId; 
+                    });
+
+                    renderTeacherRoutine(allRoutinesResult.data, strictTeacherRoutines);
+                } else {
+                    document.getElementById("ttBody").innerHTML = `<tr><td style="color: red; padding: 30px;">Failed to load data!</td></tr>`;
+                }
+            } catch (error) {
+                console.error("API Error:", error);
+                document.getElementById("ttBody").innerHTML = `<tr><td style="color: red; padding: 30px;">Server is offline or unreachable.</td></tr>`;
+            }
+        });
+
+        // Dynamic Render Logic with Current Date & Day Mapping
+        function renderTeacherRoutine(allRoutines, teacherRoutines) {
+            const theadRow = document.getElementById("ttHeadRow");
+            const tbody = document.getElementById("ttBody");
+            
+            tbody.innerHTML = ""; 
+            theadRow.innerHTML = "<th>Date & Day</th>";
+
+            // STEP 1: Extract all standard unique time slots from entire college data
+            const timeSlotsMap = new Map();
+            allRoutines.forEach(r => {
+                const key = `${r.startTime}-${r.endTime}`;
+                if(!timeSlotsMap.has(key)) {
+                    let [h, m] = r.startTime.split(':').map(Number);
+                    if (h >= 1 && h <= 7) {
+                        h += 12; // PM adjustment for sorting
+                    }
+                    const sortValue = h * 60 + m;
+                    timeSlotsMap.set(key, { start: r.startTime, end: r.endTime, sortValue });
+                }
+            });
+
+            // Sort periods from morning to evening
+            const uniqueTimeSlots = Array.from(timeSlotsMap.values()).sort((a, b) => a.sortValue - b.sortValue);
+
+            // Create standard Columns dynamically
+            uniqueTimeSlots.forEach(slot => {
+                let th = document.createElement("th");
+                th.innerText = `${formatToAMPM(slot.start)} - ${formatToAMPM(slot.end)}`;
+                theadRow.appendChild(th);
+            });
+
+            // STEP 2: Render Rows for Current Week (Mon-Sat dynamically)
+            const currentWeekDates = getCurrentWeekDates();
+            const todayStr = new Date().toDateString();
+
+            currentWeekDates.forEach(dateObj => {
+                let tr = document.createElement("tr");
+
+                // Get Day Name (Monday, Tuesday...) and Date string (01 Apr, 02 Apr...)
+                let dayName = dateObj.toLocaleDateString('en-US', { weekday: 'long' });
+                let dateDisplay = dateObj.toLocaleDateString('en-US', { day: '2-digit', month: 'short' });
+                
+                let isToday = (dateObj.toDateString() === todayStr);
+                
+                if (isToday) {
+                    tr.style.backgroundColor = "#f0fdf4"; // Halka green highlight for whole row
+                }
+
+                // Date & Day Cell
+                let tdDay = document.createElement("td");
+                tdDay.style.background = isToday ? "#d1fae5" : "var(--bg)";
+                
+                // Set HTML: e.g., "Wednesday <br> 01 Apr"
+                if (isToday) {
+                    tdDay.innerHTML = `<b style="font-size: 14px;">${dayName}</b><br><span style="font-size: 13px; color: #475569;">${dateDisplay}</span><br><span style="font-size:11px; font-weight: bold; color:var(--primary); background: #fff; padding: 2px 6px; border-radius: 4px; display: inline-block; margin-top: 4px;">Today</span>`;
+                } else {
+                    tdDay.innerHTML = `<b style="font-size: 14px;">${dayName}</b><br><span style="font-size: 13px; color: #475569;">${dateDisplay}</span>`;
+                }
+                tr.appendChild(tdDay);
+
+                // Fill class blocks per time slot
+                uniqueTimeSlots.forEach(slot => {
+                    let td = document.createElement("td");
+
+                    // Check if teacher has class at this exact time and day (Match DB dayOfWeek with Current Day Name)
+                    const classesAtThisTime = teacherRoutines.filter(r => 
+                        r.dayOfWeek.toLowerCase() === dayName.toLowerCase() && 
+                        r.startTime === slot.start &&
+                        r.endTime === slot.end
+                    );
+
+                    if (classesAtThisTime.length > 0) {
+                        let cellHTML = "";
+                        classesAtThisTime.forEach(cls => {
+                            let sectionStr = cls.section ? cls.section : 'A'; 
+                            cellHTML += `
+                                <div class="class-block" style="${isToday ? 'background: #fff; border-color: var(--primary);' : ''}">
+                                    <b>${cls.subject}</b>
+                                    <span>${cls.course} - Sem ${cls.semester} (Sec: ${sectionStr})</span>
+                                    <span class="room-badge"><i class='bx bx-map'></i> ${cls.roomNumber || 'Room TBA'}</span>
+                                </div>
+                            `;
+                        });
+                        td.innerHTML = cellHTML;
+                    } else {
+                        // Free Period
+                        td.innerHTML = `<span style="color: #94a3b8; font-size: 13px;">- Free -</span>`;
+                    }
+
+                    tr.appendChild(td);
+                });
+
+                tbody.appendChild(tr);
+            });
+        }
+    </script>
+    <script src="js/settings-client.js"></script>
+  <script src="js/role-ui.js"></script>
+</body>
+</html>

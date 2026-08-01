@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZHI | My Profile & Settings</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    
+    <style>
+        /* GREEN THEME APPLIED */
+        :root { 
+            --sidebar-bg: #0f172a; 
+            --primary: #10b981;  /* Changed to Green */
+            --primary-dark: #059669; /* Darker Green for hover */
+            --warning: #f59e0b; 
+            --danger: #ef4444; 
+            --success: #10b981; 
+            --bg: #f8fafc; 
+            --text-dark: #1e293b; 
+            --text-light: #64748b; 
+            --white: #ffffff; 
+            --border: #e2e8f0; 
+            --card-curve: 12px; 
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        body { background-color: var(--bg); display: flex; height: 100vh; overflow: hidden; color: var(--text-dark); }
+
+        .sidebar { width: 260px; background: var(--sidebar-bg); color: #fff; display: flex; flex-direction: column; flex-shrink: 0; z-index: 1001; transition: transform 0.3s ease; }
+        .sidebar-header { padding: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; gap: 12px; }
+        .sidebar-header h2 { font-size: 18px; color: #fff; font-weight: 700;}
+        .sidebar-header p { font-size: 11px; color: var(--success); font-weight: 700; letter-spacing: 1px;}
+        .logo-img { width: 42px; height: 42px; border-radius: 50%; background: #fff; display: flex; align-items: center; justify-content: center; color: var(--primary); font-size: 26px;}
+
+        .sidebar-menu { list-style: none; padding: 15px 0; flex: 1; overflow-y: auto; }
+        .sidebar-menu li a { display: flex; align-items: center; gap: 12px; padding: 12px 20px; color: #cbd5e1; text-decoration: none; font-size: 14px; font-weight: 500; transition: 0.2s; border-left: 4px solid transparent;}
+        .sidebar-menu li a:hover, .sidebar-menu li.active a { background: rgba(255,255,255,0.05); color: #fff; border-left: 4px solid var(--primary); padding-left: 25px;}
+        .sidebar-menu li.active a { padding-left: 20px; }
+        .logout-btn a { color: var(--danger) !important; }
+        .logout-btn a:hover { border-left-color: var(--danger) !important; background: rgba(239, 68, 68, 0.1) !important; }
+
+        .main-wrapper { flex: 1; display: flex; flex-direction: column; overflow-y: auto; width: 100%; position: relative;}
+        .topbar { height: 70px; background: var(--white); border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; padding: 0 25px; position: sticky; top: 0; z-index: 1000;}
+        .menu-btn { display: none; background: none; border: none; font-size: 26px; cursor: pointer; color: var(--text-dark); }
+        
+        .content { padding: 30px; flex: 1; }
+        .page-title { font-size: 24px; font-weight: 700; color: var(--text-dark); margin-bottom: 25px;}
+
+        /* PROFILE HEADER CARD */
+        .profile-header-card { background: var(--white); border-radius: var(--card-curve); border: 1px solid var(--border); padding: 30px; display: flex; align-items: center; gap: 25px; margin-bottom: 25px; box-shadow: 0 2px 6px rgba(0,0,0,0.02);}
+        .profile-img-wrap { position: relative; width: 100px; height: 100px; flex-shrink: 0;}
+        .profile-img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 4px solid #d1fae5; }
+        .profile-info h2 { font-size: 24px; color: var(--text-dark); margin-bottom: 5px;}
+        .profile-info p { font-size: 14px; color: var(--text-light); display: flex; align-items: center; gap: 6px; margin-bottom: 10px;}
+        .profile-badge { background: #dcfce7; color: #166534; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; display: inline-block;}
+
+        /* GRID FOR INFO */
+        .grid-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 25px; align-items: start;}
+        .card { background: var(--white); border-radius: var(--card-curve); border: 1px solid var(--border); box-shadow: 0 2px 6px rgba(0,0,0,0.02); overflow: hidden; }
+        .card-header { padding: 18px 20px; background: #f8fafc; border-bottom: 1px solid var(--border); font-size: 16px; font-weight: 600; display: flex; align-items: center; gap: 8px; color: var(--text-dark);}
+        .card-body { padding: 20px; display: flex; flex-direction: column; gap: 20px; }
+
+        /* INFO LISTS */
+        .info-row { display: flex; flex-direction: column; gap: 4px; border-bottom: 1px solid #f1f5f9; padding-bottom: 15px;}
+        .info-row:last-child { border-bottom: none; padding-bottom: 0;}
+        .info-row label { font-size: 12px; font-weight: 600; color: var(--text-light); text-transform: uppercase;}
+        .info-row span { font-size: 15px; color: var(--text-dark); font-weight: 500;}
+
+        /* CHANGE PASSWORD FORM */
+        .form-group { display: flex; flex-direction: column; gap: 6px; }
+        .form-group label { font-size: 13px; font-weight: 600; color: var(--text-light); }
+        .form-control { padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 6px; outline: none; font-size: 14px; background: var(--bg); transition: 0.2s; width: 100%; }
+        .form-control:focus { border-color: var(--primary); background: #fff; }
+        .btn-submit { background: var(--primary); color: white; border: none; padding: 12px; border-radius: 6px; font-weight: 600; cursor: pointer; transition: 0.2s; width: 100%; display: flex; justify-content: center; gap: 8px;}
+        .btn-submit:hover { background: var(--primary-dark); }
+
+        @media (max-width: 992px) { .grid-layout { grid-template-columns: 1fr; } }
+        @media (max-width: 768px) { .sidebar { position: fixed; left: -260px; height: 100vh; } .sidebar.active { transform: translateX(260px); } .menu-btn { display: block; } .profile-header-card { flex-direction: column; text-align: center; } .profile-info p { justify-content: center; } }
+    </style>
+    <script src="js/auth-client.js"></script>
+</head>
+<body>
+    
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="logo-img"><i class='bx bx-book-reader'></i></div>
+            <div><h2>ZHI Academics</h2><p>TEACHER PANEL</p></div>
+        </div>
+        <ul class="sidebar-menu">
+            <li><a href="teacher_dashboard.html"><i class='bx bx-grid-alt'></i> Dashboard Home</a></li>
+            
+            <li style="margin: 15px 0 5px 20px; font-size: 11px; color: #64748b; font-weight: 700; text-transform: uppercase;">Academics</li>
+            <li><a href="teacher_timetable.html"><i class='bx bx-calendar'></i> My Timetable</a></li>
+            <li><a href="upload_notes.html"><i class='bx bx-folder-plus'></i> Upload Notes</a></li>
+            <li><a href="manage_assignments.html"><i class='bx bx-task'></i> Assignments</a></li>
+            
+            <li style="margin: 15px 0 5px 20px; font-size: 11px; color: #64748b; font-weight: 700; text-transform: uppercase;">Classroom</li>
+            <li><a href="mark_attendance.html"><i class='bx bx-check-shield'></i> Mark Attendance</a></li>
+            <li><a href="upload_marks.html"><i class='bx bx-bar-chart-alt-2'></i> Upload Marks</a></li>
+            <li><a href="apply_leave.html"><i class='bx bx-envelope'></i> Apply Leave</a></li>
+            
+            <li style="margin: 15px 0 5px 20px; font-size: 11px; color: #64748b; font-weight: 700; text-transform: uppercase;">Personal</li>
+            <li class="active"><a href="teacher_profile.html"><i class='bx bx-user'></i> My Profile</a></li>
+
+            <li class="logout-btn" style="margin-top: 20px;">
+                <a href="#" onclick="logoutTeacher()"><i class='bx bx-log-out'></i> Logout Securely</a>
+            </li>
+        </ul>
+    </aside>
+
+    <main class="main-wrapper">
+        <header class="topbar">
+            <div style="display: flex; align-items: center; gap: 15px;">
+                <button class="menu-btn" onclick="toggleSidebar()"><i class='bx bx-menu'></i></button>
+                <div style="font-size: 18px; font-weight: 600; color: var(--text-dark);">Personal Setup</div>
+            </div>
+        </header>
+
+        <div class="content">
+            <div class="page-title">Profile Settings</div>
+
+            <div class="profile-header-card">
+                <div class="profile-img-wrap">
+                    <img id="profileImage" src="/zhi_logo.png" class="profile-img" alt="Profile">
+                </div>
+                <div class="profile-info">
+                    <h2 id="profileName">Loading Data...</h2>
+                    <p><i class='bx bx-briefcase'></i> Faculty - <span id="profileRole">Loading...</span></p>
+                    <span class="profile-badge">Employee ID: <span id="profileEmpId">...</span></span>
+                </div>
+            </div>
+
+            <div class="grid-layout">
+                <div class="card">
+                    <div class="card-header"><i class='bx bx-info-circle' style="color: var(--primary);"></i> Personal Details</div>
+                    <div class="card-body">
+                        <div class="info-row">
+                            <label>Full Name</label>
+                            <span id="detailName">Loading...</span>
+                        </div>
+                        <div class="info-row">
+                            <label>Email Address</label>
+                            <span id="detailEmail">Loading...</span>
+                        </div>
+                        <div class="info-row">
+                            <label>Mobile Number</label>
+                            <span id="detailMobile">Loading...</span>
+                        </div>
+                        <div class="info-row">
+                            <label>Highest Qualification</label>
+                            <span id="detailQual">Loading...</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header"><i class='bx bx-edit' style="color: var(--primary);"></i> Update Profile</div>
+                    <form id="profileForm" class="card-body">
+                        <div class="form-group">
+                            <label>Full Name</label>
+                            <input id="editName" name="name" class="form-control" placeholder="Your full name" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Mobile Number</label>
+                            <input id="editMobile" name="mobile" class="form-control" placeholder="Mobile number">
+                        </div>
+                        <div class="form-group">
+                            <label>Department</label>
+                            <input id="editDept" name="dept" class="form-control" placeholder="Department">
+                        </div>
+                        <div class="form-group">
+                            <label>Qualification</label>
+                            <input id="editQual" name="qualification" class="form-control" placeholder="Highest qualification">
+                        </div>
+                        <div class="form-group">
+                            <label>Profile Photo</label>
+                            <input id="profilePicInput" name="profilePic" type="file" accept="image/*" class="form-control">
+                        </div>
+                        <button type="submit" class="btn-submit" id="saveProfileBtn"><i class='bx bx-save'></i> Save Profile</button>
+                    </form>
+                </div>
+
+                <div style="display: flex; flex-direction: column; gap: 25px;">
+                    <div class="card">
+                        <div class="card-header"><i class='bx bx-building-house' style="color: var(--warning);"></i> Payroll & Bank Details</div>
+                        <div class="card-body">
+                            <div class="info-row">
+                                <label>Bank Name</label>
+                                <span id="detailBank">Loading...</span>
+                            </div>
+                            <div class="info-row">
+                                <label>Account Number</label>
+                                <span id="detailAcc">Loading...</span>
+                            </div>
+                            <div class="info-row">
+                                <label>IFSC Code</label>
+                                <span id="detailIfsc">Loading...</span>
+                            </div>
+                            <p style="font-size: 11px; color: var(--danger); font-weight: 500; margin-top: 5px;">* To update bank details, please contact HR/Accountant.</p>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header"><i class='bx bx-lock-alt' style="color: var(--danger);"></i> Security Settings</div>
+                        <form class="card-body" onsubmit="changePassword(event)">
+                            <div class="form-group">
+                                <label>Current Password</label>
+                                <input type="password" id="currentPass" class="form-control" placeholder="••••••••" required>
+                            </div>
+                            <div class="form-group">
+                                <label>New Password</label>
+                                <input type="password" id="newPass" class="form-control" placeholder="Create a strong password" required>
+                            </div>
+                            <button type="submit" class="btn-submit" id="updateBtn"><i class='bx bx-shield-quarter'></i> Update Password</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const API_BASE_URL = '';
+        let currentProfile = null;
+
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('active');
+        }
+
+        function avatar(name) {
+            const initials = String(name || 'User').split(/\s+/).filter(Boolean).slice(0, 2).map(p => p[0]).join('').toUpperCase() || 'U';
+            const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="160" height="160"><rect width="100%" height="100%" fill="#10b981"/><text x="50%" y="54%" dominant-baseline="middle" text-anchor="middle" font-family="Inter,Arial" font-size="54" font-weight="800" fill="#fff">${initials}</text></svg>`;
+            return 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(svg);
+        }
+
+        function setText(id, value) {
+            const el = document.getElementById(id);
+            if (el) el.textContent = value || 'N/A';
+        }
+
+        function setValue(id, value) {
+            const el = document.getElementById(id);
+            if (el) el.value = value || '';
+        }
+
+        function fillProfile(profile) {
+            const raw = profile.raw || {};
+            currentProfile = profile;
+            const name = profile.name || raw.name || raw.studentName || 'User';
+            const roleLabel = profile.staffRole || profile.role || raw.role || 'Profile';
+            const mobile = profile.mobile || raw.mobile || raw.studentMobile || '';
+            const dept = profile.dept || raw.dept || raw.course || '';
+            const qualification = raw.qualification || '';
+
+            setText('profileName', name);
+            setText('profileRole', roleLabel);
+            setText('profileEmpId', profile.empId || raw.empId || raw.collegeRegNo || profile.id || 'N/A');
+            setText('detailName', name);
+            setText('detailEmail', profile.email || raw.email || 'N/A');
+            setText('detailMobile', mobile || 'N/A');
+            setText('detailQual', qualification || 'N/A');
+            setText('detailBank', raw.bankName || 'Not Updated');
+            setText('detailAcc', raw.accNumber || 'Not Updated');
+            setText('detailIfsc', raw.ifsc || 'Not Updated');
+
+            setValue('editName', name);
+            setValue('editMobile', mobile);
+            setValue('editDept', dept);
+            setValue('editQual', qualification);
+
+            document.getElementById('profileImage').src = profile.profilePicUrl || avatar(name);
+            if (window.ZHIRoleUI) window.ZHIRoleUI.applyProfile(profile);
+        }
+
+        async function fetchTeacherProfile() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/profile/me`);
+                const result = await response.json();
+                if (!result.success) throw new Error(result.message || 'Profile load failed');
+                fillProfile(result.data);
+            } catch (error) {
+                alert('Profile load nahi ho paya. Please login again.');
+                if (window.ZHIAuth) window.ZHIAuth.logout();
+            }
+        }
+
+        document.getElementById('profilePicInput').addEventListener('change', function (event) {
+            if (event.target.files && event.target.files[0]) {
+                document.getElementById('profileImage').src = URL.createObjectURL(event.target.files[0]);
+            }
+        });
+
+        document.getElementById('profileForm').addEventListener('submit', async function (event) {
+            event.preventDefault();
+            const btn = document.getElementById('saveProfileBtn');
+            const fd = new FormData(event.currentTarget);
+            try {
+                btn.disabled = true;
+                btn.innerHTML = 'Saving...';
+                const res = await fetch(`${API_BASE_URL}/api/profile/me`, { method: 'PUT', body: fd });
+                const data = await res.json();
+                if (!data.success) throw new Error(data.message || 'Profile update failed');
+                fillProfile(data.data);
+                alert('Profile updated successfully.');
+            } catch (error) {
+                alert(error.message || 'Profile update failed.');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = "<i class='bx bx-save'></i> Save Profile";
+            }
+        });
+
+        async function changePassword(e) {
+            e.preventDefault();
+            const currentPassInput = document.getElementById('currentPass').value;
+            const newPassInput = document.getElementById('newPass').value;
+            const updateBtn = document.getElementById('updateBtn');
+
+            if (newPassInput.length < 6) {
+                alert('Password must be at least 6 characters long!');
+                return;
+            }
+
+            try {
+                updateBtn.innerHTML = 'Updating...';
+                updateBtn.disabled = true;
+                const res = await fetch(`${API_BASE_URL}/api/profile/password`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ currentPassword: currentPassInput, newPassword: newPassInput })
+                });
+                const data = await res.json();
+                if (!data.success) throw new Error(data.message || 'Password update failed');
+                alert('Password updated successfully.');
+                e.target.reset();
+            } catch (error) {
+                alert(error.message || 'Password update failed.');
+            } finally {
+                updateBtn.innerHTML = "<i class='bx bx-shield-quarter'></i> Update Password";
+                updateBtn.disabled = false;
+            }
+        }
+
+        function logoutTeacher() {
+            if (window.ZHIAuth) return window.ZHIAuth.logout();
+            localStorage.clear();
+            window.location.href = 'index.html';
+        }
+
+        window.onload = fetchTeacherProfile;
+    </script>
+    <script src="js/settings-client.js"></script>
+  <script src="js/role-ui.js"></script>
+</body>
+</html>

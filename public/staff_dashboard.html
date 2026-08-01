@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZHI | Admin Office Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    
+    <style>
+        :root {
+            --sidebar-bg: #0f172a; 
+            --primary: #3b82f6; 
+            --success: #10b981; 
+            --warning: #f59e0b; 
+            --danger: #ef4444; 
+            --purple: #8b5cf6;
+            --bg: #f8fafc;
+            --text-dark: #1e293b;
+            --text-light: #64748b;
+            --white: #ffffff;
+            --border: #e2e8f0;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        body { background-color: var(--bg); display: flex; height: 100vh; overflow: hidden; color: var(--text-dark); -webkit-font-smoothing: antialiased; }
+
+        /* ------------------ SIDEBAR ------------------ */
+        .sidebar { width: 260px; background: var(--sidebar-bg); color: #fff; display: flex; flex-direction: column; flex-shrink: 0; z-index: 1001; transition: transform 0.3s ease; }
+        .sidebar-header { padding: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-between; align-items: center; }
+        .sidebar-header h2 { font-size: 18px; color: #fff; font-weight: 700;}
+        .sidebar-header p { font-size: 11px; color: var(--warning); font-weight: 700; letter-spacing: 1px; margin-top: 2px;}
+        .logo-img { width: 42px; height: 42px; border-radius: 50%; background: #fff; padding: 2px; display: flex; align-items: center; justify-content: center; }
+
+        .sidebar-menu { list-style: none; padding: 15px 0; flex: 1; overflow-y: auto; }
+        .sidebar-menu li a { display: flex; align-items: center; gap: 12px; padding: 12px 20px; color: #cbd5e1; text-decoration: none; font-size: 14px; font-weight: 500; transition: 0.2s; }
+        .sidebar-menu li a i { font-size: 20px; }
+        .sidebar-menu li.active a, .sidebar-menu li a:hover { background: rgba(255,255,255,0.05); color: #fff; border-left: 4px solid var(--primary); }
+
+        /* ------------------ MAIN CONTENT & TOPBAR ------------------ */
+        .main-wrapper { flex: 1; display: flex; flex-direction: column; overflow-y: auto; width: 100%; position: relative;}
+        .topbar { height: 70px; background: var(--white); border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; padding: 0 25px; position: sticky; top: 0; z-index: 1000; box-shadow: 0 1px 2px rgba(0,0,0,0.02);}
+        .menu-btn { display: none; background: none; border: none; font-size: 26px; cursor: pointer; color: var(--text-dark); }
+        
+        .user-profile { display: flex; align-items: center; gap: 10px; }
+        .user-profile img { width: 35px; height: 35px; border-radius: 50%; object-fit: cover; border: 2px solid var(--primary);}
+        .user-profile div { display: flex; flex-direction: column; }
+        .user-profile b { font-size: 13px; color: var(--text-dark); }
+        .user-profile span { font-size: 11px; color: var(--text-light); }
+
+        .content { padding: 25px; flex: 1; }
+        .page-title { font-size: 22px; font-weight: 700; color: var(--text-dark); margin-bottom: 20px; display: flex; align-items: center; gap: 10px;}
+
+        /* ------------------ STATS CARDS ------------------ */
+        .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 25px; }
+        .stat-card { background: var(--white); border-radius: 12px; padding: 20px; border: 1px solid var(--border); display: flex; align-items: center; gap: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); transition: 0.3s;}
+        .stat-card:hover { transform: translateY(-3px); box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
+        .stat-icon { width: 50px; height: 50px; border-radius: 12px; display: flex; justify-content: center; align-items: center; font-size: 24px; }
+        .stat-info h4 { font-size: 22px; font-weight: 700; color: var(--text-dark); margin-bottom: 2px;}
+        .stat-info p { font-size: 13px; color: var(--text-light); font-weight: 500;}
+
+        /* ------------------ QUICK ACTIONS ------------------ */
+        .quick-actions { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 25px; }
+        .action-btn { background: var(--white); border: 1px solid var(--border); padding: 15px; border-radius: 10px; display: flex; flex-direction: column; align-items: center; gap: 10px; text-decoration: none; color: var(--text-dark); font-weight: 600; font-size: 13px; transition: 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.02); }
+        .action-btn i { font-size: 28px; color: var(--primary); }
+        .action-btn:hover { background: #eff6ff; border-color: #bfdbfe; color: var(--primary); }
+
+        /* ------------------ RECENT ACTIVITY PANEL ------------------ */
+        .panel { background: var(--white); border-radius: 12px; border: 1px solid var(--border); box-shadow: 0 1px 3px rgba(0,0,0,0.02); }
+        .panel-header { padding: 18px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;}
+        .panel-header h3 { font-size: 16px; font-weight: 600; display: flex; align-items: center; gap: 8px;}
+        
+        table { width: 100%; border-collapse: collapse; text-align: left; }
+        th { padding: 12px 20px; background: #f8fafc; font-size: 12px; text-transform: uppercase; color: var(--text-light); font-weight: 600;}
+        td { padding: 15px 20px; border-bottom: 1px solid var(--border); font-size: 14px; }
+        .badge-new { background: #dcfce7; color: #166534; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; }
+
+        /* Mobile Adjustments */
+        .sidebar-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 999; }
+        @media (max-width: 992px) {
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+            .quick-actions { grid-template-columns: repeat(2, 1fr); }
+        }
+        @media (max-width: 768px) {
+            .sidebar { position: fixed; left: -260px; height: 100vh; }
+            .sidebar.active { transform: translateX(260px); }
+            .menu-btn { display: block; }
+            .sidebar-overlay.active { display: block; }
+            .content { padding: 15px; }
+            .stats-grid { grid-template-columns: 1fr; }
+            .quick-actions { grid-template-columns: repeat(2, 1fr); }
+            .table-res { overflow-x: auto; }
+        }
+    </style>
+    <script src="js/auth-client.js"></script>
+</head>
+<body>
+
+    <div class="sidebar-overlay" id="overlay" onclick="toggleSidebar()"></div>
+
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <div class="logo-img">
+                    <i class='bx bxs-graduation' style="color:var(--primary); font-size: 26px;"></i>
+                </div>
+                <div>
+                    <h2>ZHI College</h2>
+                    <p>ADMIN OFFICE</p>
+                </div>
+            </div>
+            <button class="menu-btn close-btn" onclick="toggleSidebar()" style="color:white; display:none;"><i class='bx bx-x'></i></button>
+        </div>
+        
+        <ul class="sidebar-menu">
+            <li class="active"><a href="#"><i class='bx bx-home-alt'></i> Dashboard Home</a></li>
+            
+            <li style="margin: 15px 0 5px 20px; font-size: 11px; color: #64748b; font-weight: 700; text-transform: uppercase;">Students & Admissions</li>
+            <li><a href="admissionform.html"><i class='bx bx-user-plus'></i> New Admission</a></li>
+            <li><a href="staffstudent.html"><i class='bx bx-group'></i> Student Directory</a></li>
+            
+            <li style="margin: 15px 0 5px 20px; font-size: 11px; color: #64748b; font-weight: 700; text-transform: uppercase;">Staff & Academics</li>
+            <li><a href="staffDirectory.html"><i class='bx bx-briefcase-alt-2'></i> Staff Records</a></li>
+            <li><a href="addstaff.html"><i class='bx bx-user-pin'></i> Add Teacher/Staff</a></li>
+            <li><a href="course_subjects.html"><i class='bx bx-book-bookmark'></i> Course & Subjects</a></li> 
+            <li style="margin: 15px 0 5px 20px; font-size: 11px; color: #64748b; font-weight: 700; text-transform: uppercase;">Office Tools</li>
+            <li><a href="#"><i class='bx bx-id-card'></i> Generate ID Cards</a></li>
+            <li><a href="staffnotice.html"><i class='bx bx-message-square-detail'></i> Notice Board</a></li>
+            <li><a href="#"><i class='bx bx-pie-chart-alt-2'></i> Office Reports</a></li>
+        </ul>
+    </aside>
+
+    <div class="main-wrapper">
+        <header class="topbar">
+            <div style="display: flex; align-items: center; gap: 15px;">
+                <button class="menu-btn" onclick="toggleSidebar()"><i class='bx bx-menu'></i></button>
+                <div style="font-size: 18px; font-weight: 600; color: var(--text-dark);">Office Administration</div>
+            </div>
+            <div class="user-profile">
+                <div style="text-align: right;">
+                    <b id="adminName">Office Admin</b>
+                    <span>Management Staff</span>
+                </div>
+                <img src="https://ui-avatars.com/api/?name=Admin+Staff&background=3b82f6&color=fff" alt="Admin">
+            </div>
+        </header>
+
+        <main class="content">
+            <div class="page-title">
+                👋 Welcome back, Office Team!
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: #eff6ff; color: var(--primary);"><i class='bx bx-group'></i></div>
+                    <div class="stat-info">
+                        <h4 id="totalStudents">0</h4> <p>Total Students</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: #fef2f2; color: var(--danger);"><i class='bx bx-user-voice'></i></div>
+                    <div class="stat-info">
+                        <h4 id="totalTeachers">0</h4> <p>Total Teachers</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: #fdf4ff; color: var(--purple);"><i class='bx bx-book-reader'></i></div>
+                    <div class="stat-info">
+                        <h4>12</h4>
+                        <p>Active Courses</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: #f0fdf4; color: var(--success);"><i class='bx bx-user-plus'></i></div>
+                    <div class="stat-info">
+                        <h4 id="admissionsToday">+0</h4> <p>Admissions Today</p>
+                    </div>
+                </div>
+            </div>
+
+            <h3 style="font-size: 16px; margin-bottom: 12px; color: var(--text-dark);">⚡ Quick Office Actions</h3>
+            <div class="quick-actions">
+                <a href="AdmissionForm.html" class="action-btn">
+                    <i class='bx bx-user-plus'></i>
+                    New Admission Form
+                </a>
+                <a href="addstaff.html" class="action-btn">
+                    <i class='bx bx-user-pin'></i>
+                    Add New Staff/Teacher
+                </a>
+                <a href="GlobalNotice.html" class="action-btn">
+                    <i class='bx bx-bell'></i>
+                    Broadcast Notice
+                </a>
+                <a href="#" class="action-btn">
+                    <i class='bx bx-id-card'></i>
+                    Generate ID Card
+                </a>
+            </div>
+
+            <div class="panel">
+                <div class="panel-header">
+                    <h3><i class='bx bx-time-five'></i> Recent Admissions & Updates</h3>
+                    <a href="students.html" style="font-size: 13px; color: var(--primary); font-weight: 600; text-decoration: none;">View All Directory →</a>
+                </div>
+                <div class="table-res">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Reg No.</th>
+                                <th>Name</th>
+                                <th>Type</th>
+                                <th>Course / Dept</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody id="recentActivityBody"> <tr><td colspan="5" style="text-align: center;">Loading Live Data...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <script>
+        // Sidebar Toggle Logic for Mobile
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('overlay');
+            sidebar.classList.toggle('active');
+            overlay.classList.toggle('active');
+        }
+
+        // Display Name from LocalStorage & Fetch Live Data
+        window.onload = () => {
+            const userName = localStorage.getItem('userName');
+            if(userName) {
+                document.getElementById('adminName').innerText = userName;
+            }
+            fetchLiveDashboardData();
+        };
+
+        // --- 🟢 LIVE DATABASE FETCH LOGIC 🟢 ---
+        async function fetchLiveDashboardData() {
+            try {
+                // 1. Fetch Students
+                const studentRes = await fetch('/api/students');
+                const studentData = await studentRes.json();
+                let students = studentData.success ? studentData.data : [];
+
+                // 2. Fetch Staff
+                const staffRes = await fetch('/api/staff');
+                const staffData = await staffRes.json();
+                let staff = staffData.success ? staffData.data : [];
+
+                // Update Stats
+                document.getElementById('totalStudents').innerText = students.length;
+                
+                const teachers = staff.filter(s => s.category === 'teacher');
+                document.getElementById('totalTeachers').innerText = teachers.length;
+
+                // Calculate today's admissions
+                const todayStr = new Date().toDateString();
+                const todaysAdmissions = students.filter(s => new Date(s.createdAt).toDateString() === todayStr);
+                document.getElementById('admissionsToday').innerText = "+" + todaysAdmissions.length;
+
+                // 3. Combine Data for Recent Activity Table
+                let combinedActivity = [];
+                
+                // Add Students to activity list
+                students.forEach(s => {
+                    combinedActivity.push({
+                        regNo: s.collegeRegNo || 'Pending',
+                        name: s.studentName,
+                        type: 'New Student',
+                        dept: `${s.course || 'N/A'} (Sem ${s.semester || '-'})`,
+                        date: new Date(s.createdAt),
+                        badgeStyle: '' // Default green style in CSS
+                    });
+                });
+                
+                // Add Staff/Teachers to activity list
+                staff.forEach(s => {
+                    let typeText = s.category === 'teacher' ? 'New Teacher' : 'New Staff';
+                    let badgeStyle = s.category === 'teacher' 
+                        ? 'style="background: #eff6ff; color: #1e40af;"' 
+                        : 'style="background: #f3e8ff; color: #7e22ce;"';
+                    
+                    combinedActivity.push({
+                        regNo: s.empId || 'N/A',
+                        name: s.name,
+                        type: typeText,
+                        dept: s.dept || 'N/A',
+                        date: new Date(s.createdAt),
+                        badgeStyle: badgeStyle
+                    });
+                });
+
+                // Sort by date (newest first)
+                combinedActivity.sort((a, b) => b.date - a.date);
+                
+                // Get only top 5 recent activities
+                const recent5 = combinedActivity.slice(0, 5);
+
+                // Render Table
+                const tbody = document.getElementById('recentActivityBody');
+                tbody.innerHTML = '';
+                
+                if(recent5.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">No recent data found in database.</td></tr>';
+                } else {
+                    recent5.forEach(item => {
+                        // Format date nicely (e.g., "Today, 10:30 AM" or "28/03/2026")
+                        let isToday = item.date.toDateString() === todayStr;
+                        let timeStr = item.date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                        let dateStr = isToday ? `Today, ${timeStr}` : `${item.date.toLocaleDateString('en-GB')}, ${timeStr}`;
+
+                        tbody.innerHTML += `
+                            <tr>
+                                <td><b>${item.regNo}</b></td>
+                                <td>${item.name}</td>
+                                <td><span class="badge-new" ${item.badgeStyle}>${item.type}</span></td>
+                                <td>${item.dept}</td>
+                                <td>${dateStr}</td>
+                            </tr>
+                        `;
+                    });
+                }
+            } catch(e) {
+                console.error("Error fetching live data:", e);
+                document.getElementById('recentActivityBody').innerHTML = '<tr><td colspan="5" style="text-align: center; color: red;">Failed to connect to database.</td></tr>';
+            }
+        }
+    </script>
+    <script src="js/settings-client.js"></script>
+  <script src="js/role-ui.js"></script>
+</body>
+</html>
