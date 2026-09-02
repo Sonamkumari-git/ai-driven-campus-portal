@@ -1,4 +1,4 @@
-# ZHI College Management Portal
+# AI Driven Campus Portal
 
 ZHI College Management Portal ek Node.js + Express + MongoDB based web application hai jisme Director/Admin, HOD, Accountant, Staff, Teacher aur Student related modules manage kiye ja sakte hain.
 
