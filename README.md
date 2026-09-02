@@ -648,8 +648,3 @@ Contributions welcome! Follow modular structure and test thoroughly.
 
 ---
 
-**Built with ❤️ for educational institutions**
-
-**Live Demo:** [https://college-erp-3gxa.onrender.com](https://college-erp-3gxa.onrender.com)
-
-**Status:** Active Development | **Last Updated:** September 2026
