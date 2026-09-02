@@ -2,9 +2,8 @@
 # AI DRIVEN Campus Portal — AI Engine (Mathematics & Modelling)
 
 > This document captures the **mathematical formulation** and **modelling
-> rationale** behind every AI-driven feature we are shipping in the ZHI ERP.
-> It is deliberately written to double as a resume-ready technical writeup for
-> the *Mathematics & Computing* teammate on the project.
+> rationale** behind every AI-driven feature we are shipping in the ERP.
+
 
 ---
 
