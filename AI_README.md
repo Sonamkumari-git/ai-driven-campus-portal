@@ -1,5 +1,5 @@
 # AI_README.md
-# ZHI College Management Portal — AI Engine (Mathematics & Modelling)
+# AI DRIVEN Campus Portal — AI Engine (Mathematics & Modelling)
 
 > This document captures the **mathematical formulation** and **modelling
 > rationale** behind every AI-driven feature we are shipping in the ZHI ERP.
