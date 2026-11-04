@@ -45,15 +45,14 @@ const studentSchema = new mongoose.Schema({
     paymentMode: String,
     transactionId: String,
     
-    // 🔴 PHOTO AND DOCUMENTS LINK (Naya Add Kiya Gaya Hai)
-    // Cloudinary ka URL yahan save hoga
+ 
     profilePicUrl: { type: String, default: "" }, 
     aadharDocUrl: { type: String, default: "" }, 
     
     // Credentials
     password: { type: String, required: true },
 
-    // OTP and Security (Forgot Password ke liye zaroori hai)
+    
     resetOtp: { type: String },
     otpExpiry: { type: Date }
 
