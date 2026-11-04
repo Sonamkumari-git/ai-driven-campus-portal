@@ -9,8 +9,8 @@ const noteSchema = new mongoose.Schema({
     },
     subject: { type: String, required: true },
     title: { type: String, required: true },
-    fileUrl: { type: String, required: true }, // Cloudinary ka link yahan save hoga
-    cloudinaryId: { type: String, required: true }, // Delete karne ke kaam aayega
+    fileUrl: { type: String, required: true }, 
+    cloudinaryId: { type: String, required: true },
     createdAt: { type: Date, default: Date.now }
 });
 
