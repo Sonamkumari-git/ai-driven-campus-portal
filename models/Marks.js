@@ -3,20 +3,20 @@ const mongoose = require('mongoose');
 const markSchema = new mongoose.Schema({
     teacherId: { 
         type: mongoose.Schema.Types.ObjectId, 
-        ref: 'Staff', // 🟢 Fixed: 'User' ki jagah 'Staff' hoga
+        ref: 'Staff',
         required: true 
     },
     course: { 
         type: String, 
-        required: true // e.g., "BCA", "BBA"
+        required: true 
     }, 
     sessionBatch: { 
         type: String, 
-        required: true // 🟢 NEW: e.g., "2025-2028" (Batches alag rakhne ke liye)
+        required: true 
     },
     semester: { 
         type: String, 
-        required: true // e.g., "Semester 1", "Semester 6"
+        required: true 
     }, 
     subject: { 
         type: String, 
@@ -24,7 +24,7 @@ const markSchema = new mongoose.Schema({
     },
     examName: { 
         type: String, 
-        required: true // e.g., "First Mid-Term"
+        required: true 
     }, 
     examDate: { 
         type: Date, 
@@ -35,25 +35,24 @@ const markSchema = new mongoose.Schema({
         required: true 
     },
     studentsMarkList: [{
-        studentId: { type: mongoose.Schema.Types.ObjectId, ref: 'Student' }, // 🟢 Fixed: 'User' ki jagah 'Student'
+        studentId: { type: mongoose.Schema.Types.ObjectId, ref: 'Student' }, 
         rollNo: { type: String, required: true },
         studentName: { type: String, required: true },
         attendanceStatus: { 
             type: String, 
             enum: ['Present', 'Absent', 'Debarred'], 
-            default: 'Present' // 🟢 NEW: Exam me baccha absent tha ya present
+            default: 'Present' 
         },
-        marksObtained: { type: Number, default: 0 }, // Agar absent hai toh 0
+        marksObtained: { type: Number, default: 0 },
         rank: { type: Number, default: 0 }, 
         remarks: { type: String, default: "" }
     }],
     status: {
         type: String,
         enum: ['Draft', 'Published'],
-        default: 'Published' // 🟢 NEW: Future me agar marks hide karne ho result date tak
+        default: 'Published' 
     }
-}, { timestamps: true }); // 🟢 NEW: Ye automatically createdAt aur updatedAt handle karega
-
+}, { timestamps: true }); 
 // 🟢 NEW: Prevent duplicate uploads for the same class and exam
 markSchema.index({ course: 1, sessionBatch: 1, semester: 1, subject: 1, examName: 1 }, { unique: true });
 
