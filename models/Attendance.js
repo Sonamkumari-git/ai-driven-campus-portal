@@ -1,47 +1,47 @@
 const mongoose = require('mongoose');
 
 const attendanceSchema = new mongoose.Schema({
-    // --- 📅 Date Details (Taki app me filtering aasan ho) ---
+ 
     fullDate: { 
         type: Date, 
         required: true 
     },
     day: { 
         type: Number, 
-        required: true // e.g., 30
+        required: true
     },
     month: { 
         type: String, 
-        required: true // e.g., "March" or "03"
+        required: true 
     },
     year: { 
         type: Number, 
-        required: true // e.g., 2026
+        required: true 
     },
 
-    // --- 🎓 Academic Details ---
+  
     batch: {
         type: String,
-        required: true // e.g., "2023-2026"
+        required: true 
     },
     course: {
         type: String,
-        required: true // e.g., "BCA"
+        required: true
     },
     semester: { 
         type: String, 
-        required: true // e.g., "Sem 1"
+        required: true 
     },
     section: { 
         type: String, 
-        required: true // e.g., "A"
+        required: true
     },
     subject: { 
         type: String, 
-        required: true // e.g., "C Programming"
+        required: true 
     },
 
-    // --- ⏰ Timing Details ---
+
     startTime: { 
         type: String, 
         required: true 
@@ -51,14 +51,13 @@ const attendanceSchema = new mongoose.Schema({
         required: true 
     },
 
-    // --- 👨‍🏫 Teacher Reference ---
+   
     teacherId: { 
         type: mongoose.Schema.Types.ObjectId, 
         ref: 'Teacher', 
         required: true 
     },
 
-    // --- 👨‍🎓 Students Record Array ---
     records: [{
         studentId: { 
             type: mongoose.Schema.Types.ObjectId, 
@@ -69,7 +68,7 @@ const attendanceSchema = new mongoose.Schema({
             type: String,
             required: true
         },
-        studentName: { // Name add kar diya
+        studentName: { 
             type: String,
             required: true
         },
@@ -80,7 +79,7 @@ const attendanceSchema = new mongoose.Schema({
         }
     }],
 
-    // --- 📊 Class Summary (Teacher Dashboard ke liye) ---
+    
     summary: {
         totalStudents: { type: Number, required: true },
         presentCount: { type: Number, required: true },
@@ -89,8 +88,7 @@ const attendanceSchema = new mongoose.Schema({
     }
 }, { timestamps: true });
 
-// 🚀 Database Indexing (Performance boost ke liye)
-// Isse app me individual student ka record fast fetch hoga
+
 attendanceSchema.index({ 'records.studentId': 1, subject: 1, fullDate: 1 });
 attendanceSchema.index({ batch: 1, course: 1, semester: 1, fullDate: 1 });
 
